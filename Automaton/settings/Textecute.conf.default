@@ -1,0 +1,7 @@
+FROM = email@example.com
+IMAP_SERVER = imap.gmail.com
+IMAP_PORT = 993
+IMAP_USER  = username
+IMAP_PASSWORD = password
+SMTP_SERVER = smtp.gmail.com
+SMTP_PORT = 587

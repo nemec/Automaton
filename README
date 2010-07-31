@@ -1,0 +1,39 @@
+Automaton
+
+Introduction
+============
+
+This program was built to aid in automating tasks and enabling a "smart home".
+It began as a single python file that would emulate the effects of a smart phone
+through text messages and it grew as I wanted an easy way to add both scripts
+and frontends to interface with those scripts.
+
+It is implemented as a client-server architecture using the Apache Thrift
+http://wiki.apache.org/thrift/ RPC project. This allows the server to be written
+in a single language and allow easy access to the scripts from many other
+languages and remote computers.
+
+Requirements
+============
+
+Apache Thrift: Currently information about installing can be found on Thrift's
+webpage http://incubator.apache.org/thrift. If it moves out of incubator status,
+a quick Google search should find it.
+
+Python: The server is written in Python. Originally compiled with Python 2.6.5 but
+I am unaware of any features specific to any one Python version.
+
+Linux-like operating system? While Thrift may be installed on Windows, I've never
+tried it. Also, scripts that access a specific path may cause trouble. Nothing
+confirmed, though.
+
+Installation
+============
+
+Install Apache Thrift to both the machine the server will be located on and any
+machines that will house clients.
+
+Navigate to the Automaton directory and build the thrift-python bindings with
+thrift --gen py automaton_thrift.thrift
+
+...setup.py?
