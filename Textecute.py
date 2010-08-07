@@ -11,12 +11,12 @@ from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
 from email import Encoders
 
+import pgdb
+
 import Automaton.lib.settings_loader as settings_loader
 from Automaton.lib.logger import log
 
 import ClientWrapper
-
-sys.exit()
 
 # This script reads the inbox of the given IMAP server,
 # checks for mail from the specified email address (in
@@ -36,7 +36,7 @@ sys.exit()
         error return values for commands?
 '''''''''''''''''''''
 
-def handle_message(body):
+def handle_message(body, frm):
   # This for-loop is a quick hack to ignore
   # extra data that a gmail address puts in the
   # body of an email when sending. There are no
@@ -84,7 +84,7 @@ def handle_message(body):
       result = result[0:160]
   print result
   if len(result) > 0: # If there's a returned value, send it back
-      send_mail(op['FROM'], "Textecute", result)
+      send_mail(frm, "Textecute", result)
 
 def send_mail(to, subject, text):
     # Mail function example found at http://kutuma.blogspot.com
@@ -106,20 +106,38 @@ def send_mail(to, subject, text):
     mailServer.sendmail(SMTP_USER, to, msg.as_string())
     mailServer.close()
 
+def validate_address(db, frm):
+  cursor = db.cursor()
+  query='select "Username" from "Users"."view_Email"where \'%s\'=ANY("Users"."view_Email"."Email");' % frm
+  try:
+    cursor.execute(query)
+  except Exception, e:
+    print e
+    cursor.close()
+    db.rollback()
+    return None
+  name = cursor.fetchone()
+  cursor.close()
+  if name == None:
+    return None
+  name =  " ".join(name)
+  return name
 
 # Initialize empty list of settings
-op={'FROM':'',
-    'IMAP_SERVER': 'imap.gmail.com',
+op={'IMAP_SERVER': 'imap.gmail.com',
     'IMAP_PORT':993,
     'IMAP_USER':'', 'IMAP_PASSWORD':'',
     'SMTP_SERVER':'smtp.gmail.com',
-    'SMTP_PORT':587
+    'SMTP_PORT':587,
+    "DBHOST":"localhost",
+    "DBUSER":"Textecute",
+    "DBPASS":""
    }
 
 op.update(settings_loader.load_app_settings(sys.argv[0]))
 
 # Fail if authentication info is not present.
-for operator in ('IMAP_USER', 'IMAP_PASSWORD'):
+for operator in ('IMAP_USER', 'IMAP_PASSWORD', 'DBPASS'):
   if op[operator] == '':
     log("Missing necessary credentials to log in to Textecute.")
     sys.exit()
@@ -131,13 +149,11 @@ if not op.has_key('SMTP_USER'):
 if not op.has_key('SMTP_PASSWORD'):
   op['SMTP_PASSWORD']=op['IMAP_PASSWORD']
 
-# If anything is provided on the command line, sends that message
-# instead of checking the address - basically acts as a quick and
-# dirty method of sending a message to the provided cell phone
-# (delayed messages, for example, with the 'at' system command)
-if len(sys.argv) > 1:
-    send_mail(op["FROM"], "", str(sys.argv[1:]))
-    sys.exit()
+try:
+  db = pgdb.connect(user=op["DBUSER"], password=op["DBPASS"], host=op["DBHOST"], database="Automaton")
+except Exception, e:
+  print "Error connecting to database:",e
+  sys.exit() 
 
 # connect to server
 server = imaplib2.IMAP4_SSL(op['IMAP_SERVER'], op['IMAP_PORT']) # gmail uses SSL on port 993
@@ -146,12 +162,14 @@ server.select()
 
 # list items on server
 typ, data = server.search(None, "UNSEEN")
+
 for num in data[0].split():
     typ, data = server.fetch(num, '(BODY[HEADER.FIELDS (FROM)])')
     frm=re.search("[\w.]*@[\w.]*", data[0][1][6:].strip()).group() # Parses the FROM string so that just the email address is used
-    if frm == op['FROM']:
+    user=validate_address(db, frm)
+    if user != None:
       typ, dat = server.fetch(num, '(BODY[TEXT])')
-      threading.Thread(target=handle_message, args=(dat[0][1].strip(),)).start()
+      threading.Thread(target=handle_message, args=(dat[0][1].strip(),frm)).start()
     # Mark as read and archive - doesn't actually delete the message.
     server.store(num, '+FLAGS', '\\Seen')
     server.store(num, '+FLAGS', '\\Deleted')

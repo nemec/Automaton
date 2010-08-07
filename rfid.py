@@ -19,8 +19,11 @@ def do_valid_tag(db, code):
     cursor.close()
     db.rollback()
     return None
-  name =  " ".join(cursor.fetchone())
+  name = cursor.fetchone()
   cursor.close()
+  if name == None:
+    return None
+  name =  " ".join(name)
   global client
   client.execute("say", "Welcome back %s" % name)
 
