@@ -119,7 +119,7 @@ def validate_address(db, frm):
   name = cursor.fetchone()
   cursor.close()
   if name == None:
-    return None
+    return "Restricted"
   name =  " ".join(name)
   return name
 
@@ -152,7 +152,7 @@ if not op.has_key('SMTP_PASSWORD'):
 try:
   db = pgdb.connect(user=op["DBUSER"], password=op["DBPASS"], host=op["DBHOST"], database="Automaton")
 except Exception, e:
-  print "Error connecting to database:",e
+  log("Error connecting to database: %s" % e)
   sys.exit() 
 
 # connect to server
@@ -160,20 +160,26 @@ server = imaplib2.IMAP4_SSL(op['IMAP_SERVER'], op['IMAP_PORT']) # gmail uses SSL
 server.login(op['IMAP_USER'], op['IMAP_PASSWORD'])
 server.select()
 
-# list items on server
-typ, data = server.search(None, "UNSEEN")
+try:
+  while True:
+    # list items on server
+    typ, data = server.search(None, "UNSEEN")
 
-for num in data[0].split():
-    typ, data = server.fetch(num, '(BODY[HEADER.FIELDS (FROM)])')
-    frm=re.search("[\w.]*@[\w.]*", data[0][1][6:].strip()).group() # Parses the FROM string so that just the email address is used
-    user=validate_address(db, frm)
-    if user != None:
-      typ, dat = server.fetch(num, '(BODY[TEXT])')
-      threading.Thread(target=handle_message, args=(dat[0][1].strip(),frm)).start()
-    # Mark as read and archive - doesn't actually delete the message.
-    server.store(num, '+FLAGS', '\\Seen')
-    server.store(num, '+FLAGS', '\\Deleted')
-
+    # check for new messages
+    for num in data[0].split():
+        typ, data = server.fetch(num, '(BODY[HEADER.FIELDS (FROM)])')
+        frm=re.search("[\w.]*@[\w.]*", data[0][1][6:].strip()).group() # Parses the FROM string so that just the email address is used
+        user=validate_address(db, frm)
+        if user != None:
+          typ, dat = server.fetch(num, '(BODY[TEXT])')
+          threading.Thread(target=handle_message, args=(dat[0][1].strip(),frm)).start()
+        # Mark as read and archive - doesn't actually delete the message.
+        server.store(num, '+FLAGS', '\\Seen')
+        server.store(num, '+FLAGS', '\\Deleted')
+    print "done"
+    server.idle()
+except Exception, e:
+  log("Error during execution: %s" % e)
 
 server.expunge()
 server.logout()
