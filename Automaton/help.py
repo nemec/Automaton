@@ -14,3 +14,6 @@ def execute(arg = ''):
     return "Command not found.\nDid you forget to import it?"
   return sys.modules[frlist].help()
 
+def platform():
+  return ['linux', 'mac', 'windows']
+

@@ -7,7 +7,7 @@ import Automaton.lib.settings_loader as settings_loader
 
 import Automaton.lib.logger as logger
 
-import ClientWrapper
+import Automaton.lib.ClientWrapper as ClientWrapper
 
 op = {'HOST':'login.oscar.aol.com',
       'PORT':'5190'

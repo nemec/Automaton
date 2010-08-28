@@ -27,6 +27,9 @@ def execute(arg = ''):
         return err
     return out
 
+def platform():
+  return ['linux']
+
 def help():
   return "USAGE: run [script] at [time]\nThe specified script will be run at the provided time."
 

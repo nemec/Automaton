@@ -12,6 +12,9 @@ def execute(arg = ''):
   f.close()
   return "Inserted into memo file."
 
+def platform():
+  return ['linux', 'mac', 'windows']
+
 def help():
   return """
           USAGE: memo message

@@ -318,6 +318,9 @@ def execute(arg = ''):
     return "No text to speak"
   say(arg)
 
+def platform():
+  return ['linux']
+
 def help():
   return "USAGE: say \"text string\"\nComputer will speak the provided text string."
     

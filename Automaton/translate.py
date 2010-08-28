@@ -23,9 +23,13 @@ def execute(arg = ''):
     translation=translation[:end_idx]
     return unicodedata.normalize('NFKD', unicode(translation, "utf-8")).encode('ascii','ignore')
 
+def platform():
+  return ['linux','mac','windows']
+
 def help():
   return """
           USAGE: translate lang1 lang2 phrase
-          Uses Google to translate the phrase from lang1 to lang2
+          Uses Google to translate the phrase from lang1 to lang2.
+          Lang1 and lang2 MUST only be two characters each.
          """
 

@@ -1,6 +1,7 @@
 import subprocess as sp
 
 # Shuts down the host computer in the specified number of seconds
+
 def execute(arg = 'now'):
     try:
         int(arg)
@@ -15,6 +16,9 @@ def execute(arg = 'now'):
         
     p = sp.Popen('shutdown -P ' + arg, stdout = sp.PIPE, shell = True)
     return p.communicate()[0]
+
+def platform():
+  return ['linux']
 
 def help():
   return """

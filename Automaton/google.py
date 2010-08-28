@@ -21,6 +21,9 @@ def execute(arg = ''):
     return unicodedata.normalize('NFKD', unicode(ret, "utf-8")).encode('ascii','ignore')
     #return unicodedata.normalize('NFKD', ret).encode('ascii','ignore')
 
+def platform():
+  return ['linux', 'mac', 'windows']
+
 def help():
   return """
           USAGE: google query

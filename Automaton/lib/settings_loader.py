@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 # settings_loader takes a script name, opens the associated settings
 # file, and reads all of the settings into a dictionary. It then
@@ -28,17 +29,28 @@ def load_app_settings(scriptname):
 # have the same settings file format
 def __load_settings(scriptname):
   op = {}
-  # format scriptname if we're given a path
-  scriptpath = __file__[0:__file__.rfind('/')+1]+"../settings/"
-  with open(scriptpath+scriptname+".conf","r") as settingsFile:
-    settings = settingsFile.readlines()
-  for line in settings:
-    # Lines beginning with # are comments
-    if line[0]=='#':
-      continue
-    ix = line.find('=')
-    if ix < 0:
-      log("Cannot read settings line: "+line)
-      continue
-    op[line[0:ix].strip().upper()]=line[ix+1:].strip()
+  settings = None
+  if sys.platform.startswith('win'):
+    personaldir = os.path.join(os.environ['APPDATA'],'automaton')
+  else:
+    personaldir = os.path.expanduser('~/.automaton/')
+  systemdir = os.path.join(__file__[0:__file__.rfind(os.sep)+1],"../settings/")
+  # Try the home directory first, then default settings
+  for scriptpath in personaldir, systemdir:
+    filepath = os.path.join(scriptpath,scriptname+".conf")
+    if os.path.isfile(filepath):
+      with open(filepath,"r") as settingsFile:
+        settings = settingsFile.readlines()
+      if settings != None:
+        break
+  if settings != None:
+    for line in settings:
+      # Lines beginning with # are comments
+      if line[0]=='#':
+        continue
+      ix = line.find('=')
+      if ix < 0:
+        log("Cannot read settings line: "+line)
+        continue
+      op[line[0:ix].strip().upper()]=line[ix+1:].strip()
   return op

@@ -21,7 +21,7 @@ webpage http://incubator.apache.org/thrift. If it moves out of incubator status,
 a quick Google search should find it.
 
 Python: The server is written in Python. Originally compiled with Python 2.6.5 but
-I am unaware of any features specific to any one Python version.
+I am unaware of features specific to any one Python version.
 
 Linux-like operating system? While Thrift may be installed on Windows, I've never
 tried it. Also, scripts that access a specific path may cause trouble. Nothing

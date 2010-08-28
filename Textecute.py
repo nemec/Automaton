@@ -1,6 +1,9 @@
 #!/usr/bin/python
 
 import sys
+
+sys.path.append('/home/dan/prg/py/Automaton/Automaton')
+
 import Automaton.lib.imaplib2 as imaplib2
 import os
 import re
@@ -16,7 +19,7 @@ import pgdb
 import Automaton.lib.settings_loader as settings_loader
 from Automaton.lib.logger import log
 
-import ClientWrapper
+import Automaton.lib.ClientWrapper as ClientWrapper
 
 # This script reads the inbox of the given IMAP server,
 # checks for mail from the specified email address (in
@@ -37,6 +40,9 @@ import ClientWrapper
 '''''''''''''''''''''
 
 def handle_message(body, frm):
+
+  global op
+
   # This for-loop is a quick hack to ignore
   # extra data that a gmail address puts in the
   # body of an email when sending. There are no
@@ -65,8 +71,10 @@ def handle_message(body, frm):
     args = ''
 
   try:
-
-    client = ClientWrapper.ClientWrapper("tails.local")
+    if op['THRIFT_SERVER']!='':
+      client = ClientWrapper.ClientWrapper(op['THRIFT_SERVER'])
+    else:
+      client = ClientWrapper.ClientWrapper()
     client.open()
 
     if client.isScript(body):
@@ -118,9 +126,8 @@ def validate_address(db, frm):
     return None
   name = cursor.fetchone()
   cursor.close()
-  if name == None:
-    return "Restricted"
-  name =  " ".join(name)
+  if name != None:
+    name =  " ".join(name)
   return name
 
 # Initialize empty list of settings
@@ -176,7 +183,6 @@ try:
         # Mark as read and archive - doesn't actually delete the message.
         server.store(num, '+FLAGS', '\\Seen')
         server.store(num, '+FLAGS', '\\Deleted')
-    print "done"
     server.idle()
 except Exception, e:
   log("Error during execution: %s" % e)

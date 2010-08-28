@@ -1,5 +1,5 @@
 import sys
-import ClientWrapper
+import Automaton.lib.ClientWrapper as ClientWrapper
 
 try:
   

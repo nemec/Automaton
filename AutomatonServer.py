@@ -22,8 +22,14 @@ class AutomatonServer:
   def __init__(self):
     # A dictionary mapping serviceids to registered scripts
     self.registeredServices = {}
-    # Update __init__.py in the Automaton package when a new script is addes
-    self.loadedScripts = set(Automaton.__all__)
+    # Update __init__.py in the Automaton package when a new script is added
+    self.loadedScripts = set()
+    for script in Automaton.__all__:
+      try:
+        if getPlatform() in globals()[script].platform():
+          self.loadedScripts.add(script)
+      except (AttributeError, TypeError):
+        self.loadedScripts.add(script)
 
   # Registers a client service with the server. Calculates a UUID that will
   # identify which scripts are loaded for each client service
@@ -111,6 +117,13 @@ class AutomatonServer:
   def getAvailableScripts(self): #set<string>
     return self.loadedScripts
 
+def getPlatform():
+  if sys.platform.startswith('win'):
+    return 'windows'
+  elif sys.platform.startswith('darwin'):
+    return 'mac'
+  else:
+    return 'linux'
 
 handler = AutomatonServer()
 processor = Script.Processor(handler)

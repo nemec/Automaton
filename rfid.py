@@ -7,7 +7,7 @@ import sys
 
 import pgdb
 
-import ClientWrapper
+import Automaton.lib.ClientWrapper as ClientWrapper
 
 def do_valid_tag(db, code):
   cursor = db.cursor()
@@ -62,7 +62,7 @@ except Exception, e:
   print "Error connecting to database:",e
   sys.exit() 
 
-client = ClientWrapper.ClientWrapper("tails.local")
+client = ClientWrapper.ClientWrapper(op["THRIFT_SERVER"])
 client.open()
 
 try:

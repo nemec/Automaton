@@ -9,6 +9,9 @@ def execute(arg = ''):
         return err
     return out
 
+def platform():
+  return ['linux', 'mac', 'windows']
+
 def help():
   return """
           USAGE: exe command

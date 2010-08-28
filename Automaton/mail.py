@@ -21,6 +21,9 @@ def execute(arg = ''):
       return err
   return out
 
+def platform():
+  return ['linux']
+
 def help():
   return """
           USAGE: mail

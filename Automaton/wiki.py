@@ -10,6 +10,9 @@ def execute(arg = ''):
         return err
     return out
 
+def platform():
+  return ['linux', 'mac']
+
 def help():
   return """
           USAGE: wiki page

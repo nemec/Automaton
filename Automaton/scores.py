@@ -15,6 +15,9 @@ def execute(arg = ''):
     ret = "No games"
   return ret.strip()
 
+def platform():
+  return ['linux','mac','windows']
+
 def help():
   return """
           USAGE: scores
