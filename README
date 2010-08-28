@@ -37,3 +37,15 @@ Navigate to the Automaton directory and build the thrift-python bindings with
 thrift --gen py automaton_thrift.thrift
 
 ...setup.py?
+
+Creating A New Script
+=====================
+A script should implement three methods:
+  execute: This is the function that is run when the script is called by the AutomatonServer.
+           Takes one argument - a string that contains any arguments provided by the calling program.
+  platform: This returns a list of all platforms supported by the script.
+            Currently, the only platforms supported are linux, windows, and mac.
+            If this method does not exist, the script will be active for any platform, even unsupported ones.
+            In this way, a script can be forced to work for any platform by commenting out this method.
+  help: This method should return a string containing usage data for the script. The builtin 'help' script
+        calls this method for with the provided scriptname argument.
