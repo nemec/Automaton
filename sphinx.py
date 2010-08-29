@@ -1,12 +1,6 @@
 #!/usr/bin/python
 #
-# This file is in the Public Domain
-# Should be ok with
-#  CMU sphinxbase 0.4.1
-#  CMU pocketsphinx 0.5.1
-#  pyalsaaudio 0.4
-#
-# Author: Yu-Jie Lin
+# Original script by: Yu-Jie Lin
 # http://sites.google.com/site/livibetter/
 
 
