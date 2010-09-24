@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.append('/home/dan/prg/py/Automaton/Automaton')
+import os
+sys.path.append('/home/dan/prg/Automaton/gen-py')
 from twisted.words.protocols import oscar
 from twisted.internet import protocol, reactor
 import Automaton.lib.settings_loader as settings_loader
@@ -41,7 +42,9 @@ def unescape(text):
 
 
 op = {'HOST':'login.oscar.aol.com',
-      'PORT':'5190'
+      'PORT':'5190',
+      'USER':'',
+      'PASS':''
      }
 
 op.update(settings_loader.load_app_settings(sys.argv[0]))
