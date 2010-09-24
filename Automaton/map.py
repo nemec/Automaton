@@ -33,7 +33,6 @@ def execute(arg = ''):
   if status_code == 200:
     steps = response['Directions']['Routes'][0]['Steps']
     ret = ""
-    print steps
     for line in steps:
       ret = ret + line['descriptionHtml'] + ' for ' + line['Distance']['html'] + '\n'
       ret = re.sub(r'<.*?>', '', ret) # Strips HTML tags
