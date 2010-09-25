@@ -9,6 +9,7 @@ import os
 import re
 import smtplib
 import threading
+import time
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
@@ -162,10 +163,22 @@ except Exception, e:
   log("Error connecting to database: %s" % e)
   sys.exit() 
 
-# connect to server
-server = imaplib2.IMAP4_SSL(op['IMAP_SERVER'], op['IMAP_PORT']) # gmail uses SSL on port 993
-server.login(op['IMAP_USER'], op['IMAP_PASSWORD'])
-server.select()
+connectionTries = 3
+while connectionTries > 0:
+  try:
+    # connect to server
+    server = imaplib2.IMAP4_SSL(op['IMAP_SERVER'], op['IMAP_PORT']) # gmail uses SSL on port 993
+    server.login(op['IMAP_USER'], op['IMAP_PASSWORD'])
+    server.select()
+    break
+  except Exception, e:
+    connectionTries = connectionTries - 1
+    log("Error connecting to IMAP server: retries left (%s)" % connectionTries)
+    time.sleep(5)
+
+if connectionTries <= 0:
+  log("Error connecting to IMAP server: %s" % e)
+  sys.exit()
 
 try:
   while True:
@@ -179,11 +192,15 @@ try:
         user=validate_address(db, frm)
         if user != None:
           typ, dat = server.fetch(num, '(BODY[TEXT])')
-          threading.Thread(target=handle_message, args=(dat[0][1].strip(),frm)).start()
+          handle_message(dat[0][1].strip(),frm)
+          #threading.Thread(target=handle_message, args=(dat[0][1].strip(),frm)).start()
         # Mark as read and archive - doesn't actually delete the message.
         server.store(num, '+FLAGS', '\\Seen')
         server.store(num, '+FLAGS', '\\Deleted')
-    server.idle()
+    try:
+      server.idle()
+    except IOError, e:
+      log("Error with idle: %s" %e)
 except Exception, e:
   log("Error during execution: %s" % e)
 
