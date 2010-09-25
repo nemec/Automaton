@@ -23,5 +23,8 @@ service Script {
 
   bool isScript(1:string scriptname),
 
-  set<string> getAvailableScripts()
+  set<string> getAvailableScripts(),
+
+  string scriptUsage(1:string scriptname) throws (1:ServiceNotRegisteredException oops, 2:ScriptNotLoadedException ouch)
+
 }

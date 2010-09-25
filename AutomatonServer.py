@@ -117,6 +117,16 @@ class AutomatonServer:
   def getAvailableScripts(self): #set<string>
     return self.loadedScripts
 
+  # Returns the contents of the specified script's help() method
+  # Replaces the complicated help "command"
+  # Arguments: scriptname:string
+  # Return value: string
+  # Throws ScriptNotLoadedException
+  def scriptUsage(self, scriptname):
+    if scriptname not in self.loadedScripts:
+      raise ScriptNotLoadedException()
+    return globals()[scriptname].help()
+
 def getPlatform():
   if sys.platform.startswith('win'):
     return 'windows'
