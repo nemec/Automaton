@@ -28,6 +28,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print '  string execute(string serviceid, string scriptname, string arguments)'
   print '  bool isScript(string scriptname)'
   print '   getAvailableScripts()'
+  print '  string scriptUsage(string scriptname)'
   print ''
   sys.exit(0)
 
@@ -117,5 +118,11 @@ elif cmd == 'getAvailableScripts':
     print 'getAvailableScripts requires 0 args'
     sys.exit(1)
   pp.pprint(client.getAvailableScripts())
+
+elif cmd == 'scriptUsage':
+  if len(args) != 1:
+    print 'scriptUsage requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.scriptUsage(args[0],))
 
 transport.close()

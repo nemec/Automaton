@@ -1,5 +1,5 @@
 import sys
-sys.path.append('/home/dan/prg/py/Automaton/gen-py')
+sys.path.append('/home/dan/prg/Automaton/gen-py')
 
 from automaton_thrift import Script
 from automaton_thrift.ttypes import *
@@ -43,3 +43,6 @@ class ClientWrapper:
 
   def execute(self, scriptname, args):
     return self.client.execute(self.serviceid, scriptname, args)
+
+  def scriptUsage(self, scriptname):
+    return self.client.scriptUsage(scriptname)
