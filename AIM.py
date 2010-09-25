@@ -5,6 +5,7 @@ import os
 sys.path.append('/home/dan/prg/Automaton/gen-py')
 from twisted.words.protocols import oscar
 from twisted.internet import protocol, reactor
+from twisted.internet.error import ConnectionDone
 import Automaton.lib.settings_loader as settings_loader
 
 import Automaton.lib.logger as logger
@@ -77,8 +78,6 @@ class B(oscar.BOSConnection):
     def receiveMessage(self, user, multiparts, flags):
         if user.name.upper() != op['MASTER'].upper():
           multiparts[0] = ("I don't take orders from you!",)
-          self.lastUser = user.name
-          self.sendMessage(user.name, multiparts)
         else:
           body = multiparts[0][0].strip()
           ix=body.find(' ')
@@ -100,12 +99,30 @@ class B(oscar.BOSConnection):
             returned = "Command not found.\nDid you forget to import it?"
 
           multiparts[0] = (returned,)
-          self.lastUser = user.name
-          self.sendMessage(user.name, multiparts)
+        self.lastUser = user.name
+        self.sendMessage(user.name, multiparts)
 
 class OA(oscar.OscarAuthenticator):
    BOSClass = B
 
-protocol.ClientCreator(reactor, OA, op['USER'], op['PASS']).connectTCP(op['HOST'], int(op['PORT']))
+class AIMClientFactory(protocol.ReconnectingClientFactory):
+
+  def buildProtocol(self, addr):
+    #return protocol.ClientCreator(reactor, OA, op['USER'], op['PASS'])
+    return OA(op['USER'], op['PASS'])
+
+  def clientConnectionLost(self, connector, reason):
+    logger.log("Lost connection: %s" % reason)
+    reason.raiseException
+    if(reason.check([ConnectionDone])==None):
+      protocol.ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
+    else:
+      print "hello"
+
+  def clientConnectionFailed(self, connector, reason):
+    logger.log("Connection failed: %s" % reason)
+    protocol.ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
+
+reactor.connectTCP(op['HOST'], int(op['PORT']), AIMClientFactory())
 reactor.run()
 
