@@ -14,7 +14,7 @@ from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 from thrift.server import TServer
 
-import AutomatonServer
+import Automaton.lib.AutomatonServer as AutomatonServer
 
 if __name__=="__main__":
   handler = AutomatonServer.AutomatonServer()
