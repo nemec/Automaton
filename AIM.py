@@ -114,10 +114,11 @@ class AIMClientFactory(protocol.ReconnectingClientFactory):
   def clientConnectionLost(self, connector, reason):
     logger.log("Lost connection: %s" % reason)
     reason.raiseException
-    if(reason.check([ConnectionDone])==None):
-      protocol.ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
-    else:
-      print "hello"
+    #TODO figure out a way to prevent the bot connecting multiple times.
+    #if(reason.check([ConnectionDone])==None):
+    #  protocol.ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
+    #else:
+    #  print "hello"
 
   def clientConnectionFailed(self, connector, reason):
     logger.log("Connection failed: %s" % reason)
