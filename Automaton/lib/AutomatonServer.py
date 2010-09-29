@@ -1,17 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.append('/home/dan/prg/Automaton/gen-py')
-sys.path.append('/home/dan/prg/Automaton/Automaton')
-
-from automaton_thrift import Script
-from automaton_thrift.ttypes import *
-
-from thrift.transport import TSocket
-from thrift.transport import TTransport
-from thrift.protocol import TBinaryProtocol
-from thrift.server import TServer
-
 import uuid
 
 import Automaton
@@ -26,7 +15,7 @@ class AutomatonServer:
     self.loadedScripts = set()
     for script in Automaton.__all__:
       try:
-        if getPlatform() in globals()[script].platform():
+        if self.__getPlatform() in globals()[script].platform():
           self.loadedScripts.add(script)
       except (AttributeError, TypeError):
         self.loadedScripts.add(script)
@@ -127,26 +116,11 @@ class AutomatonServer:
       raise ScriptNotLoadedException()
     return globals()[scriptname].help()
 
-def getPlatform():
-  if sys.platform.startswith('win'):
-    return 'windows'
-  elif sys.platform.startswith('darwin'):
-    return 'mac'
-  else:
-    return 'linux'
-
-handler = AutomatonServer()
-processor = Script.Processor(handler)
-transport = TSocket.TServerSocket(9090)
-tfactory = TTransport.TBufferedTransportFactory()
-pfactory = TBinaryProtocol.TBinaryProtocolFactory()
-
-#Threaded server allows for multiple connections
-server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
-
-print 'Starting the server...'
-try:
-  server.serve()
-except KeyboardInterrupt:
-  pass
+  def __getPlatform():
+    if sys.platform.startswith('win'):
+      return 'windows'
+    elif sys.platform.startswith('darwin'):
+      return 'mac'
+    else:
+      return 'linux'
 
