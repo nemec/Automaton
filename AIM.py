@@ -79,8 +79,9 @@ class B(oscar.BOSConnection):
         if user.name.upper() != op['MASTER'].upper():
           multiparts[0] = ("I don't take orders from you!",)
         else:
-          body = multiparts[0][0].strip()
+          body = re.sub(r'<.*?>', '', multiparts[0][0].strip()) # Strips HTML tags
           ix=body.find(' ')
+          
           returned = ''
           args=''
           if ix > -1:
