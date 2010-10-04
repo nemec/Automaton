@@ -2,7 +2,7 @@
 
 import sys
 
-sys.path.append('/home/dan/prg/Automaton/gen-py')
+sys.path.append('/home/dan/prg/py/Automaton/gen-py')
 
 import Automaton.lib.imaplib2 as imaplib2
 import os

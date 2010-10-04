@@ -2,8 +2,6 @@
 
 import sys
 # Keeping these here until I get the installer script working =/
-sys.path.append('/home/dan/prg/Automaton/Automaton')
-sys.path.append('/home/dan/prg/Automaton/gen-py')
 sys.path.append('/home/dan/prg/py/Automaton/Automaton')
 sys.path.append('/home/dan/prg/py/Automaton/gen-py')
 
