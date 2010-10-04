@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+
+import sys
+sys.path.append('/home/dan/prg/py/Automaton/Automaton')
+
+if __name__=="__main__":
+
+  servertype = "thrift"
+  server = None
+
+  if len(sys.argv) > 1:
+    servertype = sys.argv[1]
+
+  if servertype != "thrift" and servertype != "pyro":
+    print "USAGE: AutomatonServer.py [thrift|pyro]"
+    sys.exit()
+
+  if servertype == "thrift":
+    try:
+      from Automaton.lib.AutomatonServer_thrift import ThriftServer
+      server = ThriftServer()
+    except ImportError:
+      servertype = "pyro"
+
+  # Not elseif so that we can fallthrough if thrift fails
+  if servertype == "pyro":
+    try:
+      from Automaton.lib.AutomatonServer_pyro import PyroServer
+      server = PyroServer()
+    except ImportError:
+      pass
+
+  if server==None:
+    print "Error: Specified server type not installed."
+    sys.exit()
+
+  server.initialize()
+
+  print 'Starting the server...'
+  try:
+    server.start()
+  except KeyboardInterrupt:
+    pass
+

@@ -30,11 +30,17 @@ confirmed, though.
 Installation
 ============
 
+Linux/Mac:
 Install Apache Thrift to both the machine the server will be located on and any
 machines that will house clients.
 
 Navigate to the Automaton directory and build the thrift-python bindings with
 thrift --gen py automaton_thrift.thrift
+
+
+Windows:
+Thrift is difficult to install in Windows. In an effort to provide a working implementation on all three major platforms, an alternate server/client conection was developed with PYRO, a Python RMI implementation. Unfortunately, since PYRO is Python-only, the server loses the ability to connect with non-Python applications.
+Download PYRO from http://www.xs4all.nl/~irmen/pyro3/
 
 ...setup.py?
 
