@@ -3,7 +3,7 @@ import Automaton.lib.ClientWrapper as ClientWrapper
 
 try:
   
-  client = ClientWrapper.ClientWrapper("tails.local")
+  client = ClientWrapper.ClientWrapper("localhost")
   client.open()
 
   try:
