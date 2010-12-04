@@ -1,6 +1,8 @@
 import sys
 sys.path.append('/home/dan/prg/py/Automaton/gen-py')
 
+from ClientInterface import ClientInterface
+
 from automaton_thrift import Script
 from automaton_thrift.ttypes import *
 
@@ -11,7 +13,7 @@ from thrift.protocol import TBinaryProtocol
 
 ThriftException=Thrift.TException
 
-class ClientWrapper:
+class ClientWrapper(ClientInterface):
 
   def __init__(self, server='localhost', port=9090):
     self.transport = TSocket.TSocket(server, port)
@@ -29,20 +31,3 @@ class ClientWrapper:
     self.client.unregisterService(self.serviceid)
     self.transport.close()
 
-  def getAvailableScripts(self):
-    return self.client.getAvailableScripts()
-
-  def isScript(self, scriptname):
-    return self.client.isScript(scriptname)
-
-  def registerScript(self, scriptname):
-    return self.client.registerScript(self.serviceid, scriptname)
-
-  def unregisterScript(self, scriptname):
-    return self.client.registerScript(self.serviceid, scriptname)
-
-  def execute(self, scriptname, args):
-    return self.client.execute(self.serviceid, scriptname, args)
-
-  def scriptUsage(self, scriptname):
-    return self.client.scriptUsage(scriptname)
