@@ -7,23 +7,25 @@ try:
   client.open()
 
   try:
-
     command = sys.argv[1]
     args = ' '.join(sys.argv[2:])
-
-    if client.isScript(command):
+    
+    if command == '-i':
+      [client.registerScript(x) for x in client.getAvailableScripts()]
+      client.interpret(args)
+    elif client.isScript(command):
       client.registerScript(command)
       print client.execute(command, args)
     else:
       print "Command not found"
-  except ClientWrapper.ScriptNotLoadedException:
-    print "ScriptNotLoaded Exception"
   except ClientWrapper.ServiceNotRegisteredException:
     print "Service not registered"
-  except ClientWrapper.ScriptNotRegisteredException:
-    print "Script not registered"
+  except ClientWrapper.ScriptNotLoadedException, e:
+    print e
+  except ClientWrapper.ScriptNotRegisteredException, e:
+    print e
   finally:
     client.close()
 
 except ClientWrapper.ThriftException, tx:
-  print '%s' % (tx.message)
+  print repr(tx.message)

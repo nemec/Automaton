@@ -15,9 +15,18 @@ except:
 
 
 class ScriptNotLoadedException(Exception):
+  """
+  Attributes:
+   - action
+  """
 
   thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'action', None, None, ), # 1
   )
+
+  def __init__(self, action=None,):
+    self.action = action
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -28,6 +37,11 @@ class ScriptNotLoadedException(Exception):
       (fname, ftype, fid) = iprot.readFieldBegin()
       if ftype == TType.STOP:
         break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.action = iprot.readString();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -38,6 +52,10 @@ class ScriptNotLoadedException(Exception):
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('ScriptNotLoadedException')
+    if self.action != None:
+      oprot.writeFieldBegin('action', TType.STRING, 1)
+      oprot.writeString(self.action)
+      oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
@@ -56,9 +74,18 @@ class ScriptNotLoadedException(Exception):
     return not (self == other)
 
 class ScriptNotRegisteredException(Exception):
+  """
+  Attributes:
+   - action
+  """
 
   thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'action', None, None, ), # 1
   )
+
+  def __init__(self, action=None,):
+    self.action = action
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -69,6 +96,11 @@ class ScriptNotRegisteredException(Exception):
       (fname, ftype, fid) = iprot.readFieldBegin()
       if ftype == TType.STOP:
         break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.action = iprot.readString();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -79,6 +111,10 @@ class ScriptNotRegisteredException(Exception):
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('ScriptNotRegisteredException')
+    if self.action != None:
+      oprot.writeFieldBegin('action', TType.STRING, 1)
+      oprot.writeString(self.action)
+      oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 

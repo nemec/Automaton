@@ -5,7 +5,7 @@ import sys
 sys.path.append('/home/dan/prg/py/Automaton/Automaton')
 sys.path.append('/home/dan/prg/py/Automaton/gen-py')
 from automaton_thrift import Script
-from automaton_thrift.ttypes import *
+import automaton_thrift.ttypes
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -16,8 +16,9 @@ import Automaton.lib.AutomatonServer as AutomatonServer
 
 class ThriftServer(AutomatonServer.AutomatonServer):
   def __init__(self, port = 9090):
-    self.port = port
     AutomatonServer.AutomatonServer.__init__(self)
+    self.port = port
+    self.Exceptions = automaton_thrift.ttypes
 
   def initialize(self):
     processor = Script.Processor(self)
