@@ -26,7 +26,7 @@ class AutomatonServer:
             self.loadedScripts.add(script)
           # If there is a problem importing the 
           except (Exceptions.ModuleLoadError, ImportError):
-            pass
+            print "Error loading module %s" % script
       # If no platform is provided, add the script anyways for
       # compatibility with unknown platforms, etc
       except (AttributeError, TypeError):
@@ -35,7 +35,7 @@ class AutomatonServer:
           self.commandPackages[script] = cmd
           self.loadedScripts.add(script)
         except (Exceptions.ModuleLoadException, ImportError):
-          pass
+          print "Error loading module %s" % script
 
   # Registers a client service with the server. Calculates a UUID that will
   # identify which scripts are loaded for each client service

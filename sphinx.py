@@ -10,6 +10,7 @@ import audioop
 import alsaaudio as alsa
 import pocketsphinx as ps
 import subprocess
+import Automaton.lib.ClientWrapper as ClientWrapper
 
 filename = 'audio'
 volume_threshold = 500
@@ -44,6 +45,13 @@ def interpret_command(block):
 
 if __name__ == '__main__':
 
+  client = ClientWrapper.ClientWrapper("localhost")
+  client.open()
+
+  client.registerScript('echo')
+  client.registerScript('latitude')
+  client.registerScript('say')
+
   d = ps.Decoder()
 
   # Prepare the CAPTURE device. It must use 16k Hz, little endian, 16 bit signed integer
@@ -64,7 +72,10 @@ if __name__ == '__main__':
       record_audio(pcm_in, data, vol)
       block = decode_audio()
       print 'Result on decoding on a block:', block
-      cmd = interpret_command(block)
-      # execute command
-      if len(cmd) != 0:
-        subprocess.call(cmd)
+      ret = "Sorry, I don't know how to interpret what you said."
+      try:
+        ret = client.interpret(block)
+      except ClientWrapper.ScriptNotRegisteredException:
+        pass
+      print ret
+      client.execute('say', ret)

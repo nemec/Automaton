@@ -57,6 +57,12 @@ def execute(arg = ''):
   else:
     return ret
 
+def grammar():
+  return  """
+          keywords = where | location | address
+          arguments = 0
+          """
+
 def platform():
   return ['linux', 'mac', 'windows']
 
