@@ -2,9 +2,7 @@
 
 import sys
 import uuid
-
 import Automaton
-from Automaton import *
 import logger
 import Interpreter
 import Exceptions
@@ -17,15 +15,27 @@ class AutomatonServer:
     # A dictionary mapping serviceids to registered scripts
     self.registeredServices = {}
     # Update __init__.py in the Automaton package when a new script is added
+    self.commandPackages = {}
     self.loadedScripts = set()
     for script in Automaton.__all__:
       try:
         if self.__getPlatform() in globals()[script].platform():
-          self.loadedScripts.add(script)
+          try:
+            cmd = __import__('Automaton.%s' % script, globals(), locals(), [script])
+            self.commandPackages[script] = cmd
+            self.loadedScripts.add(script)
+          # If there is a problem importing the 
+          except (Exceptions.ModuleLoadError, ImportError):
+            pass
       # If no platform is provided, add the script anyways for
       # compatibility with unknown platforms, etc
       except (AttributeError, TypeError):
-        self.loadedScripts.add(script)
+        try:
+          cmd = __import__('Automaton.%s' % script, globals(), locals(), [script])
+          self.commandPackages[script] = cmd
+          self.loadedScripts.add(script)
+        except (Exceptions.ModuleLoadException, ImportError):
+          pass
 
   # Registers a client service with the server. Calculates a UUID that will
   # identify which scripts are loaded for each client service
@@ -95,7 +105,7 @@ class AutomatonServer:
 
     # Executes module from the pool of globally imported modules.
     # Safe because only legal scripts are allowed to be registered.
-    return globals()[scriptname].execute(arguments)
+    return self.commandPackages[scriptname].execute(arguments)
 
   # Uses the interpreter to translate the raw (arbitrary) text into
   # a command:arguments pair that is then executed like normal

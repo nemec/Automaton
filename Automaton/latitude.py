@@ -1,15 +1,19 @@
 import urllib
 import simplejson
-from apiclient.discovery import build
 import httplib2
 import pickle
 import lib.settings_loader as settings_loader
+import lib.Exceptions
 
-# Requires the google-api-python-client to be installed
-# http://code.google.com/p/google-api-python-client/
-# Follow the installation information then try out the Latitude sample.
-# If the sample works, move the latitude.dat file somewhere safe and
-# modify the cmd_latitude.conf file to point towards that file.
+try:
+  from apiclient.discovery import build
+except ImportError:
+  print "Requires the google-api-python-client to be installed " +\
+        "(http://code.google.com/p/google-api-python-client/)"
+  print "Follow the installation information then try out the Latitude sample."
+  print "If the sample works, move the latitude.dat file somewhere safe and" +\
+        "modify the cmd_latitude.conf file to point towards that file."
+  raise lib.Exceptions.ModuleLoadException()
 
 def lookup(lat = '', lng = ''):
 

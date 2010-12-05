@@ -14,7 +14,6 @@ if __name__=="__main__":
   if servertype != "thrift" and servertype != "pyro":
     print "USAGE: AutomatonServer.py [thrift|pyro]"
     sys.exit()
-
   if servertype == "thrift":
     try:
       from Automaton.lib.AutomatonServer_thrift import ThriftServer
