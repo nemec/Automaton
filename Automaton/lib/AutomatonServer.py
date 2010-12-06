@@ -146,9 +146,9 @@ class AutomatonServer:
     return globals()[scriptname].help()
 
   def __getPlatform():
-    if sys.platform.startswith('win'):
+    if platform.system().lowercase().startswith('windows'):
       return 'windows'
-    elif sys.platform.startswith('darwin'):
+    elif platform.system().lowercase().startswith('darwin'):
       return 'mac'
     else:
       return 'linux'

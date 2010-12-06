@@ -1,6 +1,6 @@
 import os
 import re
-import sys
+import platform
 
 # settings_loader takes a script name, opens the associated settings
 # file, and reads all of the settings into a dictionary. It then
@@ -30,7 +30,7 @@ def load_app_settings(scriptname):
 def __load_settings(scriptname):
   op = {}
   settings = None
-  if sys.platform.startswith('win'):
+  if platform.system().lowercase().startswith('windows'):
     personaldir = os.path.join(os.environ['APPDATA'],'automaton')
   else:
     personaldir = os.path.expanduser('~/.automaton/')
