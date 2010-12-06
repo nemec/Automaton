@@ -7,6 +7,14 @@ grammar = "latitude{"+\
           "echo{"+\
             "keywords = echo | repeat"+\
             "arguments = *"+\
+          "}"+\
+          "google{"+\
+            "keywords = search | google"+\
+            "arguments = *"+\
+          "}"+\
+          "map{"+\
+            "keywords = map | directions | direction"+\
+            "arguments = *"+\
           "}"
 
 class rule:
@@ -41,7 +49,7 @@ def interpret(raw, services):
       node = tree[key]
       command = node.command
       if node.argrule == '*':
-        args = raw[ix+len(command):]
+        args = raw[ix+len(key):]
       elif node.argrule == '0':
         pass
       else:

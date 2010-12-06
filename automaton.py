@@ -12,7 +12,7 @@ try:
     
     if command == '-i':
       [client.registerScript(x) for x in client.getAvailableScripts()]
-      client.interpret(args)
+      print client.interpret(args)
     elif client.isScript(command):
       client.registerScript(command)
       print client.execute(command, args)

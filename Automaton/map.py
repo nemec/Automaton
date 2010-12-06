@@ -13,6 +13,8 @@ def execute(arg = ''):
   if arg == '':
     return help()
 
+  arg = re.sub(r'^from', '', arg)
+
   origin, sep, destination = arg.partition(" to ")
   if sep == '':
     return help()

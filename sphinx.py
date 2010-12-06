@@ -50,6 +50,8 @@ if __name__ == '__main__':
 
   client.registerScript('echo')
   client.registerScript('latitude')
+  client.registerScript('google')
+  client.registerScript('map')
   client.registerScript('say')
 
   d = ps.Decoder()
@@ -62,9 +64,10 @@ if __name__ == '__main__':
   # Size of block of each read
   pcm_in.setperiodsize(512)
 
-  print  
-  print 'Waiting for input...'
   while True:
+    print  
+    print 'Waiting for input...'
+
     l, data = pcm_in.read()
     vol = audioop.max(data, 2)
     # enter recording state
