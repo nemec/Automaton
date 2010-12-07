@@ -2,6 +2,7 @@
 
 import sys
 import uuid
+import platform
 import Automaton
 import logger
 import Interpreter
@@ -15,27 +16,21 @@ class AutomatonServer:
     # A dictionary mapping serviceids to registered scripts
     self.registeredServices = {}
     # Update __init__.py in the Automaton package when a new script is added
-    self.commandPackages = {}
-    self.loadedScripts = set()
+    self.loadedScripts = {}
     for script in Automaton.__all__:
       try:
-        if self.__getPlatform() in globals()[script].platform():
-          try:
-            cmd = __import__('Automaton.%s' % script, globals(), locals(), [script])
-            self.commandPackages[script] = cmd
-            self.loadedScripts.add(script)
-          # If there is a problem importing the 
-          except (Exceptions.ModuleLoadError, ImportError):
-            print "Error loading module %s" % script
-      # If no platform is provided, add the script anyways for
-      # compatibility with unknown platforms, etc
-      except (AttributeError, TypeError):
-        try:
-          cmd = __import__('Automaton.%s' % script, globals(), locals(), [script])
-          self.commandPackages[script] = cmd
-          self.loadedScripts.add(script)
-        except (Exceptions.ModuleLoadException, ImportError):
-          print "Error loading module %s" % script
+        # Imports the command module
+        cmd = __import__('Automaton.%s' % script, globals(), locals(), [script])
+        # Extracts the class from the command module
+        # Class must have same name as module
+        cmdcls = getattr(cmd, script)()
+        # Either no platform restriction is provided, or the platform is
+        # in the restriction set
+        if not hasattr(cmdcls, 'platform') or self.__getPlatform() in cmdcls.platform():
+          self.loadedScripts[script] = cmdcls
+      except (Exceptions.ModuleLoadException, ImportError, AttributeError):
+        print "Error loading module %s." % script
+        
 
   # Registers a client service with the server. Calculates a UUID that will
   # identify which scripts are loaded for each client service
@@ -71,7 +66,7 @@ class AutomatonServer:
   def registerScript(self, serviceid, scriptname):
     if serviceid not in self.registeredServices:
       raise self.Exceptions.ServiceNotRegisteredException()
-    if scriptname not in self.loadedScripts:
+    if scriptname not in self.loadedScripts.keys():
       raise self.Exceptions.ScriptNotLoadedException(scriptname)
 
     if scriptname not in self.registeredServices[serviceid]:
@@ -105,7 +100,7 @@ class AutomatonServer:
 
     # Executes module from the pool of globally imported modules.
     # Safe because only legal scripts are allowed to be registered.
-    return self.commandPackages[scriptname].execute(arguments)
+    return self.loadedScripts[scriptname].execute(arguments)
 
   # Uses the interpreter to translate the raw (arbitrary) text into
   # a command:arguments pair that is then executed like normal
@@ -116,7 +111,7 @@ class AutomatonServer:
   def interpret(self, serviceid, raw):
     if serviceid not in self.registeredServices:
       raise self.Exceptions.ServiceNotRegisteredException()
-    command, args = Interpreter.interpret(raw, self.registeredServices[serviceid])
+    command, args = Interpreter.interpret(raw, [self.loadedScripts[x] for x in self.registeredServices[serviceid]])
     return self.execute(serviceid, command, args)
 
   # Tests if the specified script is loaded or not.
@@ -125,7 +120,7 @@ class AutomatonServer:
   # Return value: bool
   # Throws: none
   def isScript(self, scriptname):
-    return scriptname in self.loadedScripts
+    return scriptname in self.loadedScripts.keys()
 
   # Returns a set of strings containing all loaded scripts
   # Querying is possible even when unregistered
@@ -133,7 +128,7 @@ class AutomatonServer:
   # Return value: set<string>
   # Throws: none
   def getAvailableScripts(self):
-    return self.loadedScripts
+    return self.loadedScripts.keys()
 
   # Returns the contents of the specified script's help() method
   # Replaces the complicated help "command"
@@ -141,14 +136,19 @@ class AutomatonServer:
   # Return value: string
   # Throws ScriptNotLoadedException
   def scriptUsage(self, scriptname):
-    if scriptname not in self.loadedScripts:
+    if scriptname not in self.loadedScripts.keys():
       raise self.Exceptions.ScriptNotLoadedException(scriptname)
-    return globals()[scriptname].help()
+    return self.loadedScripts[scriptname].help()
 
-  def __getPlatform():
-    if platform.system().lowercase().startswith('windows'):
+  def call(self, scriptname, args):
+    if scriptname not in self.loadedScripts.keys():
+      return ''
+    return self.loadedScripts[scriptname].execute(args)
+
+  def __getPlatform(self):
+    if platform.system().lower().startswith('windows'):
       return 'windows'
-    elif platform.system().lowercase().startswith('darwin'):
+    elif platform.system().lower().startswith('darwin'):
       return 'mac'
     else:
       return 'linux'

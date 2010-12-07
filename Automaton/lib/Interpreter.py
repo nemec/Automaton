@@ -1,22 +1,5 @@
 import re
 
-grammar = "latitude{"+\
-            "keywords = where | location | address"+\
-            "arguments = 0"+\
-          "}"+\
-          "echo{"+\
-            "keywords = echo | repeat"+\
-            "arguments = *"+\
-          "}"+\
-          "google{"+\
-            "keywords = search | google"+\
-            "arguments = *"+\
-          "}"+\
-          "map{"+\
-            "keywords = map | directions | direction"+\
-            "arguments = *"+\
-          "}"
-
 class rule:
   def __init__(self, command, argrule = None):
     self.command = command
@@ -28,6 +11,14 @@ class rule:
 def interpret(raw, services):
   command = None
   args = None
+  grammar = ''
+
+  for service in services:
+    try:
+      grammar = grammar + service.grammar()
+    except AttributeError:
+      pass
+
   gram = re.sub(r'\s','',grammar)
   rx = re.compile( r'(?P<script>\w+)\{'
               r'keywords=(?P<kw>\w+(\|\w+)*)'
@@ -49,15 +40,10 @@ def interpret(raw, services):
       node = tree[key]
       command = node.command
       if node.argrule == '*':
-        args = raw[ix+len(key):]
+        args = raw[ix+len(key):].strip()
       elif node.argrule == '0':
         pass
       else:
-        args = raw[ix+len(key):]
-
+        args = raw[ix+len(key):].strip()
   return (command, args)
 
-if __name__=="__main__":
-  print interpret("what is my location?", ['latitude', 'echo'])
-  print interpret("where am i?", ['latitude', 'echo'])
-  print interpret("is there an echo in here? please", [])

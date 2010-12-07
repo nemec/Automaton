@@ -313,14 +313,16 @@ def say(text):
 
 ###### MODIFIED TEXT BELOW
 
-def execute(arg = ''):
-  if arg == '':
-    return "No text to speak"
-  say(arg)
+class say_fest:
 
-def platform():
-  return ['linux']
+  def execute(self, arg = ''):
+    if arg == '':
+      return "No text to speak"
+    say(arg)
 
-def help():
-  return "USAGE: say \"text string\"\nComputer will speak the provided text string."
-    
+  def platform(self):
+    return ['linux']
+
+  def help(self):
+    return "USAGE: say \"text string\"\nComputer will speak the provided text string."
+      

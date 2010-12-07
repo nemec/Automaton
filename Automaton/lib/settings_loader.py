@@ -30,7 +30,7 @@ def load_app_settings(scriptname):
 def __load_settings(scriptname):
   op = {}
   settings = None
-  if platform.system().lowercase().startswith('windows'):
+  if platform.system().lower().startswith('windows'):
     personaldir = os.path.join(os.environ['APPDATA'],'automaton')
   else:
     personaldir = os.path.expanduser('~/.automaton/')

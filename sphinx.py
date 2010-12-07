@@ -64,10 +64,10 @@ if __name__ == '__main__':
   # Size of block of each read
   pcm_in.setperiodsize(512)
 
-  while True:
-    print  
-    print 'Waiting for input...'
+  print  
+  print 'Waiting for input...'
 
+  while True:
     l, data = pcm_in.read()
     vol = audioop.max(data, 2)
     # enter recording state
@@ -82,3 +82,5 @@ if __name__ == '__main__':
         pass
       print ret
       client.execute('say', ret)
+      print  
+      print 'Waiting for input...'
