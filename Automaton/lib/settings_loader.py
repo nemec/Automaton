@@ -1,6 +1,7 @@
 import os
 import re
 import platform
+import logger
 
 # settings_loader takes a script name, opens the associated settings
 # file, and reads all of the settings into a dictionary. It then
@@ -45,12 +46,14 @@ def __load_settings(scriptname):
         break
   if settings != None:
     for line in settings:
+      if len(line.strip()) == 0:
+        continue
       # Lines beginning with # are comments
       if line[0]=='#':
         continue
       ix = line.find('=')
       if ix < 0:
-        log("Cannot read settings line: "+line)
+        logger.log("Cannot read settings line: "+line)
         continue
       op[line[0:ix].strip().upper()]=line[ix+1:].strip()
   return op

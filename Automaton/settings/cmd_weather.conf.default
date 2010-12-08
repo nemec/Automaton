@@ -1,0 +1,10 @@
+# Each line is a 'name = location' pair
+# The name is an alias for the location and can be used instead of it
+#  when querying the weather
+# Optionally, a format may be provided. Default value is F, legal values are:
+#  F, Farenheit
+#  C, Celseus
+format = F
+
+home = (lat,lng)
+school = (lat,lng)
