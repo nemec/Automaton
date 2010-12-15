@@ -48,11 +48,8 @@ if __name__ == '__main__':
   client = ClientWrapper.ClientWrapper("localhost")
   client.open()
 
-  client.registerScript('echo')
-  client.registerScript('latitude')
-  client.registerScript('google')
-  client.registerScript('map')
-  client.registerScript('say')
+  # Register every script!
+  [client.registerScript(x) for x in client.getAvailableScripts()]
 
   d = ps.Decoder()
 

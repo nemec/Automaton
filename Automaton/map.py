@@ -20,15 +20,15 @@ class map:
     origin, sep, destination = arg.partition(" to ")
     if sep == '':
       destination = arg
+      destination = re.sub("^to ", "", destination)
       origin = ''
 
     if origin == '':
-      # TODO add a way to "call" other scripts from within a script
-      #try:
-      #  origin = server.call('latitude', '')
-      #except:
-      #  return self.help()
-      return self.help()
+      try:
+        origin = self.call('latitude', '')
+      except Exception, e:
+        print e
+        return self.help()
 
     params = {
       'q':        'from:%s to:%s' % (origin, destination),
@@ -38,6 +38,7 @@ class map:
 
     encoded_params = urllib.urlencode(params)    
     url = 'http://maps.google.com/maps/nav?' + encoded_params
+    print url
     request = urllib2.Request(url)
     resp = urllib2.urlopen(request)
     response = json.load(resp)

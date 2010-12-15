@@ -1,7 +1,9 @@
-from datetime import datetime
+from datetime import datetime  
 
-def log(message):
+def log(message, exception = None):
   "@TODO logging"
+  if exception:
+    message = '\n'.join([message, exception])
   time = datetime.now()
   print "Log",time,":",message
   with open("log.txt", 'a') as f:

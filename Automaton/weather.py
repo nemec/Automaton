@@ -44,6 +44,7 @@ class weather:
 
   def __init__(self):
     self.ttl = 3600 # seconds
+    self.last = None # last weather value recorded, tuple of (location, value)
     cmd = settings_loader.load_script_settings(self.__class__.__name__)
     self.locations = cmd
     self.format = 'F'
@@ -64,9 +65,18 @@ class weather:
     self.cache = {}
 
   def execute(self, arg=''):
+    if arg == 'last':
+      if self.last:
+        if time.time() < self.last[1].ttl:
+          return "Data for %s: %s" % (self.last[0], self.last[1].val)
+        else:
+          self.last = None
+      return "No recent data stored."
+
     if arg == '':
-      try: # TODO be able to call scripts from within other scripts
-        arg = server.call('latitude', '')
+      try:
+        # Try to call on latitude script to get the current location
+        arg = re.sub("[() ]", "", self.call('latitude', 'noreverse'))
       except:
         return "No current location is available."
 
@@ -143,7 +153,8 @@ class weather:
     if ret == '':
       return "There is no weather data for this location"
 
-    self.cache[arg] = cache(time.time()+self.ttl, ret)
+    self.last = (arg, cache(time.time()+self.ttl, ret))
+    self.cache[arg] = self.last[1]
 
     return ret
 
