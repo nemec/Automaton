@@ -4,6 +4,8 @@ import Automaton.lib.settings_loader as settings_loader
 import Automaton.lib.logger as logger
 import serial
 import sys
+from struct import unpack
+import time
 
 import pgdb
 
@@ -72,27 +74,34 @@ except ClientWrapper.ScriptNotLoadedException:
 except ClientWrapper.ServiceNotRegisteredException:
     print "Service not registered"
 
+
+# Enable the reader
+s.setRTS(1)
+
 while True:
   try:
-    # Enables the RFID Reader manually if plugged in
-    # with the serial-USB converter, since it's backwards
-    #for x in range(0,300):
-    #  s.write(str(x))
-    #print s.read(10)
-    idnum = s.read(10)
-    s.flushInput()
-
-    username = checkid(db, idnum)
-    if username != None:
-      s.write("1")
-      logger.log("Valid tag: "+idnum)
-      do_valid_tag(db, username)
-    else:
-      s.write("0")
-      logger.log("Invalid tag: "+idnum)
+    if unpack("B", s.read()) == (10, ):
+      idnum = ''
+      while len(idnum) < 10:
+        char = s.read()
+        val = unpack("B", char)
+        if val == (10, ) or val == (13, ):
+          break
+        idnum += char
+      
+      if len(idnum) == 10:
+        username = checkid(db, idnum)
+        if username != None:
+          logger.log("Valid tag: "+idnum)
+          do_valid_tag(db, username)
+        else:
+          logger.log("Invalid tag: "+idnum)
+        s.setRTS(0)
+        time.sleep(2)
+        s.setRTS(1)
   except Exception, e:
     print e
     break
 
-client.close()
+#client.close()
 db.close()

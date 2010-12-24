@@ -3,7 +3,7 @@ from datetime import datetime
 def log(message, exception = None):
   "@TODO logging"
   if exception:
-    message = '\n'.join([message, exception])
+    message = message[0:-1] + ': %s' % str(exception)
   time = datetime.now()
   print "Log",time,":",message
   with open("log.txt", 'a') as f:

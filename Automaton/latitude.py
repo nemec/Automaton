@@ -44,19 +44,22 @@ class latitude:
 
     p = build("latitude", "v1", http=http)
 
-    data = p.currentLocation().get().execute()
+    data = p.currentLocation().get(granularity="best").execute()
 
-    if arg == "noreverse":
-      if data.has_key('latitude') and data.has_key('longitude'):
+    if data.has_key('latitude') and data.has_key('longitude'):
+      if arg == "noreverse":
         return "(%s, %s)" % (data['latitude'], data['longitude'])
       else:
-        return "Error in Latitude response."
-
-    ret = self.lookup(data['latitude'], data['longitude'])
-    if ret == None:
-      return "(%s, %s)" % (data['latitude'], data['longitude'])
+        ret = self.lookup(data['latitude'], data['longitude'])
+        if ret == None:
+          return "(%s, %s)" % (data['latitude'], data['longitude'])
+        else:
+          return ret
     else:
-      return ret
+      if data.has_key('kind'):
+        return "No latitude data available."
+      else:
+        return "Error in Latitude response."
 
   def grammar(self):
     return  "latitude{"+\

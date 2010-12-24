@@ -33,7 +33,7 @@ class AutomatonServer:
         # in the restriction set
         if not hasattr(cmdcls, 'platform') or self.__getPlatform() in cmdcls.platform():
           self.loadedScripts[script] = cmdcls
-      except (Exceptions.ModuleLoadException, ImportError, AttributeError), e:
+      except Exception, e:
         logger.log("Error loading module %s." % script, e)
 
     self.interpreter = Interpreter.Interpreter(self.loadedScripts.values())
