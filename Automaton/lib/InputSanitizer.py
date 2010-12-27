@@ -1,49 +1,40 @@
 import re
+import logger
 import settings_loader
 
 
 class InputSanitizer:
 
   def __init__(self):
-    self.cmd_op = settings_loader.load_app_settings("InputSanitizer")
+    self.aliases = settings_loader.load_app_settings("InputSanitizer_Aliases")
 
   def sanitize(self, msg):
-    ret = self.variable_sub(msg)
+    ret = self.alias(msg)
     return ret
 
   # Lets you define variables to be replaced with the output of a command.
-  # Must be 
-  def variable_sub(self, msg):
+  # Must begin with a % and contain only alphanumeric characters. The alias
+  # name will end when non-alphanumeric characters are encountered (including
+  # punctuation and whitespace). Configuration examples are found in
+  # InputSanitizer_Aliases.conf
+  def alias(self, msg):
     ret = ""
     for word in re.split("\s+", msg):
-      if word[0] is not "%":
-        ret += word
+      match = re.match("%(\w+)(.*)", word)
+      if match:
+        cmd, sep, args = self.aliases[match.group(1).upper()].partition(" ")
+        try:
+          if sep is None:
+            ret += self.call(cmd)
+          else:
+            ret += self.call(cmd, args)
+        except Exception, e:
+          logger.log("Exception encountered in alias %%%s: %s" %
+                                                        (match.group(1), e))
+          ret += "%%%s" % match.group(1)
+        ret += match.group(2)
       else:
-        word = word[1:]
-        # Find consecutive al-num characters in the word
-        trigger = re.search("\w+", word)
-        if trigger is None: 
-          ret += word
-        else:
-          try:
-            key = trigger.group(0)
-            if key.upper() in self.cmd_op:
-              cmd, sep, args = self.cmd_op[key.upper()].partition(" ")
-              # If there is text before or after the key (such as punctuation)
-              # add the beginning part to the beginning of the substitution
-              beg, extra, end = word.partition(key)
-              if extra is not None:
-                ret += beg
-              if sep is None:
-                ret += self.call(cmd)
-              else:
-                ret += self.call(cmd, args)
-              # Add the end of the "extra" text
-              if extra is not None:
-                ret += end
-          except Exception, e:
-            print e
-            ret += word
+        ret += word
       ret += " "
     return ret
 
@@ -57,4 +48,4 @@ if __name__ == "__main__":
       return "Automaton"
     return ""
   i.call = call
-  print i.sanitize("Hello, %name. You may call me %.me.")
+  print i.sanitize("Hello, %name. You may call me %me.")

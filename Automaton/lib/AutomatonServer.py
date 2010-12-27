@@ -158,8 +158,8 @@ class AutomatonServer:
 
   
   def call(self, scriptname, args):
-    if scriptname not in self.loadedScripts.keys():
-      return ''
+    #if scriptname not in self.loadedScripts.keys():
+    #  return ''
     return self.loadedScripts[scriptname].execute(args)
 
   def __getPlatform(self):

@@ -1,2 +1,3 @@
 time = gettime
 me = echo Tom
+nom = echo *munch* *munch*
