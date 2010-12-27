@@ -158,6 +158,7 @@ class AutomatonServer:
 
   
   def call(self, scriptname, args):
+    # Let's let exceptions happen... for now.
     #if scriptname not in self.loadedScripts.keys():
     #  return ''
     return self.loadedScripts[scriptname].execute(args)
