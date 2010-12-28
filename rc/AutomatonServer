@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# Start Automaton Server
+#
+
+case "$1" in
+   'start')
+      /home/dan/prg/py/Automaton/AutomatonServer.py & ;;
+   'stop')
+      for process in $(pgrep -f AutomatonServer.py)
+        do kill $process
+      done ;;
+   'restart')
+      for process in $(pgrep -f AutomatonServer.py);
+        do kill $process
+      done
+      sleep 5
+      /home/dan/prg/py/Automaton/AutomatonServer.py & ;;
+   *)
+      echo "usage $0 start|stop|restart" ;;
+esac
+
