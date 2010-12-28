@@ -116,6 +116,7 @@ class AutomatonServer:
     except Exception, e:
       retval = "Exception encountered executing script %s." % scriptname
       logger.log("%s\n%s" % (retval, e))
+    self.sanitizer.set_prev(retval)
     return retval
 
   # Uses the interpreter to translate the raw (arbitrary) text into
