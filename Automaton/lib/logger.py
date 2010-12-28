@@ -6,10 +6,10 @@ def log(message, exception = None):
     message = message[0:-1] + ': %s' % str(exception)
   time = datetime.now()
   print "Log",time,":",message
-  with open("log.txt", 'a') as f:
+  with open("/home/dan/.automaton/log.txt", 'a') as f:
     f.write("%s:%s\n" % (time,message))
 
-# Logging client ^
+# Logging client
 ''' import logging, logging.handlers
 
 rootLogger = logging.getLogger('')
