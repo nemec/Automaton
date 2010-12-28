@@ -20,12 +20,11 @@ Apache Thrift: Currently information about installing can be found on Thrift's
 webpage http://incubator.apache.org/thrift. If it moves out of incubator status,
 a quick Google search should find it.
 
-Python: The server is written in Python. Originally compiled with Python 2.6.5 but
-I am unaware of features specific to any one Python version.
+Python: The server is written in Python. Originally compiled with Python 2.6.5,
+but I have since migrated to Python 2.7 and there are some scripts that require
+2.7 functionality.
 
-Linux-like operating system? While Thrift may be installed on Windows, I've never
-tried it. Also, scripts that access a specific path may cause trouble. Nothing
-confirmed, though.
+
 
 Installation
 ============
@@ -39,19 +38,29 @@ thrift --gen py automaton_thrift.thrift
 
 
 Windows:
-Thrift is difficult to install in Windows. In an effort to provide a working implementation on all three major platforms, an alternate server/client conection was developed with PYRO, a Python RMI implementation. Unfortunately, since PYRO is Python-only, the server loses the ability to connect with non-Python applications.
-Download PYRO from http://www.xs4all.nl/~irmen/pyro3/
+Thrift is difficult to install in Windows. In an effort to provide a working
+implementation on all three major platforms, an alternate server/client
+conection was developed with PYRO, a Python RMI implementation. Unfortunately,
+since PYRO is Python-only, the server loses the ability to connect with
+non-Python applications. Download PYRO from http://www.xs4all.nl/~irmen/pyro3/
 
 ...setup.py?
 
 Creating A New Script
 =====================
-A script should implement three methods:
-  execute: This is the function that is run when the script is called by the AutomatonServer.
-           Takes one argument - a string that contains any arguments provided by the calling program.
+A script should implement a class with the following four methods:
+  execute: This is the function that is run when the script is called by the
+    AutomatonServer. Takes one argument - a string that contains any arguments
+    provided by the calling program.
+  grammar (optional): This is a method that returns a string containing a format
+    that the interpreter can use to turn "natural language" into the correct
+    format for the script. Currently it's terribly naive, have a look at some
+    existing scripts for an example of how to write it. This is optional - if
+    missing, the script will not be available to the interpreter.
   platform: This returns a list of all platforms supported by the script.
-            Currently, the only platforms supported are linux, windows, and mac.
-            If this method does not exist, the script will be active for any platform, even unsupported ones.
-            In this way, a script can be forced to work for any platform by commenting out this method.
-  help: This method should return a string containing usage data for the script. The builtin 'help' script
-        calls this method for with the provided scriptname argument.
+    Currently, the only platforms supported are linux, windows, and mac.
+    If this method does not exist, the script will be active for any platform,
+    even unsupported ones. In this way, a script can be forced to work for any
+    platform by commenting out this method.
+  help: This method should return a string containing usage data for the script.
+    The builtin 'help' command will call this and return the text to the user. 
