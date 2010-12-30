@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
 import sys
-# Keeping these here until I get the installer script working =/
-sys.path.append('/home/dan/prg/py/Automaton/Automaton')
-sys.path.append('/home/dan/prg/py/Automaton/gen-py')
-from automaton_thrift import Script
-import automaton_thrift.ttypes
+from automaton_thrift.python import Script
+import automaton_thrift.python.ttypes
 
 from thrift.transport import TSocket
 from thrift.transport import TTransport
@@ -18,7 +15,7 @@ class ThriftServer(AutomatonServer.AutomatonServer):
   def __init__(self, port = 9090):
     AutomatonServer.AutomatonServer.__init__(self)
     self.port = port
-    self.Exceptions = automaton_thrift.ttypes
+    self.Exceptions = automaton_thrift.python.ttypes
 
   def initialize(self):
     processor = Script.Processor(self)

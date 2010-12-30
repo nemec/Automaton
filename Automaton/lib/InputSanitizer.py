@@ -7,7 +7,7 @@ class InputSanitizer:
 
   def __init__(self):
     self.aliases = settings_loader.load_app_settings("InputSanitizer_Aliases")
-    self.aliased['prev'] = ""
+    self.aliases['PREV'] = ""
 
   def sanitize(self, msg):
     ret = self.alias(msg)
@@ -24,6 +24,8 @@ class InputSanitizer:
       match = re.match("%(\w+)(.*)", word)
       if match:
         cmd, sep, args = self.aliases[match.group(1).upper()].partition(" ")
+        print cmd
+        print args
         try:
           if sep is None:
             ret += self.call(cmd)
@@ -42,7 +44,7 @@ class InputSanitizer:
   # Defines a special "prev" alias that contains the output of the last
   # command run
   def set_prev(self, alias):
-    self.aliases['prev'] = alias
+    self.aliases['PREV'] = "echo %s" % alias
 
 if __name__ == "__main__":
   __name__ == "InputSanitizer"

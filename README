@@ -44,10 +44,35 @@ conection was developed with PYRO, a Python RMI implementation. Unfortunately,
 since PYRO is Python-only, the server loses the ability to connect with
 non-Python applications. Download PYRO from http://www.xs4all.nl/~irmen/pyro3/
 
-...setup.py?
+If you just want to install the latest "stable" version, unpack one of the
+tarballs in dist/ and execute "python setup.py install" (may need root/admin
+privileges). Otherwise, run the install command (above) in the root directory.
+
+Running
+=======
+
+Find the __init__.py script wherever it was installed (the output of the install
+command should list the directory) and open it. Add/remove any command scripts
+that are listed in the root of the python module (leaving it as-is will include
+most of the scripts, but WARNING - as it's a networked application, make sure
+all scripts that are enabled come from a trusted source). If any command scripts
+have configuration files (labeled cmd_COMMAND.conf.default in
+Automaton/settings), create copies of them and remove the ".default" extension
+(so it reads cmd_COMMAND.conf) and edit them with the required information.
+
+Run "AutomatonServer" from the terminal/command line. If everything is set up
+correctly, the program should eventually print "Starting the server...". If
+a module fails to load for any reason, it will display a log message with a
+short description of the error.
+
+Pick a client application from the source directory (such as sampleclient.py
+for testing purposes). Run it with "python sampleclient.py" and it should
+display a number of messages back to you (as long as the 'echo' script is
+loaded from __init__.py)..
 
 Creating A New Script
 =====================
+
 A script should implement a class with the following four methods:
   execute: This is the function that is run when the script is called by the
     AutomatonServer. Takes one argument - a string that contains any arguments

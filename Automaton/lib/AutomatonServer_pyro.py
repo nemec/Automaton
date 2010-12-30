@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.append('/home/dan/prg/py/Automaton/Automaton')
 
 import Pyro.core
 

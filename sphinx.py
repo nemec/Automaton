@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env/python
 #
 # Original script by: Yu-Jie Lin
 # http://sites.google.com/site/livibetter/

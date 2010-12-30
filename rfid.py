@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env/python
 
 import Automaton.lib.settings_loader as settings_loader
 import Automaton.lib.logger as logger

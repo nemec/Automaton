@@ -1,10 +1,9 @@
 import sys
-sys.path.append('/home/dan/prg/py/Automaton/gen-py')
 
 from ClientInterface import ClientInterface
 
-from automaton_thrift import Script
-from automaton_thrift.ttypes import *
+from automaton_thrift.python import Script
+from automaton_thrift.python.ttypes import *
 
 from thrift import Thrift
 from thrift.transport import TSocket

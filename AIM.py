@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-import os
-sys.path.append('/home/dan/prg/py/Automaton/gen-py')
 from twisted.words.protocols import oscar
 from twisted.internet import protocol, reactor
 from twisted.internet.error import ConnectionDone
