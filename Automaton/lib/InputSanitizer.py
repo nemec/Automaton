@@ -11,7 +11,7 @@ class InputSanitizer:
 
   def sanitize(self, msg):
     ret = self.alias(msg)
-    return ret
+    return ret.strip()
 
   # Lets you define variables to be replaced with the output of a command.
   # Must begin with a % and contain only alphanumeric characters. The alias
