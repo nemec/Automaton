@@ -38,7 +38,6 @@ class map:
 
     encoded_params = urllib.urlencode(params)    
     url = 'http://maps.google.com/maps/nav?' + encoded_params
-    print url
     request = urllib2.Request(url)
     resp = urllib2.urlopen(request)
     response = json.load(resp)
