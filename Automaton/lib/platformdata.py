@@ -40,4 +40,3 @@ def getPlatform():
   else:
     return 'linux'
 
-os.access("/etc/automaton", os.R_OK)

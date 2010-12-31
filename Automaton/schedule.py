@@ -1,13 +1,15 @@
-import threading
-import Queue
-import datetime
-import time
 import re
-import lib.logger as logger
-import lib.utils as utils
-import sys
-import pickle
 import os
+import sys
+import time
+import Queue
+import pickle
+import datetime
+import threading
+import lib.utils as utils
+import lib.logger as logger
+import lib.platformdata as platformdata
+import lib.settings_loader as settings_loader
 
 if sys.version_info < (2, 7):
   raise Exception("Scheduler requires Python 2.7.")
@@ -19,9 +21,10 @@ class schedule:
     try:
       self.queue.put(task)
       try:
-        f = open(self.queue_file, 'w')
-        pickle.dump(self.queue)
-        f.close()
+        if self.ops["QUEUE_FILE"] is not None:
+          f = open(self.ops["QUEUE_FILE"], 'w')
+          pickle.dump(self.queue.queue, f)
+          f.close()
       except IOError, e:
         if e.args[0] == 13:
           logger.log("No access to scheduler file. Could not store current"
@@ -36,9 +39,10 @@ class schedule:
     try:
       if item[0] < datetime.datetime.now():
         try:
-          f = open(self.queue_file, 'w')
-          pickle.dump(self.queue)
-          f.close()
+          if self.ops["QUEUE_FILE"] is not None:
+            f = open(self.ops["QUEUE_FILE"], 'w')
+            pickle.dump(self.queue.queue, f)
+            f.close()
         except IOError, e:
           if e.args[0] == 13:
             logger.log("No access to scheduler file. Could not store current"
@@ -74,6 +78,31 @@ class schedule:
   
   def __init__(self):
     self.queue = Queue.PriorityQueue()
+    self.ops = {"QUEUE_FILE": None}
+    self.ops.update(settings_loader.load_script_settings(__name__))
+    if self.ops["QUEUE_FILE"] is None:
+      for d in platformdata.getDirHierarchy():
+        if os.path.exists(d):
+          filepath = os.path.join(scriptpath,scriptname)
+          if os.access(filepath, os.W_OK):
+            self.ops["QUEUE_FILE"] = filepath
+            break
+    else:
+      try:
+        if os.access(self.ops["QUEUE_FILE"], os.W_OK):
+          if os.path.exists(self.ops["QUEUE_FILE"]):
+            f = open(self.ops["QUEUE_FILE"], 'r')
+            self.queue.queue = pickle.load(f)
+            f.close()
+        else:
+          self.ops["QUEUE_FILE"] = None
+      except Exception, e:
+        print e
+        pass
+    if self.ops["QUEUE_FILE"] is None:
+      logger.log("Scheduler could not find an existing queue file and "
+                 "no write access to create a new one. Any scheduled tasks "
+                 "will disappear once server is stopped.")
     self.queue_lock = threading.Lock()
     self.event = threading.Event()
     thread = threading.Thread(target=self._executionthread)
