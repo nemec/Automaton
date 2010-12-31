@@ -6,16 +6,54 @@ import re
 import lib.logger as logger
 import lib.utils as utils
 import sys
+import pickle
+import os
 
 if sys.version_info < (2, 7):
   raise Exception("Scheduler requires Python 2.7.")
 
 class schedule:
 
-  def _thread(self):
+  def add_task(self, task):
+    self.queue_lock.acquire()
+    try:
+      self.queue.put(task)
+      try:
+        f = open(self.queue_file, 'w')
+        pickle.dump(self.queue)
+        f.close()
+      except IOError, e:
+        if e.args[0] == 13:
+          logger.log("No access to scheduler file. Could not store current"
+                     "queue data.")
+      self.event.set()
+    finally:
+      self.queue_lock.release()
+
+  def remove_task_if_past(self):
+    item = self.queue.get()
+    self.queue_lock.acquire()
+    try:
+      if item[0] < datetime.datetime.now():
+        try:
+          f = open(self.queue_file, 'w')
+          pickle.dump(self.queue)
+          f.close()
+        except IOError, e:
+          if e.args[0] == 13:
+            logger.log("No access to scheduler file. Could not store current"
+                       "queue data.")
+        return item
+      else:
+        self.queue.put(item)
+        return (item[0], None, None)
+    finally:
+      self.queue_lock.release()
+
+  def _executionthread(self):
     while True:
-      t, cmd, arg = self.queue.get()
-      if t < datetime.datetime.now():
+      t, cmd, arg = self.remove_task_if_past()
+      if cmd is not None:
         try:
           val = self.call(cmd, arg)
         except Exception, e:
@@ -23,9 +61,7 @@ class schedule:
         logger.log("Scheduled command %s has been run, with return value: \"%s\"" %
                     (cmd, val))
       else:
-        self.queue.put((t, cmd, arg))
         twait = max((t-datetime.datetime.now()).total_seconds(),0)
-        #print twait
         self.event.wait(twait)
         self.event.clear()
 
@@ -37,10 +73,10 @@ class schedule:
       return "Please test with echo command."
   
   def __init__(self):
-    #@TODO write to file instead of memory, in case of restart
     self.queue = Queue.PriorityQueue()
+    self.queue_lock = threading.Lock()
     self.event = threading.Event()
-    thread = threading.Thread(target=self._thread)
+    thread = threading.Thread(target=self._executionthread)
     thread.setDaemon(True)
     thread.start()
   
@@ -78,8 +114,8 @@ class schedule:
           return "Error parsing time."
     else:
       return 'Command could not be scheduled.'
-    self.queue.put((t, match.group('cmd'), match.group('args')))
-    self.event.set()
+
+    self.add_task((t, match.group('cmd'), match.group('args')))
     return 'Command scheduled.'
 
   def grammar(self):

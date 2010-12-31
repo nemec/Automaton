@@ -1,6 +1,6 @@
 import os
 import re
-import platform
+import platformdata
 import logger
 
 # settings_loader takes a script name, opens the associated settings
@@ -14,16 +14,17 @@ import logger
 # indicator and prepends cmd_ in case an app and a script have the
 # same name
 def load_script_settings(scriptname):
+  # Removes all "upper" module indicators, if present
   scriptname = scriptname[scriptname.rfind('.')+1:]
-  return __load_settings('cmd_'+scriptname)
+  scriptname = os.path.join("commands", scriptname+".conf")
+  return __load_settings(scriptname)
 
 # Function used by apps to load their settings
 # Before calling __load_settings it removes the absolute path provided
 # by sys.argv in the app and removes the .py file extension if it exists.
 def load_app_settings(scriptname):
-  scriptname = os.path.basename(scriptname)
-  regex = re.compile('\.py$')
-  scriptname = regex.sub('', scriptname)
+  scriptname = scriptname[scriptname.rfind('.')+1:]
+  scriptname = os.path.join("apps", scriptname+".conf")
   return __load_settings(scriptname)
 
 # Private function that loads settings, since both scripts and apps
@@ -31,19 +32,16 @@ def load_app_settings(scriptname):
 def __load_settings(scriptname):
   op = {}
   settings = None
-  if platform.system().lower().startswith('windows'):
-    personaldir = os.path.join(os.environ['APPDATA'],'automaton')
-  else:
-    personaldir = os.path.expanduser('~/.automaton/')
-  systemdir = os.path.join(__file__[0:__file__.rfind(os.sep)+1],"../settings/")
-  # Try the home directory first, then default settings
-  for scriptpath in personaldir, systemdir:
-    filepath = os.path.join(scriptpath,scriptname+".conf")
+  # Try the home directory first, then system, then local settings
+  for scriptpath in platformdata.getDirHierarchy():
+    filepath = os.path.join(scriptpath,scriptname)
     if os.path.isfile(filepath):
       with open(filepath,"r") as settingsFile:
         settings = settingsFile.readlines()
       if settings != None:
         break
+  if scriptname == "memo":
+    print settings
   if settings != None:
     for line in settings:
       if len(line.strip()) == 0:

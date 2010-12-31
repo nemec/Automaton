@@ -23,3 +23,7 @@ class memo:
             Appends message to the file specified in the configuration file.
            """
 
+if __name__=="__main__":
+  __name__ = "memo"
+  m = memo()
+  print m.execute("testing")

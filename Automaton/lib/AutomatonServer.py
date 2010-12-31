@@ -5,6 +5,7 @@ import uuid
 import platform
 import Automaton
 import logger
+import platformdata
 import InputSanitizer
 import Interpreter
 import Exceptions
@@ -36,7 +37,8 @@ class AutomatonServer:
         cmdcls.call = self.call
         # Either no platform restriction is provided, or the platform is
         # in the restriction set
-        if not hasattr(cmdcls, 'platform') or self.__getPlatform() in cmdcls.platform():
+        if not hasattr(cmdcls, 'platform') or (platformdata.getPlatform() in
+                                                             cmdcls.platform()):
           self.loadedScripts[script] = cmdcls
       except Exception, e:
         logger.log("Error loading module %s." % script, e)
@@ -163,12 +165,3 @@ class AutomatonServer:
     #if scriptname not in self.loadedScripts.keys():
     #  return ''
     return self.loadedScripts[scriptname].execute(args)
-
-  def __getPlatform(self):
-    if platform.system().lower().startswith('windows'):
-      return 'windows'
-    elif platform.system().lower().startswith('darwin'):
-      return 'mac'
-    else:
-      return 'linux'
-
