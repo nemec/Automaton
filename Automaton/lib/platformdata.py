@@ -1,7 +1,15 @@
-import platform
+import platform as pl
 import os
 
 # This module deals with platform-specific paths
+
+# Set the platform we are currently running on
+if pl.system().lower().startswith('windows'):
+  platform =  'windows'
+elif pl.system().lower().startswith('darwin'):
+  platform = 'mac'
+else:
+  platform = 'linux'
 
 def getDirHierarchy():
   return (personaldir(), systemdir(), localdir())
@@ -9,7 +17,7 @@ def getDirHierarchy():
 # The personal directory for settings storage.
 # The settings location in the "home" directory for a user.
 def personaldir():
-  if getPlatform() == 'windows':
+  if platform == 'windows':
     return os.path.join(os.environ['APPDATA'],'automaton')
   else:
     return os.path.expanduser('~/.automaton/')
@@ -17,7 +25,7 @@ def personaldir():
 # The system directory for settings storage.
 # Usually the default "/etc" directory.
 def systemdir():
-  if getPlatform() == 'windows':
+  if platform == 'windows':
     return ""
   else:
     return "/etc/automaton/"
@@ -31,12 +39,4 @@ def localdir():
     root = os.path.realpath (root)
   directory = os.path.dirname (os.path.abspath (root))
   return os.path.join(directory ,"../settings/")
-
-def getPlatform():
-  if platform.system().lower().startswith('windows'):
-    return 'windows'
-  elif platform.system().lower().startswith('darwin'):
-    return 'mac'
-  else:
-    return 'linux'
 

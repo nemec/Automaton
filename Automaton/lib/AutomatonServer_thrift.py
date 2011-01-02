@@ -12,8 +12,8 @@ from thrift.server import TServer
 import Automaton.lib.AutomatonServer as AutomatonServer
 
 class ThriftServer(AutomatonServer.AutomatonServer):
-  def __init__(self, port = 9090):
-    AutomatonServer.AutomatonServer.__init__(self)
+  def __init__(self, withgui = False, port = 9090):
+    AutomatonServer.AutomatonServer.__init__(self, withgui)
     self.port = port
     self.Exceptions = automaton_thrift.python.ttypes
 
@@ -26,7 +26,7 @@ class ThriftServer(AutomatonServer.AutomatonServer):
     #Threaded server allows for multiple connections
     self.server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
 
-  def start(self):
+  def start_local(self):
     self.server.serve()
 
 if __name__=="__main__":

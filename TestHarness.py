@@ -43,7 +43,7 @@ test_data ={"echo": [("hello", "hello")],
        }
 
 tests = ["exe", "gettime", "echo", "google", "latitude", "mail", "map",
-         "memo", "say", "weather", "wiki"]
+         "weather", "wiki"]
 
 success = set()
 failed = {}
@@ -72,7 +72,7 @@ try:
           failed[key] = "not loaded."
       except Exception, e:
         failed[key] = "encountered exception during execution: %s" % e
-        success.remove(key)
+        success.discard(key)
 
   cthrift.close()
 except ClientWrapper_thrift.ThriftException, tx:

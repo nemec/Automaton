@@ -7,16 +7,22 @@ if __name__=="__main__":
   servertype = "thrift"
   server = None
 
+  withgui = True
+
   if len(sys.argv) > 1:
     servertype = sys.argv[1]
 
-  if servertype != "thrift" and servertype != "pyro":
+  if servertype not in ("thrift", "pyro", "local"):
     print "USAGE: AutomatonServer.py [thrift|pyro]"
     sys.exit()
-  if servertype == "thrift":
+
+  if servertype == "local":
+    from Automaton.lib.AutomatonServer import AutomatonServer
+    server = AutomatonServer(withgui=withgui)
+  elif servertype == "thrift":
     try:
       from Automaton.lib.AutomatonServer_thrift import ThriftServer
-      server = ThriftServer()
+      server = ThriftServer(withgui=withgui)
     except ImportError:
       servertype = "pyro"
 
@@ -24,7 +30,7 @@ if __name__=="__main__":
   if servertype == "pyro":
     try:
       from Automaton.lib.AutomatonServer_pyro import PyroServer
-      server = PyroServer()
+      server = PyroServer(withgui=withgui)
     except ImportError:
       pass
 

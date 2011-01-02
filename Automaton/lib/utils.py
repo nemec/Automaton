@@ -2,6 +2,9 @@ import time
 import datetime
 import re
 
+def get_module_name(fullname):
+  return fullname[fullname.rfind('.')+1:]
+
 # Adapted from http://stackoverflow.com/questions/493174/is-there-a-way-to-convert-number-words-to-integers-python
 def text_to_int(textnum):
   numwords = {}

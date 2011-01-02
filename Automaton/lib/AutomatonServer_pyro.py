@@ -7,9 +7,9 @@ import Pyro.core
 import Automaton.lib.AutomatonServer as AutomatonServer
 
 class PyroServer(Pyro.core.ObjBase, AutomatonServer.AutomatonServer):
-  #pass
-  def __init__(self):
-    AutomatonServer.AutomatonServer.__init__(self)
+
+  def __init__(self, withgui = False):
+    AutomatonServer.AutomatonServer.__init__(self, withgui)
     Pyro.core.ObjBase.__init__(self)
 
   def initialize(self):
@@ -18,7 +18,7 @@ class PyroServer(Pyro.core.ObjBase, AutomatonServer.AutomatonServer):
     self.daemon.connect(PyroServer(), "automaton")
     self.initialized = True
 
-  def start(self):
+  def start_local(self):
     if self.initialized:
       self.daemon.requestLoop()
     else:

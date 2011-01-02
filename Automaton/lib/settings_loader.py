@@ -1,7 +1,8 @@
 import os
 import re
-import platformdata
+import utils
 import logger
+import platformdata
 
 # settings_loader takes a script name, opens the associated settings
 # file, and reads all of the settings into a dictionary. It then
@@ -15,7 +16,7 @@ import logger
 # same name
 def load_script_settings(scriptname):
   # Removes all "upper" module indicators, if present
-  scriptname = scriptname[scriptname.rfind('.')+1:]
+  scriptname = utils.get_module_name(scriptname)
   scriptname = os.path.join("commands", scriptname+".conf")
   return __load_settings(scriptname)
 
@@ -23,7 +24,7 @@ def load_script_settings(scriptname):
 # Before calling __load_settings it removes the absolute path provided
 # by sys.argv in the app and removes the .py file extension if it exists.
 def load_app_settings(scriptname):
-  scriptname = scriptname[scriptname.rfind('.')+1:]
+  scriptname = utils.get_module_name(scriptname)
   scriptname = os.path.join("apps", scriptname+".conf")
   return __load_settings(scriptname)
 
