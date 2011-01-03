@@ -207,16 +207,16 @@ class AutomatonServer:
 
   # Ensures that any networking is done in a separate thread from 
   def start(self):
-    if hasattr(self, "start_local"):
-      # Spawn a second thread for the start_local method
+    if hasattr(self, "_start"):
+      # Spawn a second thread for the _start method
       if self.needsgui:
-        thread = threading.Thread(target = self.start_local)
+        thread = threading.Thread(target = self._start)
         thread.setDaemon(True)
         thread.start()
         self.load_gui()
       else:
-        self.start_local()
-    # If there's no start_local method defined, we've got to load the gui
+        self._start()
+    # If there's no _start method defined, we've got to load the gui
     # or else there will be no way to communicate with the application.
     else:
       self.load_gui()

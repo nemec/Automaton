@@ -18,7 +18,7 @@ class PyroServer(Pyro.core.ObjBase, AutomatonServer.AutomatonServer):
     self.daemon.connect(PyroServer(), "automaton")
     self.initialized = True
 
-  def start_local(self):
+  def _start(self):
     if self.initialized:
       self.daemon.requestLoop()
     else:

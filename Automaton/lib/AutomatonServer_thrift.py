@@ -26,7 +26,7 @@ class ThriftServer(AutomatonServer.AutomatonServer):
     #Threaded server allows for multiple connections
     self.server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
 
-  def start_local(self):
+  def _start(self):
     self.server.serve()
 
 if __name__=="__main__":
