@@ -1,6 +1,12 @@
 import Queue
 import pickle
 
+# ATTENTION: This writes the entire list every time something is added or
+# removed. Thus, it is very very very slow for large lists.
+# Currently, optimization seems to be unnecessary so it will not be
+# implemented. If you are interested in scalable object persistence, check
+# out http://www.zodb.org/
+
 class PersistentPriorityQueue(Queue.PriorityQueue):
   # Pickles queue to file on get/put
   # Since it doesn't read the file once it's been
@@ -80,5 +86,6 @@ if __name__=="__main__":
   print q.front()
   print q.get()
 
+  # Emulates closing/reopening the queue
   q = PersistentPriorityQueue(storagefile="file")
   print q.get()

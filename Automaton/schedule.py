@@ -41,13 +41,9 @@ class schedule:
   def __init__(self):
     self.ops = {"QUEUE_FILE": None}
     self.ops.update(settings_loader.load_script_settings(__name__))
+
     if self.ops["QUEUE_FILE"] is None:
-      for d in platformdata.getDirHierarchy():
-        if os.path.exists(d):
-          filepath = os.path.join(scriptpath,scriptname)
-          if os.access(filepath, os.W_OK):
-            self.ops["QUEUE_FILE"] = filepath
-            break
+      self.ops["QUEUE_FILE"] = platformdata.getExistingFile("schedule.queue")
     else:
       if not os.access(self.ops["QUEUE_FILE"], os.W_OK):
         self.ops["QUEUE_FILE"] = None

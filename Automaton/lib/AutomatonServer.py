@@ -14,6 +14,7 @@ import platformdata
 import InputSanitizer
 
 class AutomatonServer:
+
   def __init__(self, withgui = False):
 
     self.needsgui = withgui
@@ -22,7 +23,7 @@ class AutomatonServer:
     # behavior. Can be overridden in subclasses of the AutomatonServer.
     self.Exceptions = Exceptions
 
-    # Set up the sanitizer and allow it to "call" any command that we've loaded
+    # Set up the sanitizer and allow it to "call" any plugin that we've loaded
     self.sanitizer = InputSanitizer.InputSanitizer()
     self.sanitizer.call = self.call
 
@@ -34,36 +35,35 @@ class AutomatonServer:
 
     for script in Automaton.__all__:
       try:
-        # Imports the command module
-        cmd = __import__('Automaton.%s' % script, fromlist= [script])
-        self.load_script_module(cmd)
+        self.enableScript(script)
       except Exception, e:
         logger.log("Error loading module %s." % script, e)
 
     self.interpreter = Interpreter.Interpreter(self.loadedScripts.values())
 
-  def load_script_module(self, module):
-    script = utils.get_module_name(module.__name__)
-    # Extracts the class from the command module
+  def enableScript(self, script):
+    # Imports the plugin module
+    cmd = __import__('Automaton.%s' % script, fromlist= [script])
+    # Extracts the class from the plugin module
     # Class must have same name as module
-    cmdcls = getattr(module, script)()
-    # Lets commands call other commands
+    cmdcls = getattr(cmd, script)()
+    # Lets plugins call other plugins
     cmdcls.call = self.call
     # Either no platform restriction is provided, or the platform is
     # in the restriction set
     if not hasattr(cmdcls, 'platform') or (platformdata.platform in
                                                          cmdcls.platform()):
-      if script in self.loadedScripts:
-        self.loadedScripts[script] = (cmdcls, self.loadedScripts[script][1])
-      else:
         self.loadedScripts[script] = (cmdcls, threading.Lock())
 
-  def reload_script(self, script):
+  def disableScript(self, script):
+    del self.loadedScripts[script]
+
+  def reloadScript(self, script):
     if script in self.loadedScripts:
       self.loadedScripts[script][1].acquire()
       try:
         cmd = reload(__import__('Automaton.%s' % script, fromlist = [script]))
-        self.load_script_module(cmd)
+        self.loadedScripts[script] = (cmdcls, self.loadedScripts[script][1])
         logger.log("Script %s has been successfully reloaded." % script)
       except Exception, e:
         print e
@@ -228,6 +228,6 @@ class AutomatonServer:
       print ("gtk toolkit not present, so no graphical user interface will be "
              "available.")
       return
-    gtk.gdk.threads_init()
     StatusIcon.StatusIcon(self)
+    gtk.gdk.threads_init()
     gtk.main()

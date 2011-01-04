@@ -4,16 +4,25 @@ import sys
 
 if __name__=="__main__":
 
-  servertype = "thrift"
+  servertype = "local"
   server = None
 
   withgui = True
 
-  if len(sys.argv) > 1:
-    servertype = sys.argv[1]
+  for arg in sys.argv[1:]:
+    arg = arg.lower()
+    if arg == '--nogui':
+      withgui = False
+    else:
+      servertype = arg
+      break
 
   if servertype not in ("thrift", "pyro", "local"):
-    print "USAGE: AutomatonServer.py [thrift|pyro]"
+    print "USAGE: AutomatonServer.py [--nogui] [thrift|pyro]"
+    sys.exit()
+
+  if servertype == "local" and not withgui:
+    print "If local, must have GUI enabled."
     sys.exit()
 
   if servertype == "local":

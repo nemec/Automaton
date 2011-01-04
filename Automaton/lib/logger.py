@@ -1,4 +1,7 @@
+import os.path
+from os import mkdir
 from datetime import datetime  
+import platformdata
 
 def log(message, exception = None):
   "@TODO logging"
@@ -6,7 +9,11 @@ def log(message, exception = None):
     message = message[0:-1] + ': %s' % str(exception)
   time = datetime.now()
   print "Log",time,":",message
-  with open("/home/dan/.automaton/log.txt", 'a') as f:
+  logdir = platformdata.personaldir()
+  if not os.path.exists(logdir):
+    mkdir(logdir)
+  logfile = os.path.join(logdir, "log.txt")
+  with open(logfile, 'a') as f:
     f.write("%s:%s\n" % (time,message))
 
 # Logging client

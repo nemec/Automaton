@@ -6,6 +6,7 @@ class StatusIcon(gtk.StatusIcon):
   def __init__(self, server):
     gtk.StatusIcon.__init__(self)
     self.server = server
+    self.window_active = False
     menu = '''
       <ui>
        <menubar name="Menubar">
@@ -21,7 +22,8 @@ class StatusIcon(gtk.StatusIcon):
     actions = [
       ('Menu',  None, 'Menu'),
       ('Reload', None, 'Reload'),
-      ('About', gtk.STOCK_ABOUT, '_About...', None, 'About Automaton', self.on_about),
+      ('About', gtk.STOCK_ABOUT, '_About...', None, 'About Automaton',
+                                                                self.on_about),
       ('Quit', None, '_Quit', None, None, self.on_quit)]
     ag = gtk.ActionGroup('Actions')
     ag.add_actions(actions)
@@ -51,57 +53,76 @@ class StatusIcon(gtk.StatusIcon):
 
   def on_command_activate(self, icon):
     if self.server:
-      window = gtk.Window()
-      window.set_size_request(300, 200)
-      window.set_title("Automaton Command Window")
-      vbox = gtk.VBox(False, 3)
-      entry = gtk.Entry()
-      output = gtk.TextView()
-      output.set_editable(False)
-      output.set_cursor_visible(False)
-      output.set_buffer(self.command_log)
-      scrollview = gtk.ScrolledWindow()
-      scrollview.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
-      scrollview.add(output)
+      if not self.window_active:
+        self.window_active = True
+        self.window = gtk.Window()
+        self.window.set_size_request(300, 200)
+        self.window.set_title("Automaton Command Window")
+        vbox = gtk.VBox(False, 3)
+        entry = gtk.Entry()
+        output = gtk.TextView()
+        output.set_editable(False)
+        output.set_cursor_visible(False)
+        output.set_buffer(self.command_log)
+        scrollview = gtk.ScrolledWindow()
+        scrollview.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_ALWAYS)
+        scrollview.add(output)
 
-      def clear_log(button):
-        self.command_log.delete(*self.command_log.get_bounds())
-      button = gtk.Button("Clear log")
-      button.connect('clicked', clear_log)
+        def clear_log(button):
+          self.command_log.delete(*self.command_log.get_bounds())
+        button = gtk.Button("Clear log")
+        button.connect('clicked', clear_log)
 
-      f = gtk.Fixed()
-      f.put(button,0,0)
-      vbox.pack_start(entry, False, False, 0)
-      vbox.pack_start(scrollview, True, True, 0)
-      vbox.pack_end(f, False, False)
+        f = gtk.Fixed()
+        f.put(button,0,0)
+        vbox.pack_start(entry, False, False, 0)
+        vbox.pack_start(scrollview, True, True, 0)
+        vbox.pack_end(f, False, False)
 
-      def send_command(widget, textview):
-        if widget.get_text_length() > 0:
-          text = widget.get_text()
-          widget.set_text('')
-          cmd, sep, args = text.partition(' ')
-          
-          def cb_call(cmd, args):
-            output = self.server.call(cmd, args).strip()
-            if len(output) > 0:
-              buf = textview.get_buffer() 
-              end = buf.get_end_iter()
-              if buf.get_char_count() > 0:
-                buf.insert(end,'\n')
-              buf.insert(end, output)
-              textview.scroll_mark_onscreen(buf.get_insert())
-            return False
+        def send_command(widget, textview):
+          if widget.get_text_length() > 0:
+            text = widget.get_text()
+            widget.set_text('')
+            cmd, sep, args = text.partition(' ')
+            
+            def cb_call(cmd, args):
+              try:
+                if cmd == "help":
+                  output = self.server.scriptUsage(args)
+                else:
+                  output = self.server.call(cmd, args)
+              except self.server.Exceptions.ScriptNotLoadedException, e:
+                output = e.__str__()
+              except Exception, e:
+                output = "Exception encountered: %s" % e
+              output = output.strip()
+              if len(output) > 0:
+                buf = textview.get_buffer() 
+                end = buf.get_end_iter()
+                if buf.get_char_count() > 0:
+                  buf.insert(end,'\n')
+                buf.insert(end, output)
+                textview.scroll_mark_onscreen(buf.get_insert())
+              return False
 
-          threading.Thread(target=cb_call, args=(cmd, args)).start()      
-      entry.connect('activate', send_command, output)
-      
-      window.add(vbox)
-      window.show_all()
+            threading.Thread(target=cb_call, args=(cmd, args)).start()      
+        entry.connect('activate', send_command, output)
+        
+        # Prevents the window from being displayed more than once
+        def window_destroy(window):
+          self.window_active = False
+        self.window.connect('destroy', window_destroy)
+
+        self.window.add(vbox)
+        self.window.show_all()
+
+      # Whether it's a new window or not, present it to the user
+      self.window.present()
 
 
 
   def on_reload(self, item):
-    self.server.reload_script(item.get_label())
+    self.server.reloadScript(item.get_label())
 
   def on_popup_menu(self, widget, button, time):
     self.menu.popup(None, None, gtk.status_icon_position_menu,
