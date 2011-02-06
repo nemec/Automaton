@@ -100,7 +100,7 @@ class weather:
       else:
         self.cache.pop(arg, None)
 
-    url = "http://api.wunderground.com/auto/wui/geo/ForecastXML/index.xml?query=%s" % arg
+    url = "http://api.wunderground.com/auto/wui/geo/ForecastXML/index.xml?query=%s" % re.sub('\s+', '%20', arg)
 
     resp = minidom.parse(urllib2.urlopen(urllib2.Request(url)))
     if resp == None:

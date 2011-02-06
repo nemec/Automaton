@@ -7,7 +7,6 @@ import logger
 import platform
 import threading
 import Exceptions
-import StatusIcon
 import Interpreter
 import platformdata
 import InputSanitizer
@@ -130,7 +129,7 @@ class AutomatonServer:
     return
 
   # Backend "execution" code - no service id is necessary because
-  # it can only be called from scripts
+  # it can only be called directly from scripts
   def call(self, scriptname, arguments):
     if scriptname not in self.loadedPlugins:
       raise self.Exceptions.ScriptNotLoadedException(scriptname)
@@ -225,10 +224,10 @@ class AutomatonServer:
   def load_gui(self):
     try:
       import gtk
+      import StatusIcon
+      StatusIcon.StatusIcon(self)
+      gtk.gdk.threads_init()
+      gtk.main()
     except ImportError:
-      print ("gtk toolkit not present, so no graphical user interface will be "
-             "available.")
-      return
-    StatusIcon.StatusIcon(self)
-    gtk.gdk.threads_init()
-    gtk.main()
+      logger.log("gtk toolkit not present, so no graphical user interface will "
+             "be available.")

@@ -1,6 +1,8 @@
 import sys
 
 from ClientInterface import ClientInterface
+import time
+import Automaton.lib.logger as logger
 
 from automaton_thrift.python import Script
 from automaton_thrift.python.ttypes import *
@@ -10,7 +12,7 @@ from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
 
-ThriftException=Thrift.TException
+WrapperException=Thrift.TException
 
 class ClientWrapper(ClientInterface):
 
@@ -22,8 +24,15 @@ class ClientWrapper(ClientInterface):
   
   # Opens a connection to the server and registers the client
   def open(self):
-    self.transport.open()
-    self.serviceid = self.client.registerService()
+    for x in xrange(5, 26, 10):
+      try:
+        self.transport.open()
+        self.serviceid = self.client.registerService()
+        return
+      except WrapperException:
+        logger.log("Failed to connect to Thrift server. Retrying in %d seconds." % (x))
+        time.sleep(x)
+    raise WrapperException("Failed to connect to Thrift server. Exiting.")
 
   # Unregisters from the server then closes the connection
   def close(self):

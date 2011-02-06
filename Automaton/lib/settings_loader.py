@@ -17,7 +17,7 @@ import platformdata
 def load_script_settings(scriptname):
   # Removes all "upper" module indicators, if present
   scriptname = utils.get_module_name(scriptname)
-  scriptname = os.path.join("commands", scriptname+".conf")
+  scriptname = os.path.join("plugins", scriptname+".conf")
   return __load_settings(scriptname)
 
 # Function used by apps to load their settings
@@ -41,8 +41,6 @@ def __load_settings(scriptname):
         settings = settingsFile.readlines()
       if settings != None:
         break
-  if scriptname == "memo":
-    print settings
   if settings != None:
     for line in settings:
       if len(line.strip()) == 0:
