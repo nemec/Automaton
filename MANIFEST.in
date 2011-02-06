@@ -1,5 +1,6 @@
 include AutomatonServer README
 recursive-include Automaton *.py
+recursive-include Automaton/plugins *.py
 recursive-include Automaton/lib *.py
 recursive-include Automaton/settings *.conf.default
 include Automaton/lib/automaton_thrift __init__.py

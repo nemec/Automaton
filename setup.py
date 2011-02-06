@@ -10,6 +10,7 @@ setup(name='Automaton',
       author_email='djnemec@gmail.com',
 
       packages=['Automaton',
+                'Automaton.plugins',
                 'Automaton.lib',
                 'Automaton.lib.automaton_thrift',
                 'Automaton.lib.automaton_thrift.python'],
