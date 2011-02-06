@@ -1,0 +1,15 @@
+This application originated in 2009, back before I had a smartphone. I wanted a
+way to interface with a computer through SMS, and I definitely couldn't afford
+a dedicated cell phone to receive the messages and relay them to a computer,
+so I used the little-known feature of cell phone numbers - you can actually
+email them using a carrier-specific domain name. So I set up an email account
+and wrote a small application to monitor it for new mail from my phone number,
+then execute what was in the body and return the first 160 characters of the
+response. That was fun for checking how many email messages I had or doing a
+quick translation of a phrase, but it wasn't really as effective as a smart
+phone due to the fact that I was only able to poll for new messages every X
+minutes (I had not yet discovered the IDLE command). I used that application
+for a year until I got a smart phone, then it outlived its usefulness and
+disappeared from use.
+
+

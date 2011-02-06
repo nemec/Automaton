@@ -1,5 +1,5 @@
 import socket
-import lib.settings_loader as settings_loader
+import Automaton.lib.settings_loader as settings_loader
 
 class pandora:
 

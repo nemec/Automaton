@@ -36,7 +36,7 @@ class StatusIcon(gtk.StatusIcon):
     if self.server is not None:
       rlmenu = gtk.Menu()
       rl = self.manager.get_widget('/Menubar/Menu/Reload')
-      for x in sorted(self.server.loadedScripts):
+      for x in sorted(self.server.loadedPlugins):
         item = gtk.MenuItem(x)
         item.show()
         item.connect("activate", self.on_reload)

@@ -5,11 +5,11 @@ import time
 import pickle
 import datetime
 import threading
-import lib.utils as utils
-import lib.logger as logger
-import lib.platformdata as platformdata
-import lib.settings_loader as settings_loader
-from lib.PersistentQueue import PersistentPriorityQueue
+import Automaton.lib.utils as utils
+import Automaton.lib.logger as logger
+import Automaton.lib.platformdata as platformdata
+import Automaton.lib.settings_loader as settings_loader
+from Automaton.lib.PersistentQueue import PersistentPriorityQueue
 
 if sys.version_info < (2, 7):
   raise Exception("Scheduler requires Python 2.7.")

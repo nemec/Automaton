@@ -2,7 +2,7 @@ import subprocess as sp
 import sys
 import imp
 
-import lib.settings_loader as settings_loader
+import Automaton.lib.settings_loader as settings_loader
 
 # Requires the program curl to be installed
 class mail:

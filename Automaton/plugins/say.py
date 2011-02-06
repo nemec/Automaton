@@ -1,7 +1,7 @@
 import subprocess as sp
 import gst
 import threading
-import lib.platformdata as platformdata
+import Automaton.lib.platformdata as platformdata
 import os
 import gobject
 

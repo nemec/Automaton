@@ -3,7 +3,7 @@ import re
 import urllib2
 from xml.dom import minidom
 
-import lib.settings_loader as settings_loader
+import Automaton.lib.settings_loader as settings_loader
 
 
 class cache:

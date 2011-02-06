@@ -2,8 +2,8 @@ import urllib
 import simplejson
 import httplib2
 import pickle
-import lib.settings_loader as settings_loader
-import lib.Exceptions
+import Automaton.lib.settings_loader as settings_loader
+import Automaton.lib.Exceptions
 
 try:
   from apiclient.discovery import build
