@@ -1,3 +1,4 @@
 USER = bot_username
 PASS = bot_password
 MASTER = controller_username
+PASSPHRASE = puppies

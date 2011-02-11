@@ -44,6 +44,7 @@ op = {'HOST':'login.oscar.aol.com',
       'PORT':'5190',
       'USER':'',
       'PASS':'',
+      'MASTER':'',
       'THRIFT_SERVER':'tails.local'
      }
 
@@ -58,10 +59,9 @@ for operator in ('USER', 'PASS', 'MASTER'):
 class B(oscar.BOSConnection):
     capabilities = [oscar.CAP_CHAT]
 
-    def __init__(self, s, p, **kwargs):
-      self.client = ClientWrapper.ClientWrapper(op['THRIFT_SERVER'])
-      self.client.open()
-      oscar.BOSConnection.__init__(self, s, p, **kwargs)
+    def __init__(self, s, p, f):
+      self.factory = f
+      oscar.BOSConnection.__init__(self, s, p)
 
     def initDone(self):
         self.requestSelfInfo().addCallback(self.gotSelfInfo)
@@ -74,10 +74,16 @@ class B(oscar.BOSConnection):
         self.clientReady()
         logger.log("Client online.")
     def receiveMessage(self, user, multiparts, flags):
-        if user.name.upper() != op['MASTER'].upper():
-          multiparts[0] = ("I don't take orders from you!",)
+        username = user.name.upper()
+        body = re.sub(r'<.*?>', '', multiparts[0][0].strip()) # Strips HTML tags
+        if (username != op['MASTER'].upper() and
+                       username not in self.factory.authenticated_users):
+          if op.get('PASSPHRASE', None) == body:
+            self.factory.authenticated_users.append(username)
+            multiparts[0] = ("Passphrase accepted.", )
+          else:
+            multiparts[0] = ("I don't take orders from you!",)
         else:
-          body = re.sub(r'<.*?>', '', multiparts[0][0].strip()) # Strips HTML tags
           ix=body.find(' ')
           
           returned = ''
@@ -88,12 +94,15 @@ class B(oscar.BOSConnection):
 
           if body == 'help':
             if args == '':
-              returned = ", ".join(self.client.getAvailableScripts())
+              returned = ", ".join(self.factory.client.getAvailableScripts())
             else:
-              returned = self.client.scriptUsage(args)
-          elif self.client.isScript(body):
-            self.client.registerScript(body)
-            returned = self.client.execute(body, args)
+              returned = self.factory.client.scriptUsage(args)
+          elif body == '/logout':
+            self.factory.authenticated_users.remove(username)
+            returned = "Logged out."
+          elif self.factory.client.isScript(body):
+            self.factory.client.registerScript(body)
+            returned = self.factory.client.execute(body, args)
           else:
             returned = "Command not found.\nDid you forget to import it?"
 
@@ -102,13 +111,23 @@ class B(oscar.BOSConnection):
         self.sendMessage(user.name, multiparts)
 
 class OA(oscar.OscarAuthenticator):
-   BOSClass = B
+  def connectToBOS(self, server, port):
+    c = protocol.ClientCreator(reactor, B, self.username, self.cookie,
+          self.factory)
+    return c.connectTCP(server, int(port))
 
 class AIMClientFactory(protocol.ReconnectingClientFactory):
 
+  def __init__(self):
+    self.authenticated_users = []
+    self.client = ClientWrapper.ClientWrapper(op['THRIFT_SERVER'])
+    self.client.open()
+
   def buildProtocol(self, addr):
     #return protocol.ClientCreator(reactor, OA, op['USER'], op['PASS'])
-    return OA(op['USER'], op['PASS'])
+    proto = OA(op['USER'], op['PASS'])
+    proto.factory = self
+    return proto
 
   def clientConnectionLost(self, connector, reason):
     logger.log("Lost connection: %s" % reason)

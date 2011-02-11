@@ -77,6 +77,7 @@ class weather:
       try:
         # Try to call on latitude script to get the current location
         arg = re.sub("[() ]", "", self.call('latitude', 'noreverse'))
+        print arg
       except:
         return "No current location is available."
 
