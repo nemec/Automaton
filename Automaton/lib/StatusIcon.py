@@ -135,7 +135,7 @@ class StatusIcon(gtk.StatusIcon):
     dialog = gtk.AboutDialog()
     dialog.set_name('Automaton')
     dialog.set_version('0.9.0')
-    dialog.set_comments('A home automation application.')
+    dialog.set_comments('A digital life assistant.')
     dialog.set_website('http://github.com/nemec/Automaton')
     dialog.run()
     dialog.destroy()

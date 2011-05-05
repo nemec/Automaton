@@ -63,7 +63,7 @@ class AutomatonServer:
       self.loadedPlugins[plugin][1].acquire()
       try:
         cmd = reload(__import__('Automaton.plugins.%s' % plugin, fromlist = [plugin]))
-        self.loadedPlugins[plugin] = (cmdcls, self.loadedPlugins[plugin][1])
+        self.loadedPlugins[plugin] = (getattr(cmd, plugin)(), self.loadedPlugins[plugin][1])
         logger.log("Plugin %s has been successfully reloaded." % plugin)
       except Exception, e:
         print e
