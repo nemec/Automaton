@@ -38,8 +38,8 @@ test_data ={"echo": [("hello", "hello")],
         "wiki": [("hello", "\"Hello is a salutation or greeting.+")],
        }
 
-tests = ["google"]#"exe", "gettime", "echo", "google", "latitude", "mail", "map",
-         #"weather", "wiki"]
+tests = ["google""exe", "gettime", "echo", "google", "latitude", "mail", "map",
+         "weather", "wiki"]
 
 success = set()
 failed = {}

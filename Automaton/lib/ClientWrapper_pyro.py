@@ -1,6 +1,6 @@
 import sys
 import Pyro.core
-from Exceptions import *
+from exceptions import *
 from ClientInterface import ClientInterface
 
 class ClientWrapper(ClientInterface):

@@ -8,19 +8,21 @@ import Automaton.lib.AutomatonServer as AutomatonServer
 
 class PyroServer(Pyro.core.ObjBase, AutomatonServer.AutomatonServer):
 
+  daemon = None
+
   def __init__(self, withgui = False):
     AutomatonServer.AutomatonServer.__init__(self, withgui)
     Pyro.core.ObjBase.__init__(self)
 
   def initialize(self):
     Pyro.core.initServer()
-    self.daemon=Pyro.core.Daemon(port=9090)
-    self.daemon.connect(PyroServer(), "automaton")
+    PyroServer.daemon=Pyro.core.Daemon(port=9090)
+    PyroServer.daemon.connect(self, "automaton")
     self.initialized = True
 
   def _start(self):
     if self.initialized:
-      self.daemon.requestLoop()
+      PyroServer.daemon.requestLoop()
     else:
       print "Error. Server not initialized"
 

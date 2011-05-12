@@ -3,7 +3,7 @@ import simplejson
 import httplib2
 import pickle
 import Automaton.lib.settings_loader as settings_loader
-import Automaton.lib.Exceptions
+import Automaton.lib.exceptions
 
 try:
   from apiclient.discovery import build
@@ -13,7 +13,7 @@ except ImportError:
   print "Follow the installation information then try out the Latitude sample."
   print "If the sample works, move the latitude.dat file somewhere safe and" +\
         "modify the cmd_latitude.conf file to point towards that file."
-  raise lib.Exceptions.ModuleLoadException()
+  raise Automaton.lib.exceptions.ModuleLoadException()
 
 class latitude:
   def lookup(self, lat = '', lng = ''):

@@ -15,7 +15,7 @@ class ThriftServer(AutomatonServer.AutomatonServer):
   def __init__(self, withgui = False, port = 9090):
     AutomatonServer.AutomatonServer.__init__(self, withgui)
     self.port = port
-    self.Exceptions = automaton_thrift.python.ttypes
+    self.exceptions = automaton_thrift.python.ttypes
 
   def initialize(self):
     processor = Script.Processor(self)

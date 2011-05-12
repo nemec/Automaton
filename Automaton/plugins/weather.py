@@ -16,32 +16,6 @@ class cache:
 
 class weather:
 
-  def distance(a, b):
-    # TODO use haversine formula with lat/long to cache close locations?
-    # http://www.movable-type.co.uk/scripts/latlong.html
-    return a == b
-
-  def tempmodifier(self, temp):
-    if (temp % 10) < 4:
-      return "low"
-    elif (temp % 10) < 7:
-      return "mid"
-    else:
-      return "high"
-
-  def gettimeofday(self):
-    hr = time.localtime().tm_hour
-    if hr < 3:
-      return "tonight"
-    elif hr < 12:
-      return "this morning"
-    elif hr < 7:
-      return "today"
-    elif hr < 11:
-      return "this evening"
-    else:
-      return "tonight"
-
   def __init__(self):
     self.ttl = 3600 # seconds
     self.last = None # last weather value recorded, tuple of (location, value)
@@ -58,57 +32,44 @@ class weather:
 
     # remove spaces after commas - these would screw up lat/long searches
     for loc in self.locations:
-      self.locations[loc] = re.sub(',\s+',',',self.locations[loc])
+      self.locations[loc] = re.sub(',\s*',',',self.locations[loc])
     # dict of location:cache pairs
     # if current time in sec since epoch is less than ttl, cache has expired
     # should return val if cache is still valid
     self.cache = {}
 
-  def execute(self, arg=''):
-    if arg == 'last':
-      if self.last:
-        if time.time() < self.last[1].ttl:
-          return "Data for %s: %s" % (self.last[0], self.last[1].val)
-        else:
-          self.last = None
-      return "No recent data stored."
 
-    if arg == '':
-      try:
-        # Try to call on latitude script to get the current location
-        arg = re.sub("[() ]", "", self.call('latitude', 'noreverse'))
-        print arg
-      except:
-        return "No current location is available."
+  def distance(a, b):
+    # TODO use haversine formula with lat/long to cache close locations?
+    # http://www.movable-type.co.uk/scripts/latlong.html
+    return a == b
 
-    arg = arg.upper()
-    forecastday = 0
 
-    if arg.endswith("TODAY"):
-      arg = arg[0:-len("TODAY")]
-      forecastday = 0
-    elif arg.endswith("TOMORROW"):
-      arg = arg[0:-len("TOMORROW")]
-      forecastday = 1
-    arg = arg.strip()
+  def tempmodifier(self, temp):
+    if (temp % 10) < 4:
+      return "low"
+    elif (temp % 10) < 7:
+      return "mid"
+    else:
+      return "high"
 
-    if self.locations.has_key(arg):
-      arg = self.locations[arg]
 
-    if self.cache.has_key(arg):
-      if time.time() < self.cache[arg].ttl:
-        return self.cache[arg].val
-      else:
-        self.cache.pop(arg, None)
+  def gettimeofday(self):
+    hr = time.localtime().tm_hour
+    if hr < 3:
+      return "tonight"
+    elif hr < 12:
+      return "this morning"
+    elif hr < 7:
+      return "today"
+    elif hr < 11:
+      return "this evening"
+    else:
+      return "tonight"
 
-    url = "http://api.wunderground.com/auto/wui/geo/ForecastXML/index.xml?query=%s" % re.sub('\s+', '%20', arg)
 
-    resp = minidom.parse(urllib2.urlopen(urllib2.Request(url)))
-    if resp == None:
-      return "Parsing failed for location %s" % arg
-
+  def parse_response(self, resp, forecastday):
     ret = ''
-
     try:
       simple = resp.getElementsByTagName("simpleforecast")[0]
       w_list = simple.getElementsByTagName("forecastday")
@@ -119,7 +80,11 @@ class weather:
         try:
           condnode = w_node.getElementsByTagName("conditions")
           if len(condnode) > 0:
-            ret = 'The weather %s is %s. ' % (self.gettimeofday(), condnode[0].firstChild.data)
+            if forecastday == 1:
+              time = "tomorrow"
+            else:
+              time = self.gettimeofday()
+            ret = 'The weather %s is %s. ' % (time, condnode[0].firstChild.data)
         except Exception, e:
           print "Weather", e
           pass
@@ -132,7 +97,7 @@ class weather:
             temp = int(t_high.getElementsByTagName("fahrenheit")[0].firstChild.data)
           else:
             temp = int(t_high.getElementsByTagName("celsius")[0].firstChild.data)
-            if format == 'K':
+            if self.format == 'K':
               temp = temp + 273
           ret = ret + 'Highs in the %s %ss. ' % (self.tempmodifier(temp), str(temp-(temp%10)))
           
@@ -141,7 +106,7 @@ class weather:
             temp = int(t_low.getElementsByTagName("fahrenheit")[0].firstChild.data)
           else:
             temp = int(t_low.getElementsByTagName("celsius")[0].firstChild.data)
-            if format == 'K':
+            if self.format == 'K':
               temp = temp + 273
           ret = ret + 'Lows in the %s %ss. ' % (self.tempmodifier(temp), str(temp-(temp%10)))
         except Exception, e:
@@ -151,19 +116,90 @@ class weather:
       print e
       return "Error parsing temperature data."
 
+    return ret
+
+
+  def execute(self, arg = None):
+    arg = arg.upper()
+    if not arg:
+      return self.exe()
+
+    if arg == "LAST":
+      return self.exe(LAST=True)
+
+    kwargs = {}
+    if arg.endswith("TOMORROW"):
+      kwargs["WHEN"] = "TOMORROW"
+      arg = arg[:-len("TOMORROW")].strip()
+
+    if arg.startswith("AT") or arg.startswith("IN"):
+      arg = arg[len("AT")+1:].strip()
+
+    kwargs["WHERE"] = arg
+
+    return self.exe(**kwargs)
+  
+  def exe(self, **kwargs):
+    if kwargs.get("LAST", None):
+      if self.last:
+        if time.time() < self.last[1].ttl:
+          return "Data for %s: %s" % (self.last[0], self.last[1].val)
+        else:
+          self.last = None
+      return "No recent data stored."
+
+    if len(kwargs) == 0:
+      try:
+        # Try to call on latitude script to get the current location
+        kwargs["WHERE"] = re.sub("[() ]", "", self.call('latitude', 'noreverse'))
+      except:
+        return "No current location is available."
+
+    forecastday = 0
+    if "WHEN" in kwargs:
+      if kwargs["WHEN"] == "TODAY":
+        forecastday = 0
+      if kwargs["WHEN"] == "TOMORROW":
+        forecastday = 1
+
+    location = kwargs["WHERE"]
+
+    # Sub any aliases
+    if location in self.locations:
+      location = self.locations[location]
+
+    # Look in the cache
+    # @TODO compute distance between all locations in cache before comparing
+    if location in self.cache:
+      if time.time() < self.cache[location].ttl:
+        return self.cache[location].val
+      else:
+        self.cache.pop(location, None)
+
+    url = "http://api.wunderground.com/auto/wui/geo/ForecastXML/index.xml?query=%s" % re.sub('\s+', '%20', location)
+
+    resp = minidom.parse(urllib2.urlopen(urllib2.Request(url)))
+    if resp == None:
+      return "Parsing failed for location %s" % location
+
+    ret = self.parse_response(resp, forecastday)
+
     if ret == '':
       return "There is no weather data for this location"
 
-    self.last = (arg, cache(time.time()+self.ttl, ret))
-    self.cache[arg] = self.last[1]
+    self.last = (location, cache(time.time()+self.ttl, ret))
+    self.cache[location] = self.last[1]
 
     return ret
 
+
   def grammar(self):
-    return  "weather{"+\
-              "keywords = weather"+\
-              "arguments = *"+\
+    return  ("weather{"
+              "keywords = weather"
+              "arguments = *"
             "}"
+            )
+
 
   def help(self):
     return """
@@ -173,6 +209,7 @@ class weather:
             recorded position.
            """
 
+
 if __name__=="__main__":
   w = weather()
-  print w.execute("school")
+  print w.execute()
