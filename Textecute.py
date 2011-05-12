@@ -71,13 +71,13 @@ def handle_message(body, frm):
 
   try:
     if op['THRIFT_SERVER']!='':
-      client = ClientWrapper.ClientWrapper(op['THRIFT_SERVER'])
+      client = ClientWrapper.ClientWrapper(op['THRIFT_SERVER'], appname="textecute")
     else:
       client = ClientWrapper.ClientWrapper()
     client.open()
 
-    if client.isScript(body):
-      client.registerScript(body)
+    if client.isPlugin(body):
+      client.registerPlugin(body)
       result = client.execute(body, args)
     else:
       result = "Command not found.\nDid you forget to import it?"

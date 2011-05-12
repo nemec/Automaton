@@ -19,7 +19,7 @@ class weather:
   def __init__(self):
     self.ttl = 3600 # seconds
     self.last = None # last weather value recorded, tuple of (location, value)
-    cmd = settings_loader.load_script_settings(self.__class__.__name__)
+    cmd = settings_loader.load_plugin_settings(self.__class__.__name__)
     self.locations = cmd
     self.format = 'F'
     if self.locations.has_key("FORMAT"):
@@ -150,7 +150,7 @@ class weather:
 
     if len(kwargs) == 0:
       try:
-        # Try to call on latitude script to get the current location
+        # Try to call on latitude plugin to get the current location
         kwargs["WHERE"] = re.sub("[() ]", "", self.call('latitude', 'noreverse'))
       except:
         return "No current location is available."

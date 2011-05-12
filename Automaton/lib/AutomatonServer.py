@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import re
 import sys
 import uuid
 import utils
@@ -12,7 +13,12 @@ import platformdata
 import input_sanitizer
 import Automaton.plugins
 
-class AutomatonServer:
+class AutomatonServer(object):
+
+  class __loaded_plugin(object):
+    def __init__(self, plugin):
+      self.obj = plugin
+      self.lock = threading.Lock()
 
   def __init__(self, withgui = False):
 
@@ -26,25 +32,28 @@ class AutomatonServer:
     self.sanitizer = input_sanitizer.InputSanitizer()
     self.sanitizer.call = self.call
 
-    # A dictionary mapping serviceids to registered scripts
+    # A dictionary mapping serviceids to registered plugins
     self.registeredServices = {}
 
     # Update __init__.py in the Automaton package when a new plugin is added
     self.loadedPlugins = {}
-    for script in Automaton.plugins.__all__:
+    for plugin in Automaton.plugins.__all__:
       try:
-        self.enablePlugin(script)
+        self.enablePlugin(plugin)
       except Exception, e:
-        logger.log("Error loading module %s." % script, e)
+        logger.log("Error loading module %s." % plugin, e)
 
     self.interpreter = interpreter.Interpreter(self.loadedPlugins.values())
 
-  def enablePlugin(self, plugin):
+  def enablePlugin(self, name):
     # Imports the plugin module
-    cmd = __import__('Automaton.plugins.%s' % plugin, fromlist= [plugin])
+    cmd = __import__('Automaton.plugins.%s' % name, fromlist= [name])
     # Extracts the class from the plugin module
     # Class must have same name as module
-    cmdcls = getattr(cmd, plugin)()
+    # Acts like:
+    #  from Automaton.plugins import plugin
+    #  cmdcls = plugin.plugin() <-object created
+    cmdcls = getattr(cmd, name)()
     # Lets plugins call other plugins
     cmdcls.call = self.call
     # Either no platform restriction is provided, or the platform is
@@ -52,35 +61,37 @@ class AutomatonServer:
     if not hasattr(cmdcls, 'platform') or (platformdata.platform in
                                                          cmdcls.platform()):
       # Plugin, lock tuple
-      self.loadedPlugins[plugin] = (cmdcls, threading.Lock())
+      self.loadedPlugins[name] = self.__loaded_plugin(cmdcls)
 
-  def disableScript(self, plugin):
-    del self.loadedPlugins[plugin]
+  def disablePlugin(self, name):
+    del self.loadedPlugins[name]
 
-  def reloadScript(self, plugin):
-    if plugin in self.loadedPlugins:
-      self.loadedPlugins[plugin][1].acquire()
+  def reloadPlugin(self, name):
+    if name in self.loadedPlugins:
+      self.loadedPlugins[name].lock.acquire()
       try:
-        cmd = reload(__import__('Automaton.plugins.%s' % plugin, fromlist = [plugin]))
-        self.loadedPlugins[plugin] = (getattr(cmd, plugin)(), self.loadedPlugins[plugin][1])
-        logger.log("Plugin %s has been successfully reloaded." % plugin)
+        cmd = reload(__import__('Automaton.plugins.%s' % name, fromlist = [name]))
+        self.loadedPlugins[name].obj = getattr(cmd, name)()
+        logger.log("Plugin %s has been successfully reloaded." % name)
       except Exception, e:
         print e
-        self.loadedPlugins[plugin] = (None, self.loadedPlugins[plugin][1])
-        s = "Exception encountered reloading %s. Plugin disabled." % plugin
-        logger.log(s)
+        self.disablePlugin(name)
+        error = "Exception encountered reloading %s. Plugin disabled." % name
+        logger.log(name)
       finally:
-        self.loadedPlugins[plugin][1].release()
+        self.loadedPlugins[name].lock.release()
 
   # Registers a client service with the server. Calculates a UUID that will
   # identify which plugins are loaded for each client service
   # Arguments: none
   # Return value: string
   # Throws: none
-  def registerService(self):
+  def registerService(self, appname = None):
     id = str(uuid.uuid1())
-    while self.registeredServices.has_key(id):
+    while id in self.registeredServices:
       id = str(uuid.uuid1())
+    if appname is not None:
+      id = re.sub('[\W_]+', '', appname) + '-' + id
     logger.log("Registering service %s" % id)
     self.registeredServices[id]=set()
     return id
@@ -99,74 +110,74 @@ class AutomatonServer:
     return
 
   # Registers a plugin for use by a client service.
-  # Arguments: serviceid:string, scriptname:string
+  # Arguments: serviceid:string, name:string
   # Return value: void
-  # Throws: ServiceNotRegisteredException, ScriptNotLoadedException
-  def registerScript(self, serviceid, scriptname):
+  # Throws: ServiceNotRegisteredException, PluginNotLoadedException
+  def registerPlugin(self, serviceid, name):
     if serviceid not in self.registeredServices:
       raise self.exceptions.ServiceNotRegisteredException()
-    if scriptname not in self.loadedPlugins.keys():
-      raise self.exceptions.ScriptNotLoadedException(scriptname)
+    if name not in self.loadedPlugins.keys():
+      raise self.exceptions.PluginNotLoadedException(name)
 
-    if scriptname not in self.registeredServices[serviceid]:
-      logger.log("Adding plugin %s for service %s" % (scriptname, serviceid))
-      self.registeredServices[serviceid].add(scriptname)
+    if name not in self.registeredServices[serviceid]:
+      logger.log("Adding plugin %s for service %s" % (name, serviceid))
+      self.registeredServices[serviceid].add(name)
     return
 
   # Unregisters a plugin from a client service.
-  # Arguments: serviceid:string, scriptname:string
+  # Arguments: serviceid:string, name:string
   # Return value: void
-  # Throws: ServiceNotRegisteredException, ScriptNotRegisteredException
-  def unregisterScript(self, serviceid, scriptname):
+  # Throws: ServiceNotRegisteredException, PluginNotRegisteredException
+  def unregisterPlugin(self, serviceid, name):
     if serviceid not in self.registeredServices:
       raise self.exceptions.ServiceNotRegisteredException()
-    if scriptname not in self.registeredServices[serviceid]:
-      raise self.exceptions.ScriptNotRegisteredException(scriptname)
+    if name not in self.registeredServices[serviceid]:
+      raise self.exceptions.PluginNotRegisteredException(name)
 
-    logger.log("Removing script %s for service %s" % (scriptname, serviceid))
-    self.registeredServices[serviceid].remove(scriptname)
+    logger.log("Removing plugin %s for service %s" % (name, serviceid))
+    self.registeredServices[serviceid].remove(name)
     return
 
   # Backend "execution" code - no service id is necessary because
-  # it can only be called directly from scripts
-  def call(self, scriptname, arguments):
-    if scriptname not in self.loadedPlugins:
-      raise self.exceptions.ScriptNotLoadedException(scriptname)
+  # it can only be called directly from plugins
+  def call(self, name, arguments):
+    if name not in self.loadedPlugins:
+      raise self.exceptions.PluginNotLoadedException(name)
 
     # Executes module from the pool of globally imported modules.
-    # Safe because only legal scripts are allowed to be registered.
-    self.loadedPlugins[scriptname][1].acquire()
+    # Safe because only legal plugins are allowed to be registered.
+    self.loadedPlugins[name].lock.acquire()
     try:
-      if self.loadedPlugins[scriptname][0] is None:
+      if self.loadedPlugins[name].obj is None:
         return "Plugin is currently unavailable. Please fix plugin and reload."
       arguments = self.sanitizer.sanitize(arguments)
       try:
-        retval = self.loadedPlugins[scriptname][0].execute(arguments)
+        retval = self.loadedPlugins[name].obj.execute(arguments)
       finally:
-        self.loadedPlugins[scriptname][1].release()
+        self.loadedPlugins[name].lock.release()
     except Exception, e:
-      retval = "Exception encountered executing plugin %s." % scriptname
+      retval = "Exception encountered executing plugin %s." % name
       logger.log("%s\n%s" % (retval, e))
     self.sanitizer.set_prev(retval)
     return retval.strip()
 
   # Executes the provided plugin with any associated arguments.
-  # Arguments: serviceid:string, scriptname:string, arguments:string
+  # Arguments: serviceid:string, name:string, arguments:string
   # Return value: string
-  # Throws: ServiceNotRegisteredException, ScriptNotRegisteredException
-  def execute(self, serviceid, scriptname, arguments):
+  # Throws: ServiceNotRegisteredException, PluginNotRegisteredException
+  def execute(self, serviceid, name, arguments):
     if serviceid not in self.registeredServices:
       raise self.exceptions.ServiceNotRegisteredException()
-    if scriptname not in self.registeredServices[serviceid]:
-      raise self.exceptions.ScriptNotRegisteredException(scriptname)
+    if name not in self.registeredServices[serviceid]:
+      raise self.exceptions.PluginNotRegisteredException(name)
 
-    return self.call(scriptname, arguments)
+    return self.call(name, arguments)
 
   # Uses the interpreter to translate the raw (arbitrary) text into
   # a command:arguments pair that is then executed like normal
   # Arguments: serviceid:string, raw:string
   # Return value: string
-  # Throws: ServiceNotRegisteredException, ScriptNotRegisteredException,
+  # Throws: ServiceNotRegisteredException, PluginNotRegisteredException,
   #         UnknownActionException
   def interpret(self, serviceid, raw):
     if serviceid not in self.registeredServices:
@@ -176,29 +187,29 @@ class AutomatonServer:
 
   # Tests if the specified plugin is loaded or not.
   # Querying is possible even when unregistered
-  # Arguments: scriptname:string
+  # Arguments: name:string
   # Return value: bool
   # Throws: none
-  def isScript(self, scriptname):
-    return scriptname in self.loadedPlugins.keys()
+  def isPlugin(self, name):
+    return name in self.loadedPlugins.keys()
 
   # Returns a set of strings containing all loaded plugins
   # Querying is possible even when unregistered
   # Arguments: none
   # Return value: set<string>
   # Throws: none
-  def getAvailableScripts(self):
+  def getAvailablePlugins(self):
     return self.loadedPlugins.keys()
 
   # Returns the contents of the specified plugin's help() method
   # Replaces the complicated help "command"
-  # Arguments: scriptname:string
+  # Arguments: name:string
   # Return value: string
-  # Throws ScriptNotLoadedException
-  def scriptUsage(self, scriptname):
-    if scriptname not in self.loadedPlugins.keys():
-      raise self.exceptions.ScriptNotLoadedException(scriptname)
-    return self.loadedPlugins[scriptname][0].help()
+  # Throws PluginNotLoadedException
+  def pluginUsage(self, name):
+    if name not in self.loadedPlugins.keys():
+      raise self.exceptions.PluginNotLoadedException(name)
+    return self.loadedPlugins[name].obj.help()
 
   # No initialization done for the local server, can be overridden in subclasses
   def initialize(self):

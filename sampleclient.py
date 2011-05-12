@@ -2,22 +2,22 @@ import Automaton.lib.ClientWrapper as ClientWrapper
 
 try:
   
-  client = ClientWrapper.ClientWrapper()
+  client = ClientWrapper.ClientWrapper(appname="sample")
   client.open()
 
   try:
-    print client.getAvailableScripts()
-    if client.isScript("echo"):
-      client.registerScript("echo")
+    print client.getAvailablePlugins()
+    if client.isPlugin("echo"):
+      client.registerPlugin("echo")
       print client.execute("echo", "Successful execution")
       print client.interpret("can you repeat how are you please")
-      client.unregisterScript("echo")
-  except ClientWrapper.ScriptNotLoadedException:
-    print "ScriptNotLoaded Exception"
+      client.unregisterPlugin("echo")
+  except ClientWrapper.PluginNotLoadedException:
+    print "PluginNotLoaded Exception"
   except ClientWrapper.ServiceNotRegisteredException:
     print "Service not registered"
-  except ClientWrapper.ScriptNotRegisteredException:
-    print "Script not registered"
+  except ClientWrapper.PluginNotRegisteredException:
+    print "Plugin not registered"
   finally:
     client.close()
 

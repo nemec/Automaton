@@ -7,7 +7,7 @@
 include_once $GLOBALS['THRIFT_ROOT'].'/Thrift.php';
 
 
-class automaton_thrift_ScriptNotLoadedException extends TException {
+class automaton_thrift_PluginNotLoadedException extends TException {
   static $_TSPEC;
 
   public $action = null;
@@ -29,7 +29,7 @@ class automaton_thrift_ScriptNotLoadedException extends TException {
   }
 
   public function getName() {
-    return 'ScriptNotLoadedException';
+    return 'PluginNotLoadedException';
   }
 
   public function read($input)
@@ -66,7 +66,7 @@ class automaton_thrift_ScriptNotLoadedException extends TException {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('ScriptNotLoadedException');
+    $xfer += $output->writeStructBegin('PluginNotLoadedException');
     if ($this->action !== null) {
       $xfer += $output->writeFieldBegin('action', TType::STRING, 1);
       $xfer += $output->writeString($this->action);
@@ -79,7 +79,7 @@ class automaton_thrift_ScriptNotLoadedException extends TException {
 
 }
 
-class automaton_thrift_ScriptNotRegisteredException extends TException {
+class automaton_thrift_PluginNotRegisteredException extends TException {
   static $_TSPEC;
 
   public $action = null;
@@ -101,7 +101,7 @@ class automaton_thrift_ScriptNotRegisteredException extends TException {
   }
 
   public function getName() {
-    return 'ScriptNotRegisteredException';
+    return 'PluginNotRegisteredException';
   }
 
   public function read($input)
@@ -138,7 +138,7 @@ class automaton_thrift_ScriptNotRegisteredException extends TException {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('ScriptNotRegisteredException');
+    $xfer += $output->writeStructBegin('PluginNotRegisteredException');
     if ($this->action !== null) {
       $xfer += $output->writeFieldBegin('action', TType::STRING, 1);
       $xfer += $output->writeString($this->action);

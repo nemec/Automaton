@@ -88,10 +88,10 @@ class StatusIcon(gtk.StatusIcon):
             def cb_call(cmd, args):
               try:
                 if cmd == "help":
-                  output = self.server.scriptUsage(args)
+                  output = self.server.pluginUsage(args)
                 else:
                   output = self.server.call(cmd, args)
-              except self.server.Exceptions.ScriptNotLoadedException, e:
+              except self.server.exceptions.PluginNotLoadedException, e:
                 output = e.__str__()
               except Exception, e:
                 output = "Exception encountered: %s" % e
@@ -122,7 +122,7 @@ class StatusIcon(gtk.StatusIcon):
 
 
   def on_reload(self, item):
-    self.server.reloadScript(item.get_label())
+    self.server.reloadPlugin(item.get_label())
 
   def on_popup_menu(self, widget, button, time):
     self.menu.popup(None, None, gtk.status_icon_position_menu,

@@ -5,7 +5,7 @@ class pandora:
 
   def __init__(self):
     cmd_op = {"ip":"localhost", "port":"9900"}
-    cmd_op.update(settings_loader.load_script_settings(__name__))
+    cmd_op.update(settings_loader.load_plugin_settings(__name__))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((cmd_op["ip"], int(cmd_op["port"])))
 

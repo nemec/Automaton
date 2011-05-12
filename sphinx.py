@@ -45,11 +45,11 @@ def interpret_command(block):
 
 if __name__ == '__main__':
 
-  client = ClientWrapper.ClientWrapper("localhost")
+  client = ClientWrapper.ClientWrapper("localhost", appname="sphinx")
   client.open()
 
-  # Register every script!
-  [client.registerScript(x) for x in client.getAvailableScripts()]
+  # Register every plugin!
+  [client.registerPlugin(x) for x in client.getAvailablePlugins()]
 
   d = ps.Decoder()
 
@@ -75,7 +75,7 @@ if __name__ == '__main__':
       ret = "Sorry, I don't know how to interpret what you said."
       try:
         ret = client.interpret(block)
-      except ClientWrapper.ScriptNotRegisteredException:
+      except ClientWrapper.PluginNotRegisteredException:
         pass
       print ret
       client.execute('say', ret)

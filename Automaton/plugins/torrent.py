@@ -65,7 +65,7 @@ class torrent:
     return succ
 
   def __init__(self):
-    self.cmd_op = settings_loader.load_script_settings(__name__)
+    self.cmd_op = settings_loader.load_plugin_settings(__name__)
 
 
   def execute(self, arg = ''):

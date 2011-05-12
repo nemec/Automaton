@@ -28,7 +28,7 @@ class latitude:
       return None
 
   def execute(self, arg = ''):
-    cmd_op = settings_loader.load_script_settings(__name__)
+    cmd_op = settings_loader.load_plugin_settings(__name__)
     if not cmd_op.has_key('AUTHPATH'):
       return "Server not authenticated with Google Latitude."
     

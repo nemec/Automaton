@@ -13,12 +13,12 @@ class Interpreter:
 
   # Grammar Example:
   """
-      google{                       # scriptname
+      google{                       # pluginname
         keywords = search | google  # keyword list
         arguments = *               # argument indicator
       }
   """
-  # Case sensitive scriptname, 
+  # Case sensitive pluginname, 
   # Whitespace unimportant
   # Keywords is the list of keywords recognized as associated with the command
   #  separated by '|'
@@ -38,7 +38,7 @@ class Interpreter:
 
   def addGrammar(self, grm):
     grammar = re.sub(r'\s','',grm)
-    rx = re.compile( r'(?P<script>\w+)\{'
+    rx = re.compile( r'(?P<plugin>\w+)\{'
                 r'keywords=(?P<kw>\w+(\|\w+)*)'
                 r'arguments=(?P<arg>(\w+(\|\w+)*)|\*)'
                 r'\}', re.IGNORECASE)
@@ -46,10 +46,10 @@ class Interpreter:
     for x in m:
       for kw in x.group('kw').split('|'):
         if kw not  in self.grammarDict:
-          self.grammarDict[kw] = InterpreterRule(x.group('script'), x.group('arg'))
+          self.grammarDict[kw] = InterpreterRule(x.group('plugin'), x.group('arg'))
         else:
-          logger.log("Ambiguous keyword %s for script %s." (kw, x.group('script')))
-          logger.log("Already exists for script %s." % self.grammarDict[kw].command)
+          logger.log("Ambiguous keyword %s for plugin %s." (kw, x.group('plugin')))
+          logger.log("Already exists for plugin %s." % self.grammarDict[kw].command)
 
   # Tidies up the text for better processing, ignoring
   # certain "pretty" words that have no effect on the

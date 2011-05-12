@@ -13,7 +13,7 @@ from thrift.transport import TSocket
 from thrift.transport import THttpClient
 from thrift.protocol import TBinaryProtocol
 
-import Script
+import Automaton
 from ttypes import *
 
 if len(sys.argv) <= 1 or sys.argv[1] == '--help':
@@ -21,15 +21,15 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print 'Usage: ' + sys.argv[0] + ' [-h host:port] [-u url] [-f[ramed]] function [arg1 [arg2...]]'
   print ''
   print 'Functions:'
-  print '  string registerService()'
+  print '  string registerService(string appname)'
   print '  void unregisterService(string serviceid)'
-  print '  void registerScript(string serviceid, string scriptname)'
-  print '  void unregisterScript(string serviceid, string scriptname)'
-  print '  string execute(string serviceid, string scriptname, string arguments)'
+  print '  void registerPlugin(string serviceid, string name)'
+  print '  void unregisterPlugin(string serviceid, string name)'
+  print '  string execute(string serviceid, string name, string arguments)'
   print '  string interpret(string serviceid, string raw)'
-  print '  bool isScript(string scriptname)'
-  print '   getAvailableScripts()'
-  print '  string scriptUsage(string scriptname)'
+  print '  bool isPlugin(string name)'
+  print '   getAvailablePlugins()'
+  print '  string pluginUsage(string name)'
   print ''
   sys.exit(0)
 
@@ -75,14 +75,14 @@ else:
   else:
     transport = TTransport.TBufferedTransport(socket)
 protocol = TBinaryProtocol.TBinaryProtocol(transport)
-client = Script.Client(protocol)
+client = Automaton.Client(protocol)
 transport.open()
 
 if cmd == 'registerService':
-  if len(args) != 0:
-    print 'registerService requires 0 args'
+  if len(args) != 1:
+    print 'registerService requires 1 args'
     sys.exit(1)
-  pp.pprint(client.registerService())
+  pp.pprint(client.registerService(args[0],))
 
 elif cmd == 'unregisterService':
   if len(args) != 1:
@@ -90,17 +90,17 @@ elif cmd == 'unregisterService':
     sys.exit(1)
   pp.pprint(client.unregisterService(args[0],))
 
-elif cmd == 'registerScript':
+elif cmd == 'registerPlugin':
   if len(args) != 2:
-    print 'registerScript requires 2 args'
+    print 'registerPlugin requires 2 args'
     sys.exit(1)
-  pp.pprint(client.registerScript(args[0],args[1],))
+  pp.pprint(client.registerPlugin(args[0],args[1],))
 
-elif cmd == 'unregisterScript':
+elif cmd == 'unregisterPlugin':
   if len(args) != 2:
-    print 'unregisterScript requires 2 args'
+    print 'unregisterPlugin requires 2 args'
     sys.exit(1)
-  pp.pprint(client.unregisterScript(args[0],args[1],))
+  pp.pprint(client.unregisterPlugin(args[0],args[1],))
 
 elif cmd == 'execute':
   if len(args) != 3:
@@ -114,22 +114,22 @@ elif cmd == 'interpret':
     sys.exit(1)
   pp.pprint(client.interpret(args[0],args[1],))
 
-elif cmd == 'isScript':
+elif cmd == 'isPlugin':
   if len(args) != 1:
-    print 'isScript requires 1 args'
+    print 'isPlugin requires 1 args'
     sys.exit(1)
-  pp.pprint(client.isScript(args[0],))
+  pp.pprint(client.isPlugin(args[0],))
 
-elif cmd == 'getAvailableScripts':
+elif cmd == 'getAvailablePlugins':
   if len(args) != 0:
-    print 'getAvailableScripts requires 0 args'
+    print 'getAvailablePlugins requires 0 args'
     sys.exit(1)
-  pp.pprint(client.getAvailableScripts())
+  pp.pprint(client.getAvailablePlugins())
 
-elif cmd == 'scriptUsage':
+elif cmd == 'pluginUsage':
   if len(args) != 1:
-    print 'scriptUsage requires 1 args'
+    print 'pluginUsage requires 1 args'
     sys.exit(1)
-  pp.pprint(client.scriptUsage(args[0],))
+  pp.pprint(client.pluginUsage(args[0],))
 
 transport.close()

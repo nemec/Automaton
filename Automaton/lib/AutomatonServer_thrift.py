@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from automaton_thrift.python import Script
+from automaton_thrift.python import AutomatonThrift
 import automaton_thrift.python.ttypes
 
 from thrift.transport import TSocket
@@ -18,7 +18,7 @@ class ThriftServer(AutomatonServer.AutomatonServer):
     self.exceptions = automaton_thrift.python.ttypes
 
   def initialize(self):
-    processor = Script.Processor(self)
+    processor = AutomatonThrift.Processor(self)
     transport = TSocket.TServerSocket(self.port)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()

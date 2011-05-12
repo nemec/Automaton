@@ -14,7 +14,7 @@ except:
   fastbinary = None
 
 
-class ScriptNotLoadedException(Exception):
+class PluginNotLoadedException(Exception):
   """
   Attributes:
    - action
@@ -51,7 +51,7 @@ class ScriptNotLoadedException(Exception):
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('ScriptNotLoadedException')
+    oprot.writeStructBegin('PluginNotLoadedException')
     if self.action != None:
       oprot.writeFieldBegin('action', TType.STRING, 1)
       oprot.writeString(self.action)
@@ -73,7 +73,7 @@ class ScriptNotLoadedException(Exception):
   def __ne__(self, other):
     return not (self == other)
 
-class ScriptNotRegisteredException(Exception):
+class PluginNotRegisteredException(Exception):
   """
   Attributes:
    - action
@@ -110,7 +110,7 @@ class ScriptNotRegisteredException(Exception):
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('ScriptNotRegisteredException')
+    oprot.writeStructBegin('PluginNotRegisteredException')
     if self.action != None:
       oprot.writeFieldBegin('action', TType.STRING, 1)
       oprot.writeString(self.action)

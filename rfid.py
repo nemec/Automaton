@@ -68,9 +68,9 @@ client = ClientWrapper.ClientWrapper(op["THRIFT_SERVER"])
 client.open()
 
 try:
-  client.registerScript("say")
-except ClientWrapper.ScriptNotLoadedException:
-    print "ScriptNotLoaded Exception"
+  client.registerPlugin("say")
+except ClientWrapper.PluginNotLoadedException:
+    print "PluginNotLoaded Exception"
 except ClientWrapper.ServiceNotRegisteredException:
     print "Service not registered"
 

@@ -46,15 +46,15 @@ failed = {}
 
 try:
   
-  cthrift = ClientWrapper_thrift.ClientWrapper()
+  cthrift = ClientWrapper_thrift.ClientWrapper(appname="testharness")
   cthrift.open()
 
   for key in test_data:
     if key in tests:
       print "testing %s..." % key
       try:
-        if cthrift.isScript(key):
-          cthrift.registerScript(key)
+        if cthrift.isPlugin(key):
+          cthrift.registerPlugin(key)
           for test in test_data[key]:
             resp = cthrift.execute(key, test[0]).strip()
             match = re.match(test[1] + "$", resp, flags=re.DOTALL)

@@ -1,7 +1,7 @@
 # These are the exceptions that may be raised by the server
 
 # Raised if the client tries to execute a command that doesn't exist.
-class ScriptNotLoadedException(Exception):
+class PluginNotLoadedException(Exception):
   def __init__(self, action = None):
     self.action = action
 
@@ -14,7 +14,7 @@ class ScriptNotLoadedException(Exception):
 # Raised if the client tries to execute a command that exists, but
 # hasn't been explicitly registered for the current service. Prevents
 # rogue users from executing arbitrary commands.
-class ScriptNotRegisteredException(Exception):
+class PluginNotRegisteredException(Exception):
   def __init__(self, action = None):
     self.action = action
 

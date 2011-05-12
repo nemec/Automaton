@@ -9,7 +9,7 @@ class mail:
 
   def execute(self, arg = ''):
     # Load command settings from a configuration file
-    cmd_op = settings_loader.load_script_settings(__name__)
+    cmd_op = settings_loader.load_plugin_settings(__name__)
     if not cmd_op.has_key('MAIL_USER') or not cmd_op.has_key('MAIL_PASS'):
       return "Error: username/password not provided in settings file."
     user = cmd_op["MAIL_USER"]

@@ -16,7 +16,11 @@ except:
 
 
 class Iface:
-  def registerService(self, ):
+  def registerService(self, appname):
+    """
+    Parameters:
+     - appname
+    """
     pass
 
   def unregisterService(self, serviceid):
@@ -26,27 +30,27 @@ class Iface:
     """
     pass
 
-  def registerScript(self, serviceid, scriptname):
+  def registerPlugin(self, serviceid, name):
     """
     Parameters:
      - serviceid
-     - scriptname
+     - name
     """
     pass
 
-  def unregisterScript(self, serviceid, scriptname):
+  def unregisterPlugin(self, serviceid, name):
     """
     Parameters:
      - serviceid
-     - scriptname
+     - name
     """
     pass
 
-  def execute(self, serviceid, scriptname, arguments):
+  def execute(self, serviceid, name, arguments):
     """
     Parameters:
      - serviceid
-     - scriptname
+     - name
      - arguments
     """
     pass
@@ -59,20 +63,20 @@ class Iface:
     """
     pass
 
-  def isScript(self, scriptname):
+  def isPlugin(self, name):
     """
     Parameters:
-     - scriptname
+     - name
     """
     pass
 
-  def getAvailableScripts(self, ):
+  def getAvailablePlugins(self, ):
     pass
 
-  def scriptUsage(self, scriptname):
+  def pluginUsage(self, name):
     """
     Parameters:
-     - scriptname
+     - name
     """
     pass
 
@@ -84,13 +88,18 @@ class Client(Iface):
       self._oprot = oprot
     self._seqid = 0
 
-  def registerService(self, ):
-    self.send_registerService()
+  def registerService(self, appname):
+    """
+    Parameters:
+     - appname
+    """
+    self.send_registerService(appname)
     return self.recv_registerService()
 
-  def send_registerService(self, ):
+  def send_registerService(self, appname):
     self._oprot.writeMessageBegin('registerService', TMessageType.CALL, self._seqid)
     args = registerService_args()
+    args.appname = appname
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
@@ -139,32 +148,32 @@ class Client(Iface):
       raise result.oops
     return
 
-  def registerScript(self, serviceid, scriptname):
+  def registerPlugin(self, serviceid, name):
     """
     Parameters:
      - serviceid
-     - scriptname
+     - name
     """
-    self.send_registerScript(serviceid, scriptname)
-    self.recv_registerScript()
+    self.send_registerPlugin(serviceid, name)
+    self.recv_registerPlugin()
 
-  def send_registerScript(self, serviceid, scriptname):
-    self._oprot.writeMessageBegin('registerScript', TMessageType.CALL, self._seqid)
-    args = registerScript_args()
+  def send_registerPlugin(self, serviceid, name):
+    self._oprot.writeMessageBegin('registerPlugin', TMessageType.CALL, self._seqid)
+    args = registerPlugin_args()
     args.serviceid = serviceid
-    args.scriptname = scriptname
+    args.name = name
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
 
-  def recv_registerScript(self, ):
+  def recv_registerPlugin(self, ):
     (fname, mtype, rseqid) = self._iprot.readMessageBegin()
     if mtype == TMessageType.EXCEPTION:
       x = TApplicationException()
       x.read(self._iprot)
       self._iprot.readMessageEnd()
       raise x
-    result = registerScript_result()
+    result = registerPlugin_result()
     result.read(self._iprot)
     self._iprot.readMessageEnd()
     if result.oops != None:
@@ -173,32 +182,32 @@ class Client(Iface):
       raise result.ouch
     return
 
-  def unregisterScript(self, serviceid, scriptname):
+  def unregisterPlugin(self, serviceid, name):
     """
     Parameters:
      - serviceid
-     - scriptname
+     - name
     """
-    self.send_unregisterScript(serviceid, scriptname)
-    self.recv_unregisterScript()
+    self.send_unregisterPlugin(serviceid, name)
+    self.recv_unregisterPlugin()
 
-  def send_unregisterScript(self, serviceid, scriptname):
-    self._oprot.writeMessageBegin('unregisterScript', TMessageType.CALL, self._seqid)
-    args = unregisterScript_args()
+  def send_unregisterPlugin(self, serviceid, name):
+    self._oprot.writeMessageBegin('unregisterPlugin', TMessageType.CALL, self._seqid)
+    args = unregisterPlugin_args()
     args.serviceid = serviceid
-    args.scriptname = scriptname
+    args.name = name
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
 
-  def recv_unregisterScript(self, ):
+  def recv_unregisterPlugin(self, ):
     (fname, mtype, rseqid) = self._iprot.readMessageBegin()
     if mtype == TMessageType.EXCEPTION:
       x = TApplicationException()
       x.read(self._iprot)
       self._iprot.readMessageEnd()
       raise x
-    result = unregisterScript_result()
+    result = unregisterPlugin_result()
     result.read(self._iprot)
     self._iprot.readMessageEnd()
     if result.oops != None:
@@ -207,21 +216,21 @@ class Client(Iface):
       raise result.ouch
     return
 
-  def execute(self, serviceid, scriptname, arguments):
+  def execute(self, serviceid, name, arguments):
     """
     Parameters:
      - serviceid
-     - scriptname
+     - name
      - arguments
     """
-    self.send_execute(serviceid, scriptname, arguments)
+    self.send_execute(serviceid, name, arguments)
     return self.recv_execute()
 
-  def send_execute(self, serviceid, scriptname, arguments):
+  def send_execute(self, serviceid, name, arguments):
     self._oprot.writeMessageBegin('execute', TMessageType.CALL, self._seqid)
     args = execute_args()
     args.serviceid = serviceid
-    args.scriptname = scriptname
+    args.name = name
     args.arguments = arguments
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
@@ -281,85 +290,85 @@ class Client(Iface):
       raise result.ouch
     raise TApplicationException(TApplicationException.MISSING_RESULT, "interpret failed: unknown result");
 
-  def isScript(self, scriptname):
+  def isPlugin(self, name):
     """
     Parameters:
-     - scriptname
+     - name
     """
-    self.send_isScript(scriptname)
-    return self.recv_isScript()
+    self.send_isPlugin(name)
+    return self.recv_isPlugin()
 
-  def send_isScript(self, scriptname):
-    self._oprot.writeMessageBegin('isScript', TMessageType.CALL, self._seqid)
-    args = isScript_args()
-    args.scriptname = scriptname
+  def send_isPlugin(self, name):
+    self._oprot.writeMessageBegin('isPlugin', TMessageType.CALL, self._seqid)
+    args = isPlugin_args()
+    args.name = name
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
 
-  def recv_isScript(self, ):
+  def recv_isPlugin(self, ):
     (fname, mtype, rseqid) = self._iprot.readMessageBegin()
     if mtype == TMessageType.EXCEPTION:
       x = TApplicationException()
       x.read(self._iprot)
       self._iprot.readMessageEnd()
       raise x
-    result = isScript_result()
+    result = isPlugin_result()
     result.read(self._iprot)
     self._iprot.readMessageEnd()
     if result.success != None:
       return result.success
-    raise TApplicationException(TApplicationException.MISSING_RESULT, "isScript failed: unknown result");
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "isPlugin failed: unknown result");
 
-  def getAvailableScripts(self, ):
-    self.send_getAvailableScripts()
-    return self.recv_getAvailableScripts()
+  def getAvailablePlugins(self, ):
+    self.send_getAvailablePlugins()
+    return self.recv_getAvailablePlugins()
 
-  def send_getAvailableScripts(self, ):
-    self._oprot.writeMessageBegin('getAvailableScripts', TMessageType.CALL, self._seqid)
-    args = getAvailableScripts_args()
+  def send_getAvailablePlugins(self, ):
+    self._oprot.writeMessageBegin('getAvailablePlugins', TMessageType.CALL, self._seqid)
+    args = getAvailablePlugins_args()
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
 
-  def recv_getAvailableScripts(self, ):
+  def recv_getAvailablePlugins(self, ):
     (fname, mtype, rseqid) = self._iprot.readMessageBegin()
     if mtype == TMessageType.EXCEPTION:
       x = TApplicationException()
       x.read(self._iprot)
       self._iprot.readMessageEnd()
       raise x
-    result = getAvailableScripts_result()
+    result = getAvailablePlugins_result()
     result.read(self._iprot)
     self._iprot.readMessageEnd()
     if result.success != None:
       return result.success
-    raise TApplicationException(TApplicationException.MISSING_RESULT, "getAvailableScripts failed: unknown result");
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getAvailablePlugins failed: unknown result");
 
-  def scriptUsage(self, scriptname):
+  def pluginUsage(self, name):
     """
     Parameters:
-     - scriptname
+     - name
     """
-    self.send_scriptUsage(scriptname)
-    return self.recv_scriptUsage()
+    self.send_pluginUsage(name)
+    return self.recv_pluginUsage()
 
-  def send_scriptUsage(self, scriptname):
-    self._oprot.writeMessageBegin('scriptUsage', TMessageType.CALL, self._seqid)
-    args = scriptUsage_args()
-    args.scriptname = scriptname
+  def send_pluginUsage(self, name):
+    self._oprot.writeMessageBegin('pluginUsage', TMessageType.CALL, self._seqid)
+    args = pluginUsage_args()
+    args.name = name
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
 
-  def recv_scriptUsage(self, ):
+  def recv_pluginUsage(self, ):
     (fname, mtype, rseqid) = self._iprot.readMessageBegin()
     if mtype == TMessageType.EXCEPTION:
       x = TApplicationException()
       x.read(self._iprot)
       self._iprot.readMessageEnd()
       raise x
-    result = scriptUsage_result()
+    result = pluginUsage_result()
     result.read(self._iprot)
     self._iprot.readMessageEnd()
     if result.success != None:
@@ -368,7 +377,7 @@ class Client(Iface):
       raise result.oops
     if result.ouch != None:
       raise result.ouch
-    raise TApplicationException(TApplicationException.MISSING_RESULT, "scriptUsage failed: unknown result");
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "pluginUsage failed: unknown result");
 
 
 class Processor(Iface, TProcessor):
@@ -377,13 +386,13 @@ class Processor(Iface, TProcessor):
     self._processMap = {}
     self._processMap["registerService"] = Processor.process_registerService
     self._processMap["unregisterService"] = Processor.process_unregisterService
-    self._processMap["registerScript"] = Processor.process_registerScript
-    self._processMap["unregisterScript"] = Processor.process_unregisterScript
+    self._processMap["registerPlugin"] = Processor.process_registerPlugin
+    self._processMap["unregisterPlugin"] = Processor.process_unregisterPlugin
     self._processMap["execute"] = Processor.process_execute
     self._processMap["interpret"] = Processor.process_interpret
-    self._processMap["isScript"] = Processor.process_isScript
-    self._processMap["getAvailableScripts"] = Processor.process_getAvailableScripts
-    self._processMap["scriptUsage"] = Processor.process_scriptUsage
+    self._processMap["isPlugin"] = Processor.process_isPlugin
+    self._processMap["getAvailablePlugins"] = Processor.process_getAvailablePlugins
+    self._processMap["pluginUsage"] = Processor.process_pluginUsage
 
   def process(self, iprot, oprot):
     (name, type, seqid) = iprot.readMessageBegin()
@@ -405,7 +414,7 @@ class Processor(Iface, TProcessor):
     args.read(iprot)
     iprot.readMessageEnd()
     result = registerService_result()
-    result.success = self._handler.registerService()
+    result.success = self._handler.registerService(args.appname)
     oprot.writeMessageBegin("registerService", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
@@ -425,34 +434,34 @@ class Processor(Iface, TProcessor):
     oprot.writeMessageEnd()
     oprot.trans.flush()
 
-  def process_registerScript(self, seqid, iprot, oprot):
-    args = registerScript_args()
+  def process_registerPlugin(self, seqid, iprot, oprot):
+    args = registerPlugin_args()
     args.read(iprot)
     iprot.readMessageEnd()
-    result = registerScript_result()
+    result = registerPlugin_result()
     try:
-      self._handler.registerScript(args.serviceid, args.scriptname)
+      self._handler.registerPlugin(args.serviceid, args.name)
     except ServiceNotRegisteredException, oops:
       result.oops = oops
-    except ScriptNotLoadedException, ouch:
+    except PluginNotLoadedException, ouch:
       result.ouch = ouch
-    oprot.writeMessageBegin("registerScript", TMessageType.REPLY, seqid)
+    oprot.writeMessageBegin("registerPlugin", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
 
-  def process_unregisterScript(self, seqid, iprot, oprot):
-    args = unregisterScript_args()
+  def process_unregisterPlugin(self, seqid, iprot, oprot):
+    args = unregisterPlugin_args()
     args.read(iprot)
     iprot.readMessageEnd()
-    result = unregisterScript_result()
+    result = unregisterPlugin_result()
     try:
-      self._handler.unregisterScript(args.serviceid, args.scriptname)
+      self._handler.unregisterPlugin(args.serviceid, args.name)
     except ServiceNotRegisteredException, oops:
       result.oops = oops
-    except ScriptNotRegisteredException, ouch:
+    except PluginNotRegisteredException, ouch:
       result.ouch = ouch
-    oprot.writeMessageBegin("unregisterScript", TMessageType.REPLY, seqid)
+    oprot.writeMessageBegin("unregisterPlugin", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -463,10 +472,10 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = execute_result()
     try:
-      result.success = self._handler.execute(args.serviceid, args.scriptname, args.arguments)
+      result.success = self._handler.execute(args.serviceid, args.name, args.arguments)
     except ServiceNotRegisteredException, oops:
       result.oops = oops
-    except ScriptNotRegisteredException, ouch:
+    except PluginNotRegisteredException, ouch:
       result.ouch = ouch
     oprot.writeMessageBegin("execute", TMessageType.REPLY, seqid)
     result.write(oprot)
@@ -482,47 +491,47 @@ class Processor(Iface, TProcessor):
       result.success = self._handler.interpret(args.serviceid, args.raw)
     except ServiceNotRegisteredException, oops:
       result.oops = oops
-    except ScriptNotRegisteredException, ouch:
+    except PluginNotRegisteredException, ouch:
       result.ouch = ouch
     oprot.writeMessageBegin("interpret", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
 
-  def process_isScript(self, seqid, iprot, oprot):
-    args = isScript_args()
+  def process_isPlugin(self, seqid, iprot, oprot):
+    args = isPlugin_args()
     args.read(iprot)
     iprot.readMessageEnd()
-    result = isScript_result()
-    result.success = self._handler.isScript(args.scriptname)
-    oprot.writeMessageBegin("isScript", TMessageType.REPLY, seqid)
+    result = isPlugin_result()
+    result.success = self._handler.isPlugin(args.name)
+    oprot.writeMessageBegin("isPlugin", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
 
-  def process_getAvailableScripts(self, seqid, iprot, oprot):
-    args = getAvailableScripts_args()
+  def process_getAvailablePlugins(self, seqid, iprot, oprot):
+    args = getAvailablePlugins_args()
     args.read(iprot)
     iprot.readMessageEnd()
-    result = getAvailableScripts_result()
-    result.success = self._handler.getAvailableScripts()
-    oprot.writeMessageBegin("getAvailableScripts", TMessageType.REPLY, seqid)
+    result = getAvailablePlugins_result()
+    result.success = self._handler.getAvailablePlugins()
+    oprot.writeMessageBegin("getAvailablePlugins", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
 
-  def process_scriptUsage(self, seqid, iprot, oprot):
-    args = scriptUsage_args()
+  def process_pluginUsage(self, seqid, iprot, oprot):
+    args = pluginUsage_args()
     args.read(iprot)
     iprot.readMessageEnd()
-    result = scriptUsage_result()
+    result = pluginUsage_result()
     try:
-      result.success = self._handler.scriptUsage(args.scriptname)
+      result.success = self._handler.pluginUsage(args.name)
     except ServiceNotRegisteredException, oops:
       result.oops = oops
-    except ScriptNotLoadedException, ouch:
+    except PluginNotLoadedException, ouch:
       result.ouch = ouch
-    oprot.writeMessageBegin("scriptUsage", TMessageType.REPLY, seqid)
+    oprot.writeMessageBegin("pluginUsage", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -531,9 +540,18 @@ class Processor(Iface, TProcessor):
 # HELPER FUNCTIONS AND STRUCTURES
 
 class registerService_args:
+  """
+  Attributes:
+   - appname
+  """
 
   thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'appname', None, None, ), # 1
   )
+
+  def __init__(self, appname=None,):
+    self.appname = appname
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -544,6 +562,11 @@ class registerService_args:
       (fname, ftype, fid) = iprot.readFieldBegin()
       if ftype == TType.STOP:
         break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.appname = iprot.readString();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -554,6 +577,10 @@ class registerService_args:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('registerService_args')
+    if self.appname != None:
+      oprot.writeFieldBegin('appname', TType.STRING, 1)
+      oprot.writeString(self.appname)
+      oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
@@ -736,22 +763,22 @@ class unregisterService_result:
   def __ne__(self, other):
     return not (self == other)
 
-class registerScript_args:
+class registerPlugin_args:
   """
   Attributes:
    - serviceid
-   - scriptname
+   - name
   """
 
   thrift_spec = (
     None, # 0
     (1, TType.STRING, 'serviceid', None, None, ), # 1
-    (2, TType.STRING, 'scriptname', None, None, ), # 2
+    (2, TType.STRING, 'name', None, None, ), # 2
   )
 
-  def __init__(self, serviceid=None, scriptname=None,):
+  def __init__(self, serviceid=None, name=None,):
     self.serviceid = serviceid
-    self.scriptname = scriptname
+    self.name = name
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -769,7 +796,7 @@ class registerScript_args:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.STRING:
-          self.scriptname = iprot.readString();
+          self.name = iprot.readString();
         else:
           iprot.skip(ftype)
       else:
@@ -781,14 +808,14 @@ class registerScript_args:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('registerScript_args')
+    oprot.writeStructBegin('registerPlugin_args')
     if self.serviceid != None:
       oprot.writeFieldBegin('serviceid', TType.STRING, 1)
       oprot.writeString(self.serviceid)
       oprot.writeFieldEnd()
-    if self.scriptname != None:
-      oprot.writeFieldBegin('scriptname', TType.STRING, 2)
-      oprot.writeString(self.scriptname)
+    if self.name != None:
+      oprot.writeFieldBegin('name', TType.STRING, 2)
+      oprot.writeString(self.name)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -804,7 +831,7 @@ class registerScript_args:
   def __ne__(self, other):
     return not (self == other)
 
-class registerScript_result:
+class registerPlugin_result:
   """
   Attributes:
    - oops
@@ -814,7 +841,7 @@ class registerScript_result:
   thrift_spec = (
     None, # 0
     (1, TType.STRUCT, 'oops', (ServiceNotRegisteredException, ServiceNotRegisteredException.thrift_spec), None, ), # 1
-    (2, TType.STRUCT, 'ouch', (ScriptNotLoadedException, ScriptNotLoadedException.thrift_spec), None, ), # 2
+    (2, TType.STRUCT, 'ouch', (PluginNotLoadedException, PluginNotLoadedException.thrift_spec), None, ), # 2
   )
 
   def __init__(self, oops=None, ouch=None,):
@@ -838,7 +865,7 @@ class registerScript_result:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.STRUCT:
-          self.ouch = ScriptNotLoadedException()
+          self.ouch = PluginNotLoadedException()
           self.ouch.read(iprot)
         else:
           iprot.skip(ftype)
@@ -851,7 +878,7 @@ class registerScript_result:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('registerScript_result')
+    oprot.writeStructBegin('registerPlugin_result')
     if self.oops != None:
       oprot.writeFieldBegin('oops', TType.STRUCT, 1)
       self.oops.write(oprot)
@@ -874,22 +901,22 @@ class registerScript_result:
   def __ne__(self, other):
     return not (self == other)
 
-class unregisterScript_args:
+class unregisterPlugin_args:
   """
   Attributes:
    - serviceid
-   - scriptname
+   - name
   """
 
   thrift_spec = (
     None, # 0
     (1, TType.STRING, 'serviceid', None, None, ), # 1
-    (2, TType.STRING, 'scriptname', None, None, ), # 2
+    (2, TType.STRING, 'name', None, None, ), # 2
   )
 
-  def __init__(self, serviceid=None, scriptname=None,):
+  def __init__(self, serviceid=None, name=None,):
     self.serviceid = serviceid
-    self.scriptname = scriptname
+    self.name = name
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -907,7 +934,7 @@ class unregisterScript_args:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.STRING:
-          self.scriptname = iprot.readString();
+          self.name = iprot.readString();
         else:
           iprot.skip(ftype)
       else:
@@ -919,14 +946,14 @@ class unregisterScript_args:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('unregisterScript_args')
+    oprot.writeStructBegin('unregisterPlugin_args')
     if self.serviceid != None:
       oprot.writeFieldBegin('serviceid', TType.STRING, 1)
       oprot.writeString(self.serviceid)
       oprot.writeFieldEnd()
-    if self.scriptname != None:
-      oprot.writeFieldBegin('scriptname', TType.STRING, 2)
-      oprot.writeString(self.scriptname)
+    if self.name != None:
+      oprot.writeFieldBegin('name', TType.STRING, 2)
+      oprot.writeString(self.name)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -942,7 +969,7 @@ class unregisterScript_args:
   def __ne__(self, other):
     return not (self == other)
 
-class unregisterScript_result:
+class unregisterPlugin_result:
   """
   Attributes:
    - oops
@@ -952,7 +979,7 @@ class unregisterScript_result:
   thrift_spec = (
     None, # 0
     (1, TType.STRUCT, 'oops', (ServiceNotRegisteredException, ServiceNotRegisteredException.thrift_spec), None, ), # 1
-    (2, TType.STRUCT, 'ouch', (ScriptNotRegisteredException, ScriptNotRegisteredException.thrift_spec), None, ), # 2
+    (2, TType.STRUCT, 'ouch', (PluginNotRegisteredException, PluginNotRegisteredException.thrift_spec), None, ), # 2
   )
 
   def __init__(self, oops=None, ouch=None,):
@@ -976,7 +1003,7 @@ class unregisterScript_result:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.STRUCT:
-          self.ouch = ScriptNotRegisteredException()
+          self.ouch = PluginNotRegisteredException()
           self.ouch.read(iprot)
         else:
           iprot.skip(ftype)
@@ -989,7 +1016,7 @@ class unregisterScript_result:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('unregisterScript_result')
+    oprot.writeStructBegin('unregisterPlugin_result')
     if self.oops != None:
       oprot.writeFieldBegin('oops', TType.STRUCT, 1)
       self.oops.write(oprot)
@@ -1016,20 +1043,20 @@ class execute_args:
   """
   Attributes:
    - serviceid
-   - scriptname
+   - name
    - arguments
   """
 
   thrift_spec = (
     None, # 0
     (1, TType.STRING, 'serviceid', None, None, ), # 1
-    (2, TType.STRING, 'scriptname', None, None, ), # 2
+    (2, TType.STRING, 'name', None, None, ), # 2
     (3, TType.STRING, 'arguments', None, None, ), # 3
   )
 
-  def __init__(self, serviceid=None, scriptname=None, arguments=None,):
+  def __init__(self, serviceid=None, name=None, arguments=None,):
     self.serviceid = serviceid
-    self.scriptname = scriptname
+    self.name = name
     self.arguments = arguments
 
   def read(self, iprot):
@@ -1048,7 +1075,7 @@ class execute_args:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.STRING:
-          self.scriptname = iprot.readString();
+          self.name = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 3:
@@ -1070,9 +1097,9 @@ class execute_args:
       oprot.writeFieldBegin('serviceid', TType.STRING, 1)
       oprot.writeString(self.serviceid)
       oprot.writeFieldEnd()
-    if self.scriptname != None:
-      oprot.writeFieldBegin('scriptname', TType.STRING, 2)
-      oprot.writeString(self.scriptname)
+    if self.name != None:
+      oprot.writeFieldBegin('name', TType.STRING, 2)
+      oprot.writeString(self.name)
       oprot.writeFieldEnd()
     if self.arguments != None:
       oprot.writeFieldBegin('arguments', TType.STRING, 3)
@@ -1103,7 +1130,7 @@ class execute_result:
   thrift_spec = (
     (0, TType.STRING, 'success', None, None, ), # 0
     (1, TType.STRUCT, 'oops', (ServiceNotRegisteredException, ServiceNotRegisteredException.thrift_spec), None, ), # 1
-    (2, TType.STRUCT, 'ouch', (ScriptNotRegisteredException, ScriptNotRegisteredException.thrift_spec), None, ), # 2
+    (2, TType.STRUCT, 'ouch', (PluginNotRegisteredException, PluginNotRegisteredException.thrift_spec), None, ), # 2
   )
 
   def __init__(self, success=None, oops=None, ouch=None,):
@@ -1133,7 +1160,7 @@ class execute_result:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.STRUCT:
-          self.ouch = ScriptNotRegisteredException()
+          self.ouch = PluginNotRegisteredException()
           self.ouch.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1252,7 +1279,7 @@ class interpret_result:
   thrift_spec = (
     (0, TType.STRING, 'success', None, None, ), # 0
     (1, TType.STRUCT, 'oops', (ServiceNotRegisteredException, ServiceNotRegisteredException.thrift_spec), None, ), # 1
-    (2, TType.STRUCT, 'ouch', (ScriptNotRegisteredException, ScriptNotRegisteredException.thrift_spec), None, ), # 2
+    (2, TType.STRUCT, 'ouch', (PluginNotRegisteredException, PluginNotRegisteredException.thrift_spec), None, ), # 2
   )
 
   def __init__(self, success=None, oops=None, ouch=None,):
@@ -1282,7 +1309,7 @@ class interpret_result:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.STRUCT:
-          self.ouch = ScriptNotRegisteredException()
+          self.ouch = PluginNotRegisteredException()
           self.ouch.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1322,19 +1349,19 @@ class interpret_result:
   def __ne__(self, other):
     return not (self == other)
 
-class isScript_args:
+class isPlugin_args:
   """
   Attributes:
-   - scriptname
+   - name
   """
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRING, 'scriptname', None, None, ), # 1
+    (1, TType.STRING, 'name', None, None, ), # 1
   )
 
-  def __init__(self, scriptname=None,):
-    self.scriptname = scriptname
+  def __init__(self, name=None,):
+    self.name = name
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -1347,7 +1374,7 @@ class isScript_args:
         break
       if fid == 1:
         if ftype == TType.STRING:
-          self.scriptname = iprot.readString();
+          self.name = iprot.readString();
         else:
           iprot.skip(ftype)
       else:
@@ -1359,10 +1386,10 @@ class isScript_args:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('isScript_args')
-    if self.scriptname != None:
-      oprot.writeFieldBegin('scriptname', TType.STRING, 1)
-      oprot.writeString(self.scriptname)
+    oprot.writeStructBegin('isPlugin_args')
+    if self.name != None:
+      oprot.writeFieldBegin('name', TType.STRING, 1)
+      oprot.writeString(self.name)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1378,7 +1405,7 @@ class isScript_args:
   def __ne__(self, other):
     return not (self == other)
 
-class isScript_result:
+class isPlugin_result:
   """
   Attributes:
    - success
@@ -1414,7 +1441,7 @@ class isScript_result:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('isScript_result')
+    oprot.writeStructBegin('isPlugin_result')
     if self.success != None:
       oprot.writeFieldBegin('success', TType.BOOL, 0)
       oprot.writeBool(self.success)
@@ -1433,7 +1460,7 @@ class isScript_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getAvailableScripts_args:
+class getAvailablePlugins_args:
 
   thrift_spec = (
   )
@@ -1456,7 +1483,7 @@ class getAvailableScripts_args:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('getAvailableScripts_args')
+    oprot.writeStructBegin('getAvailablePlugins_args')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
@@ -1471,7 +1498,7 @@ class getAvailableScripts_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getAvailableScripts_result:
+class getAvailablePlugins_result:
   """
   Attributes:
    - success
@@ -1512,7 +1539,7 @@ class getAvailableScripts_result:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('getAvailableScripts_result')
+    oprot.writeStructBegin('getAvailablePlugins_result')
     if self.success != None:
       oprot.writeFieldBegin('success', TType.SET, 0)
       oprot.writeSetBegin(TType.STRING, len(self.success))
@@ -1534,19 +1561,19 @@ class getAvailableScripts_result:
   def __ne__(self, other):
     return not (self == other)
 
-class scriptUsage_args:
+class pluginUsage_args:
   """
   Attributes:
-   - scriptname
+   - name
   """
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRING, 'scriptname', None, None, ), # 1
+    (1, TType.STRING, 'name', None, None, ), # 1
   )
 
-  def __init__(self, scriptname=None,):
-    self.scriptname = scriptname
+  def __init__(self, name=None,):
+    self.name = name
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -1559,7 +1586,7 @@ class scriptUsage_args:
         break
       if fid == 1:
         if ftype == TType.STRING:
-          self.scriptname = iprot.readString();
+          self.name = iprot.readString();
         else:
           iprot.skip(ftype)
       else:
@@ -1571,10 +1598,10 @@ class scriptUsage_args:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('scriptUsage_args')
-    if self.scriptname != None:
-      oprot.writeFieldBegin('scriptname', TType.STRING, 1)
-      oprot.writeString(self.scriptname)
+    oprot.writeStructBegin('pluginUsage_args')
+    if self.name != None:
+      oprot.writeFieldBegin('name', TType.STRING, 1)
+      oprot.writeString(self.name)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1590,7 +1617,7 @@ class scriptUsage_args:
   def __ne__(self, other):
     return not (self == other)
 
-class scriptUsage_result:
+class pluginUsage_result:
   """
   Attributes:
    - success
@@ -1601,7 +1628,7 @@ class scriptUsage_result:
   thrift_spec = (
     (0, TType.STRING, 'success', None, None, ), # 0
     (1, TType.STRUCT, 'oops', (ServiceNotRegisteredException, ServiceNotRegisteredException.thrift_spec), None, ), # 1
-    (2, TType.STRUCT, 'ouch', (ScriptNotLoadedException, ScriptNotLoadedException.thrift_spec), None, ), # 2
+    (2, TType.STRUCT, 'ouch', (PluginNotLoadedException, PluginNotLoadedException.thrift_spec), None, ), # 2
   )
 
   def __init__(self, success=None, oops=None, ouch=None,):
@@ -1631,7 +1658,7 @@ class scriptUsage_result:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.STRUCT:
-          self.ouch = ScriptNotLoadedException()
+          self.ouch = PluginNotLoadedException()
           self.ouch.read(iprot)
         else:
           iprot.skip(ftype)
@@ -1644,7 +1671,7 @@ class scriptUsage_result:
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('scriptUsage_result')
+    oprot.writeStructBegin('pluginUsage_result')
     if self.success != None:
       oprot.writeFieldBegin('success', TType.STRING, 0)
       oprot.writeString(self.success)

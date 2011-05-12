@@ -40,7 +40,7 @@ class schedule:
   
   def __init__(self):
     self.ops = {"QUEUE_FILE": None}
-    self.ops.update(settings_loader.load_script_settings(__name__))
+    self.ops.update(settings_loader.load_plugin_settings(__name__))
 
     if self.ops["QUEUE_FILE"] is None:
       self.ops["QUEUE_FILE"] = platformdata.getExistingFile("schedule.queue")

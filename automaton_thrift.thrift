@@ -1,34 +1,34 @@
 namespace php automaton_thrift
 namespace py automaton_thrift
 
-exception ScriptNotLoadedException {
+exception PluginNotLoadedException {
   1:string action
 }
 
-exception ScriptNotRegisteredException {
+exception PluginNotRegisteredException {
   1:string action
 }
 
 exception ServiceNotRegisteredException{
 }
 
-service Script {
-  string registerService(),
+service Automaton {
+  string registerService(1:string appname),
 
   void unregisterService(1:string serviceid) throws(1:ServiceNotRegisteredException oops),
 
-  void registerScript(1:string serviceid, 2:string scriptname) throws (1:ServiceNotRegisteredException oops, 2:ScriptNotLoadedException ouch),
+  void registerPlugin(1:string serviceid, 2:string name) throws (1:ServiceNotRegisteredException oops, 2:PluginNotLoadedException ouch),
 
-  void unregisterScript(1:string serviceid, 2:string scriptname) throws (1:ServiceNotRegisteredException oops, 2:ScriptNotRegisteredException ouch),
+  void unregisterPlugin(1:string serviceid, 2:string name) throws (1:ServiceNotRegisteredException oops, 2:PluginNotRegisteredException ouch),
 
-  string execute(1:string serviceid, 2:string scriptname, 3:string arguments) throws(1:ServiceNotRegisteredException oops, 2:ScriptNotRegisteredException ouch),
+  string execute(1:string serviceid, 2:string name, 3:string arguments) throws(1:ServiceNotRegisteredException oops, 2:PluginNotRegisteredException ouch),
 
-  string interpret(1:string serviceid, 2:string raw) throws(1:ServiceNotRegisteredException oops, 2:ScriptNotRegisteredException ouch),
+  string interpret(1:string serviceid, 2:string raw) throws(1:ServiceNotRegisteredException oops, 2:PluginNotRegisteredException ouch),
 
-  bool isScript(1:string scriptname),
+  bool isPlugin(1:string name),
 
-  set<string> getAvailableScripts(),
+  set<string> getAvailablePlugins(),
 
-  string scriptUsage(1:string scriptname) throws (1:ServiceNotRegisteredException oops, 2:ScriptNotLoadedException ouch)
+  string pluginUsage(1:string name) throws (1:ServiceNotRegisteredException oops, 2:PluginNotLoadedException ouch)
 
 }

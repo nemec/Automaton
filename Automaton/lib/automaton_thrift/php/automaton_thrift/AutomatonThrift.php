@@ -6,21 +6,21 @@
  */
 include_once $GLOBALS['THRIFT_ROOT'].'/Thrift.php';
 
-include_once $GLOBALS['THRIFT_ROOT'].'/automaton_thrift/automaton_thrift_types.php';
+include_once $GLOBALS['THRIFT_ROOT'].'/packages/automaton_thrift/automaton_thrift_types.php';
 
-interface ScriptIf {
-  public function registerService();
+interface AutomatonIf {
+  public function registerService($appname);
   public function unregisterService($serviceid);
-  public function registerScript($serviceid, $scriptname);
-  public function unregisterScript($serviceid, $scriptname);
-  public function execute($serviceid, $scriptname, $arguments);
+  public function registerPlugin($serviceid, $name);
+  public function unregisterPlugin($serviceid, $name);
+  public function execute($serviceid, $name, $arguments);
   public function interpret($serviceid, $raw);
-  public function isScript($scriptname);
-  public function getAvailableScripts();
-  public function scriptUsage($scriptname);
+  public function isPlugin($name);
+  public function getAvailablePlugins();
+  public function pluginUsage($name);
 }
 
-class ScriptClient implements ScriptIf {
+class AutomatonClient implements AutomatonIf {
   protected $input_ = null;
   protected $output_ = null;
 
@@ -31,15 +31,16 @@ class ScriptClient implements ScriptIf {
     $this->output_ = $output ? $output : $input;
   }
 
-  public function registerService()
+  public function registerService($appname)
   {
-    $this->send_registerService();
+    $this->send_registerService($appname);
     return $this->recv_registerService();
   }
 
-  public function send_registerService()
+  public function send_registerService($appname)
   {
-    $args = new automaton_thrift_Script_registerService_args();
+    $args = new automaton_thrift_Automaton_registerService_args();
+    $args->appname = $appname;
     $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {
@@ -57,7 +58,7 @@ class ScriptClient implements ScriptIf {
   public function recv_registerService()
   {
     $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
-    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Script_registerService_result', $this->input_->isStrictRead());
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Automaton_registerService_result', $this->input_->isStrictRead());
     else
     {
       $rseqid = 0;
@@ -71,7 +72,7 @@ class ScriptClient implements ScriptIf {
         $this->input_->readMessageEnd();
         throw $x;
       }
-      $result = new automaton_thrift_Script_registerService_result();
+      $result = new automaton_thrift_Automaton_registerService_result();
       $result->read($this->input_);
       $this->input_->readMessageEnd();
     }
@@ -89,7 +90,7 @@ class ScriptClient implements ScriptIf {
 
   public function send_unregisterService($serviceid)
   {
-    $args = new automaton_thrift_Script_unregisterService_args();
+    $args = new automaton_thrift_Automaton_unregisterService_args();
     $args->serviceid = $serviceid;
     $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
@@ -108,7 +109,7 @@ class ScriptClient implements ScriptIf {
   public function recv_unregisterService()
   {
     $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
-    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Script_unregisterService_result', $this->input_->isStrictRead());
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Automaton_unregisterService_result', $this->input_->isStrictRead());
     else
     {
       $rseqid = 0;
@@ -122,7 +123,7 @@ class ScriptClient implements ScriptIf {
         $this->input_->readMessageEnd();
         throw $x;
       }
-      $result = new automaton_thrift_Script_unregisterService_result();
+      $result = new automaton_thrift_Automaton_unregisterService_result();
       $result->read($this->input_);
       $this->input_->readMessageEnd();
     }
@@ -132,35 +133,35 @@ class ScriptClient implements ScriptIf {
     return;
   }
 
-  public function registerScript($serviceid, $scriptname)
+  public function registerPlugin($serviceid, $name)
   {
-    $this->send_registerScript($serviceid, $scriptname);
-    $this->recv_registerScript();
+    $this->send_registerPlugin($serviceid, $name);
+    $this->recv_registerPlugin();
   }
 
-  public function send_registerScript($serviceid, $scriptname)
+  public function send_registerPlugin($serviceid, $name)
   {
-    $args = new automaton_thrift_Script_registerScript_args();
+    $args = new automaton_thrift_Automaton_registerPlugin_args();
     $args->serviceid = $serviceid;
-    $args->scriptname = $scriptname;
+    $args->name = $name;
     $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {
-      thrift_protocol_write_binary($this->output_, 'registerScript', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
+      thrift_protocol_write_binary($this->output_, 'registerPlugin', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
     }
     else
     {
-      $this->output_->writeMessageBegin('registerScript', TMessageType::CALL, $this->seqid_);
+      $this->output_->writeMessageBegin('registerPlugin', TMessageType::CALL, $this->seqid_);
       $args->write($this->output_);
       $this->output_->writeMessageEnd();
       $this->output_->getTransport()->flush();
     }
   }
 
-  public function recv_registerScript()
+  public function recv_registerPlugin()
   {
     $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
-    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Script_registerScript_result', $this->input_->isStrictRead());
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Automaton_registerPlugin_result', $this->input_->isStrictRead());
     else
     {
       $rseqid = 0;
@@ -174,7 +175,7 @@ class ScriptClient implements ScriptIf {
         $this->input_->readMessageEnd();
         throw $x;
       }
-      $result = new automaton_thrift_Script_registerScript_result();
+      $result = new automaton_thrift_Automaton_registerPlugin_result();
       $result->read($this->input_);
       $this->input_->readMessageEnd();
     }
@@ -187,35 +188,35 @@ class ScriptClient implements ScriptIf {
     return;
   }
 
-  public function unregisterScript($serviceid, $scriptname)
+  public function unregisterPlugin($serviceid, $name)
   {
-    $this->send_unregisterScript($serviceid, $scriptname);
-    $this->recv_unregisterScript();
+    $this->send_unregisterPlugin($serviceid, $name);
+    $this->recv_unregisterPlugin();
   }
 
-  public function send_unregisterScript($serviceid, $scriptname)
+  public function send_unregisterPlugin($serviceid, $name)
   {
-    $args = new automaton_thrift_Script_unregisterScript_args();
+    $args = new automaton_thrift_Automaton_unregisterPlugin_args();
     $args->serviceid = $serviceid;
-    $args->scriptname = $scriptname;
+    $args->name = $name;
     $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {
-      thrift_protocol_write_binary($this->output_, 'unregisterScript', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
+      thrift_protocol_write_binary($this->output_, 'unregisterPlugin', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
     }
     else
     {
-      $this->output_->writeMessageBegin('unregisterScript', TMessageType::CALL, $this->seqid_);
+      $this->output_->writeMessageBegin('unregisterPlugin', TMessageType::CALL, $this->seqid_);
       $args->write($this->output_);
       $this->output_->writeMessageEnd();
       $this->output_->getTransport()->flush();
     }
   }
 
-  public function recv_unregisterScript()
+  public function recv_unregisterPlugin()
   {
     $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
-    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Script_unregisterScript_result', $this->input_->isStrictRead());
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Automaton_unregisterPlugin_result', $this->input_->isStrictRead());
     else
     {
       $rseqid = 0;
@@ -229,7 +230,7 @@ class ScriptClient implements ScriptIf {
         $this->input_->readMessageEnd();
         throw $x;
       }
-      $result = new automaton_thrift_Script_unregisterScript_result();
+      $result = new automaton_thrift_Automaton_unregisterPlugin_result();
       $result->read($this->input_);
       $this->input_->readMessageEnd();
     }
@@ -242,17 +243,17 @@ class ScriptClient implements ScriptIf {
     return;
   }
 
-  public function execute($serviceid, $scriptname, $arguments)
+  public function execute($serviceid, $name, $arguments)
   {
-    $this->send_execute($serviceid, $scriptname, $arguments);
+    $this->send_execute($serviceid, $name, $arguments);
     return $this->recv_execute();
   }
 
-  public function send_execute($serviceid, $scriptname, $arguments)
+  public function send_execute($serviceid, $name, $arguments)
   {
-    $args = new automaton_thrift_Script_execute_args();
+    $args = new automaton_thrift_Automaton_execute_args();
     $args->serviceid = $serviceid;
-    $args->scriptname = $scriptname;
+    $args->name = $name;
     $args->arguments = $arguments;
     $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
@@ -271,7 +272,7 @@ class ScriptClient implements ScriptIf {
   public function recv_execute()
   {
     $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
-    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Script_execute_result', $this->input_->isStrictRead());
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Automaton_execute_result', $this->input_->isStrictRead());
     else
     {
       $rseqid = 0;
@@ -285,7 +286,7 @@ class ScriptClient implements ScriptIf {
         $this->input_->readMessageEnd();
         throw $x;
       }
-      $result = new automaton_thrift_Script_execute_result();
+      $result = new automaton_thrift_Automaton_execute_result();
       $result->read($this->input_);
       $this->input_->readMessageEnd();
     }
@@ -309,7 +310,7 @@ class ScriptClient implements ScriptIf {
 
   public function send_interpret($serviceid, $raw)
   {
-    $args = new automaton_thrift_Script_interpret_args();
+    $args = new automaton_thrift_Automaton_interpret_args();
     $args->serviceid = $serviceid;
     $args->raw = $raw;
     $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
@@ -329,7 +330,7 @@ class ScriptClient implements ScriptIf {
   public function recv_interpret()
   {
     $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
-    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Script_interpret_result', $this->input_->isStrictRead());
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Automaton_interpret_result', $this->input_->isStrictRead());
     else
     {
       $rseqid = 0;
@@ -343,7 +344,7 @@ class ScriptClient implements ScriptIf {
         $this->input_->readMessageEnd();
         throw $x;
       }
-      $result = new automaton_thrift_Script_interpret_result();
+      $result = new automaton_thrift_Automaton_interpret_result();
       $result->read($this->input_);
       $this->input_->readMessageEnd();
     }
@@ -359,34 +360,34 @@ class ScriptClient implements ScriptIf {
     throw new Exception("interpret failed: unknown result");
   }
 
-  public function isScript($scriptname)
+  public function isPlugin($name)
   {
-    $this->send_isScript($scriptname);
-    return $this->recv_isScript();
+    $this->send_isPlugin($name);
+    return $this->recv_isPlugin();
   }
 
-  public function send_isScript($scriptname)
+  public function send_isPlugin($name)
   {
-    $args = new automaton_thrift_Script_isScript_args();
-    $args->scriptname = $scriptname;
+    $args = new automaton_thrift_Automaton_isPlugin_args();
+    $args->name = $name;
     $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {
-      thrift_protocol_write_binary($this->output_, 'isScript', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
+      thrift_protocol_write_binary($this->output_, 'isPlugin', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
     }
     else
     {
-      $this->output_->writeMessageBegin('isScript', TMessageType::CALL, $this->seqid_);
+      $this->output_->writeMessageBegin('isPlugin', TMessageType::CALL, $this->seqid_);
       $args->write($this->output_);
       $this->output_->writeMessageEnd();
       $this->output_->getTransport()->flush();
     }
   }
 
-  public function recv_isScript()
+  public function recv_isPlugin()
   {
     $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
-    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Script_isScript_result', $this->input_->isStrictRead());
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Automaton_isPlugin_result', $this->input_->isStrictRead());
     else
     {
       $rseqid = 0;
@@ -400,43 +401,43 @@ class ScriptClient implements ScriptIf {
         $this->input_->readMessageEnd();
         throw $x;
       }
-      $result = new automaton_thrift_Script_isScript_result();
+      $result = new automaton_thrift_Automaton_isPlugin_result();
       $result->read($this->input_);
       $this->input_->readMessageEnd();
     }
     if ($result->success !== null) {
       return $result->success;
     }
-    throw new Exception("isScript failed: unknown result");
+    throw new Exception("isPlugin failed: unknown result");
   }
 
-  public function getAvailableScripts()
+  public function getAvailablePlugins()
   {
-    $this->send_getAvailableScripts();
-    return $this->recv_getAvailableScripts();
+    $this->send_getAvailablePlugins();
+    return $this->recv_getAvailablePlugins();
   }
 
-  public function send_getAvailableScripts()
+  public function send_getAvailablePlugins()
   {
-    $args = new automaton_thrift_Script_getAvailableScripts_args();
+    $args = new automaton_thrift_Automaton_getAvailablePlugins_args();
     $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {
-      thrift_protocol_write_binary($this->output_, 'getAvailableScripts', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
+      thrift_protocol_write_binary($this->output_, 'getAvailablePlugins', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
     }
     else
     {
-      $this->output_->writeMessageBegin('getAvailableScripts', TMessageType::CALL, $this->seqid_);
+      $this->output_->writeMessageBegin('getAvailablePlugins', TMessageType::CALL, $this->seqid_);
       $args->write($this->output_);
       $this->output_->writeMessageEnd();
       $this->output_->getTransport()->flush();
     }
   }
 
-  public function recv_getAvailableScripts()
+  public function recv_getAvailablePlugins()
   {
     $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
-    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Script_getAvailableScripts_result', $this->input_->isStrictRead());
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Automaton_getAvailablePlugins_result', $this->input_->isStrictRead());
     else
     {
       $rseqid = 0;
@@ -450,44 +451,44 @@ class ScriptClient implements ScriptIf {
         $this->input_->readMessageEnd();
         throw $x;
       }
-      $result = new automaton_thrift_Script_getAvailableScripts_result();
+      $result = new automaton_thrift_Automaton_getAvailablePlugins_result();
       $result->read($this->input_);
       $this->input_->readMessageEnd();
     }
     if ($result->success !== null) {
       return $result->success;
     }
-    throw new Exception("getAvailableScripts failed: unknown result");
+    throw new Exception("getAvailablePlugins failed: unknown result");
   }
 
-  public function scriptUsage($scriptname)
+  public function pluginUsage($name)
   {
-    $this->send_scriptUsage($scriptname);
-    return $this->recv_scriptUsage();
+    $this->send_pluginUsage($name);
+    return $this->recv_pluginUsage();
   }
 
-  public function send_scriptUsage($scriptname)
+  public function send_pluginUsage($name)
   {
-    $args = new automaton_thrift_Script_scriptUsage_args();
-    $args->scriptname = $scriptname;
+    $args = new automaton_thrift_Automaton_pluginUsage_args();
+    $args->name = $name;
     $bin_accel = ($this->output_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_write_binary');
     if ($bin_accel)
     {
-      thrift_protocol_write_binary($this->output_, 'scriptUsage', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
+      thrift_protocol_write_binary($this->output_, 'pluginUsage', TMessageType::CALL, $args, $this->seqid_, $this->output_->isStrictWrite());
     }
     else
     {
-      $this->output_->writeMessageBegin('scriptUsage', TMessageType::CALL, $this->seqid_);
+      $this->output_->writeMessageBegin('pluginUsage', TMessageType::CALL, $this->seqid_);
       $args->write($this->output_);
       $this->output_->writeMessageEnd();
       $this->output_->getTransport()->flush();
     }
   }
 
-  public function recv_scriptUsage()
+  public function recv_pluginUsage()
   {
     $bin_accel = ($this->input_ instanceof TProtocol::$TBINARYPROTOCOLACCELERATED) && function_exists('thrift_protocol_read_binary');
-    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Script_scriptUsage_result', $this->input_->isStrictRead());
+    if ($bin_accel) $result = thrift_protocol_read_binary($this->input_, 'automaton_thrift_Automaton_pluginUsage_result', $this->input_->isStrictRead());
     else
     {
       $rseqid = 0;
@@ -501,7 +502,7 @@ class ScriptClient implements ScriptIf {
         $this->input_->readMessageEnd();
         throw $x;
       }
-      $result = new automaton_thrift_Script_scriptUsage_result();
+      $result = new automaton_thrift_Automaton_pluginUsage_result();
       $result->read($this->input_);
       $this->input_->readMessageEnd();
     }
@@ -514,26 +515,36 @@ class ScriptClient implements ScriptIf {
     if ($result->ouch !== null) {
       throw $result->ouch;
     }
-    throw new Exception("scriptUsage failed: unknown result");
+    throw new Exception("pluginUsage failed: unknown result");
   }
 
 }
 
 // HELPER FUNCTIONS AND STRUCTURES
 
-class automaton_thrift_Script_registerService_args {
+class automaton_thrift_Automaton_registerService_args {
   static $_TSPEC;
 
+  public $appname = null;
 
-  public function __construct() {
+  public function __construct($vals=null) {
     if (!isset(self::$_TSPEC)) {
       self::$_TSPEC = array(
+        1 => array(
+          'var' => 'appname',
+          'type' => TType::STRING,
+          ),
         );
+    }
+    if (is_array($vals)) {
+      if (isset($vals['appname'])) {
+        $this->appname = $vals['appname'];
+      }
     }
   }
 
   public function getName() {
-    return 'Script_registerService_args';
+    return 'Automaton_registerService_args';
   }
 
   public function read($input)
@@ -551,6 +562,13 @@ class automaton_thrift_Script_registerService_args {
       }
       switch ($fid)
       {
+        case 1:
+          if ($ftype == TType::STRING) {
+            $xfer += $input->readString($this->appname);
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
         default:
           $xfer += $input->skip($ftype);
           break;
@@ -563,7 +581,12 @@ class automaton_thrift_Script_registerService_args {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_registerService_args');
+    $xfer += $output->writeStructBegin('Automaton_registerService_args');
+    if ($this->appname !== null) {
+      $xfer += $output->writeFieldBegin('appname', TType::STRING, 1);
+      $xfer += $output->writeString($this->appname);
+      $xfer += $output->writeFieldEnd();
+    }
     $xfer += $output->writeFieldStop();
     $xfer += $output->writeStructEnd();
     return $xfer;
@@ -571,7 +594,7 @@ class automaton_thrift_Script_registerService_args {
 
 }
 
-class automaton_thrift_Script_registerService_result {
+class automaton_thrift_Automaton_registerService_result {
   static $_TSPEC;
 
   public $success = null;
@@ -593,7 +616,7 @@ class automaton_thrift_Script_registerService_result {
   }
 
   public function getName() {
-    return 'Script_registerService_result';
+    return 'Automaton_registerService_result';
   }
 
   public function read($input)
@@ -630,7 +653,7 @@ class automaton_thrift_Script_registerService_result {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_registerService_result');
+    $xfer += $output->writeStructBegin('Automaton_registerService_result');
     if ($this->success !== null) {
       $xfer += $output->writeFieldBegin('success', TType::STRING, 0);
       $xfer += $output->writeString($this->success);
@@ -643,7 +666,7 @@ class automaton_thrift_Script_registerService_result {
 
 }
 
-class automaton_thrift_Script_unregisterService_args {
+class automaton_thrift_Automaton_unregisterService_args {
   static $_TSPEC;
 
   public $serviceid = null;
@@ -665,7 +688,7 @@ class automaton_thrift_Script_unregisterService_args {
   }
 
   public function getName() {
-    return 'Script_unregisterService_args';
+    return 'Automaton_unregisterService_args';
   }
 
   public function read($input)
@@ -702,7 +725,7 @@ class automaton_thrift_Script_unregisterService_args {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_unregisterService_args');
+    $xfer += $output->writeStructBegin('Automaton_unregisterService_args');
     if ($this->serviceid !== null) {
       $xfer += $output->writeFieldBegin('serviceid', TType::STRING, 1);
       $xfer += $output->writeString($this->serviceid);
@@ -715,7 +738,7 @@ class automaton_thrift_Script_unregisterService_args {
 
 }
 
-class automaton_thrift_Script_unregisterService_result {
+class automaton_thrift_Automaton_unregisterService_result {
   static $_TSPEC;
 
   public $oops = null;
@@ -738,7 +761,7 @@ class automaton_thrift_Script_unregisterService_result {
   }
 
   public function getName() {
-    return 'Script_unregisterService_result';
+    return 'Automaton_unregisterService_result';
   }
 
   public function read($input)
@@ -776,7 +799,7 @@ class automaton_thrift_Script_unregisterService_result {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_unregisterService_result');
+    $xfer += $output->writeStructBegin('Automaton_unregisterService_result');
     if ($this->oops !== null) {
       $xfer += $output->writeFieldBegin('oops', TType::STRUCT, 1);
       $xfer += $this->oops->write($output);
@@ -789,11 +812,11 @@ class automaton_thrift_Script_unregisterService_result {
 
 }
 
-class automaton_thrift_Script_registerScript_args {
+class automaton_thrift_Automaton_registerPlugin_args {
   static $_TSPEC;
 
   public $serviceid = null;
-  public $scriptname = null;
+  public $name = null;
 
   public function __construct($vals=null) {
     if (!isset(self::$_TSPEC)) {
@@ -803,7 +826,7 @@ class automaton_thrift_Script_registerScript_args {
           'type' => TType::STRING,
           ),
         2 => array(
-          'var' => 'scriptname',
+          'var' => 'name',
           'type' => TType::STRING,
           ),
         );
@@ -812,14 +835,14 @@ class automaton_thrift_Script_registerScript_args {
       if (isset($vals['serviceid'])) {
         $this->serviceid = $vals['serviceid'];
       }
-      if (isset($vals['scriptname'])) {
-        $this->scriptname = $vals['scriptname'];
+      if (isset($vals['name'])) {
+        $this->name = $vals['name'];
       }
     }
   }
 
   public function getName() {
-    return 'Script_registerScript_args';
+    return 'Automaton_registerPlugin_args';
   }
 
   public function read($input)
@@ -846,7 +869,7 @@ class automaton_thrift_Script_registerScript_args {
           break;
         case 2:
           if ($ftype == TType::STRING) {
-            $xfer += $input->readString($this->scriptname);
+            $xfer += $input->readString($this->name);
           } else {
             $xfer += $input->skip($ftype);
           }
@@ -863,15 +886,15 @@ class automaton_thrift_Script_registerScript_args {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_registerScript_args');
+    $xfer += $output->writeStructBegin('Automaton_registerPlugin_args');
     if ($this->serviceid !== null) {
       $xfer += $output->writeFieldBegin('serviceid', TType::STRING, 1);
       $xfer += $output->writeString($this->serviceid);
       $xfer += $output->writeFieldEnd();
     }
-    if ($this->scriptname !== null) {
-      $xfer += $output->writeFieldBegin('scriptname', TType::STRING, 2);
-      $xfer += $output->writeString($this->scriptname);
+    if ($this->name !== null) {
+      $xfer += $output->writeFieldBegin('name', TType::STRING, 2);
+      $xfer += $output->writeString($this->name);
       $xfer += $output->writeFieldEnd();
     }
     $xfer += $output->writeFieldStop();
@@ -881,7 +904,7 @@ class automaton_thrift_Script_registerScript_args {
 
 }
 
-class automaton_thrift_Script_registerScript_result {
+class automaton_thrift_Automaton_registerPlugin_result {
   static $_TSPEC;
 
   public $oops = null;
@@ -898,7 +921,7 @@ class automaton_thrift_Script_registerScript_result {
         2 => array(
           'var' => 'ouch',
           'type' => TType::STRUCT,
-          'class' => 'automaton_thrift_ScriptNotLoadedException',
+          'class' => 'automaton_thrift_PluginNotLoadedException',
           ),
         );
     }
@@ -913,7 +936,7 @@ class automaton_thrift_Script_registerScript_result {
   }
 
   public function getName() {
-    return 'Script_registerScript_result';
+    return 'Automaton_registerPlugin_result';
   }
 
   public function read($input)
@@ -941,7 +964,7 @@ class automaton_thrift_Script_registerScript_result {
           break;
         case 2:
           if ($ftype == TType::STRUCT) {
-            $this->ouch = new automaton_thrift_ScriptNotLoadedException();
+            $this->ouch = new automaton_thrift_PluginNotLoadedException();
             $xfer += $this->ouch->read($input);
           } else {
             $xfer += $input->skip($ftype);
@@ -959,7 +982,7 @@ class automaton_thrift_Script_registerScript_result {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_registerScript_result');
+    $xfer += $output->writeStructBegin('Automaton_registerPlugin_result');
     if ($this->oops !== null) {
       $xfer += $output->writeFieldBegin('oops', TType::STRUCT, 1);
       $xfer += $this->oops->write($output);
@@ -977,11 +1000,11 @@ class automaton_thrift_Script_registerScript_result {
 
 }
 
-class automaton_thrift_Script_unregisterScript_args {
+class automaton_thrift_Automaton_unregisterPlugin_args {
   static $_TSPEC;
 
   public $serviceid = null;
-  public $scriptname = null;
+  public $name = null;
 
   public function __construct($vals=null) {
     if (!isset(self::$_TSPEC)) {
@@ -991,7 +1014,7 @@ class automaton_thrift_Script_unregisterScript_args {
           'type' => TType::STRING,
           ),
         2 => array(
-          'var' => 'scriptname',
+          'var' => 'name',
           'type' => TType::STRING,
           ),
         );
@@ -1000,14 +1023,14 @@ class automaton_thrift_Script_unregisterScript_args {
       if (isset($vals['serviceid'])) {
         $this->serviceid = $vals['serviceid'];
       }
-      if (isset($vals['scriptname'])) {
-        $this->scriptname = $vals['scriptname'];
+      if (isset($vals['name'])) {
+        $this->name = $vals['name'];
       }
     }
   }
 
   public function getName() {
-    return 'Script_unregisterScript_args';
+    return 'Automaton_unregisterPlugin_args';
   }
 
   public function read($input)
@@ -1034,7 +1057,7 @@ class automaton_thrift_Script_unregisterScript_args {
           break;
         case 2:
           if ($ftype == TType::STRING) {
-            $xfer += $input->readString($this->scriptname);
+            $xfer += $input->readString($this->name);
           } else {
             $xfer += $input->skip($ftype);
           }
@@ -1051,15 +1074,15 @@ class automaton_thrift_Script_unregisterScript_args {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_unregisterScript_args');
+    $xfer += $output->writeStructBegin('Automaton_unregisterPlugin_args');
     if ($this->serviceid !== null) {
       $xfer += $output->writeFieldBegin('serviceid', TType::STRING, 1);
       $xfer += $output->writeString($this->serviceid);
       $xfer += $output->writeFieldEnd();
     }
-    if ($this->scriptname !== null) {
-      $xfer += $output->writeFieldBegin('scriptname', TType::STRING, 2);
-      $xfer += $output->writeString($this->scriptname);
+    if ($this->name !== null) {
+      $xfer += $output->writeFieldBegin('name', TType::STRING, 2);
+      $xfer += $output->writeString($this->name);
       $xfer += $output->writeFieldEnd();
     }
     $xfer += $output->writeFieldStop();
@@ -1069,7 +1092,7 @@ class automaton_thrift_Script_unregisterScript_args {
 
 }
 
-class automaton_thrift_Script_unregisterScript_result {
+class automaton_thrift_Automaton_unregisterPlugin_result {
   static $_TSPEC;
 
   public $oops = null;
@@ -1086,7 +1109,7 @@ class automaton_thrift_Script_unregisterScript_result {
         2 => array(
           'var' => 'ouch',
           'type' => TType::STRUCT,
-          'class' => 'automaton_thrift_ScriptNotRegisteredException',
+          'class' => 'automaton_thrift_PluginNotRegisteredException',
           ),
         );
     }
@@ -1101,7 +1124,7 @@ class automaton_thrift_Script_unregisterScript_result {
   }
 
   public function getName() {
-    return 'Script_unregisterScript_result';
+    return 'Automaton_unregisterPlugin_result';
   }
 
   public function read($input)
@@ -1129,7 +1152,7 @@ class automaton_thrift_Script_unregisterScript_result {
           break;
         case 2:
           if ($ftype == TType::STRUCT) {
-            $this->ouch = new automaton_thrift_ScriptNotRegisteredException();
+            $this->ouch = new automaton_thrift_PluginNotRegisteredException();
             $xfer += $this->ouch->read($input);
           } else {
             $xfer += $input->skip($ftype);
@@ -1147,7 +1170,7 @@ class automaton_thrift_Script_unregisterScript_result {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_unregisterScript_result');
+    $xfer += $output->writeStructBegin('Automaton_unregisterPlugin_result');
     if ($this->oops !== null) {
       $xfer += $output->writeFieldBegin('oops', TType::STRUCT, 1);
       $xfer += $this->oops->write($output);
@@ -1165,11 +1188,11 @@ class automaton_thrift_Script_unregisterScript_result {
 
 }
 
-class automaton_thrift_Script_execute_args {
+class automaton_thrift_Automaton_execute_args {
   static $_TSPEC;
 
   public $serviceid = null;
-  public $scriptname = null;
+  public $name = null;
   public $arguments = null;
 
   public function __construct($vals=null) {
@@ -1180,7 +1203,7 @@ class automaton_thrift_Script_execute_args {
           'type' => TType::STRING,
           ),
         2 => array(
-          'var' => 'scriptname',
+          'var' => 'name',
           'type' => TType::STRING,
           ),
         3 => array(
@@ -1193,8 +1216,8 @@ class automaton_thrift_Script_execute_args {
       if (isset($vals['serviceid'])) {
         $this->serviceid = $vals['serviceid'];
       }
-      if (isset($vals['scriptname'])) {
-        $this->scriptname = $vals['scriptname'];
+      if (isset($vals['name'])) {
+        $this->name = $vals['name'];
       }
       if (isset($vals['arguments'])) {
         $this->arguments = $vals['arguments'];
@@ -1203,7 +1226,7 @@ class automaton_thrift_Script_execute_args {
   }
 
   public function getName() {
-    return 'Script_execute_args';
+    return 'Automaton_execute_args';
   }
 
   public function read($input)
@@ -1230,7 +1253,7 @@ class automaton_thrift_Script_execute_args {
           break;
         case 2:
           if ($ftype == TType::STRING) {
-            $xfer += $input->readString($this->scriptname);
+            $xfer += $input->readString($this->name);
           } else {
             $xfer += $input->skip($ftype);
           }
@@ -1254,15 +1277,15 @@ class automaton_thrift_Script_execute_args {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_execute_args');
+    $xfer += $output->writeStructBegin('Automaton_execute_args');
     if ($this->serviceid !== null) {
       $xfer += $output->writeFieldBegin('serviceid', TType::STRING, 1);
       $xfer += $output->writeString($this->serviceid);
       $xfer += $output->writeFieldEnd();
     }
-    if ($this->scriptname !== null) {
-      $xfer += $output->writeFieldBegin('scriptname', TType::STRING, 2);
-      $xfer += $output->writeString($this->scriptname);
+    if ($this->name !== null) {
+      $xfer += $output->writeFieldBegin('name', TType::STRING, 2);
+      $xfer += $output->writeString($this->name);
       $xfer += $output->writeFieldEnd();
     }
     if ($this->arguments !== null) {
@@ -1277,7 +1300,7 @@ class automaton_thrift_Script_execute_args {
 
 }
 
-class automaton_thrift_Script_execute_result {
+class automaton_thrift_Automaton_execute_result {
   static $_TSPEC;
 
   public $success = null;
@@ -1299,7 +1322,7 @@ class automaton_thrift_Script_execute_result {
         2 => array(
           'var' => 'ouch',
           'type' => TType::STRUCT,
-          'class' => 'automaton_thrift_ScriptNotRegisteredException',
+          'class' => 'automaton_thrift_PluginNotRegisteredException',
           ),
         );
     }
@@ -1317,7 +1340,7 @@ class automaton_thrift_Script_execute_result {
   }
 
   public function getName() {
-    return 'Script_execute_result';
+    return 'Automaton_execute_result';
   }
 
   public function read($input)
@@ -1352,7 +1375,7 @@ class automaton_thrift_Script_execute_result {
           break;
         case 2:
           if ($ftype == TType::STRUCT) {
-            $this->ouch = new automaton_thrift_ScriptNotRegisteredException();
+            $this->ouch = new automaton_thrift_PluginNotRegisteredException();
             $xfer += $this->ouch->read($input);
           } else {
             $xfer += $input->skip($ftype);
@@ -1370,7 +1393,7 @@ class automaton_thrift_Script_execute_result {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_execute_result');
+    $xfer += $output->writeStructBegin('Automaton_execute_result');
     if ($this->success !== null) {
       $xfer += $output->writeFieldBegin('success', TType::STRING, 0);
       $xfer += $output->writeString($this->success);
@@ -1393,7 +1416,7 @@ class automaton_thrift_Script_execute_result {
 
 }
 
-class automaton_thrift_Script_interpret_args {
+class automaton_thrift_Automaton_interpret_args {
   static $_TSPEC;
 
   public $serviceid = null;
@@ -1423,7 +1446,7 @@ class automaton_thrift_Script_interpret_args {
   }
 
   public function getName() {
-    return 'Script_interpret_args';
+    return 'Automaton_interpret_args';
   }
 
   public function read($input)
@@ -1467,7 +1490,7 @@ class automaton_thrift_Script_interpret_args {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_interpret_args');
+    $xfer += $output->writeStructBegin('Automaton_interpret_args');
     if ($this->serviceid !== null) {
       $xfer += $output->writeFieldBegin('serviceid', TType::STRING, 1);
       $xfer += $output->writeString($this->serviceid);
@@ -1485,7 +1508,7 @@ class automaton_thrift_Script_interpret_args {
 
 }
 
-class automaton_thrift_Script_interpret_result {
+class automaton_thrift_Automaton_interpret_result {
   static $_TSPEC;
 
   public $success = null;
@@ -1507,7 +1530,7 @@ class automaton_thrift_Script_interpret_result {
         2 => array(
           'var' => 'ouch',
           'type' => TType::STRUCT,
-          'class' => 'automaton_thrift_ScriptNotRegisteredException',
+          'class' => 'automaton_thrift_PluginNotRegisteredException',
           ),
         );
     }
@@ -1525,7 +1548,7 @@ class automaton_thrift_Script_interpret_result {
   }
 
   public function getName() {
-    return 'Script_interpret_result';
+    return 'Automaton_interpret_result';
   }
 
   public function read($input)
@@ -1560,7 +1583,7 @@ class automaton_thrift_Script_interpret_result {
           break;
         case 2:
           if ($ftype == TType::STRUCT) {
-            $this->ouch = new automaton_thrift_ScriptNotRegisteredException();
+            $this->ouch = new automaton_thrift_PluginNotRegisteredException();
             $xfer += $this->ouch->read($input);
           } else {
             $xfer += $input->skip($ftype);
@@ -1578,7 +1601,7 @@ class automaton_thrift_Script_interpret_result {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_interpret_result');
+    $xfer += $output->writeStructBegin('Automaton_interpret_result');
     if ($this->success !== null) {
       $xfer += $output->writeFieldBegin('success', TType::STRING, 0);
       $xfer += $output->writeString($this->success);
@@ -1601,29 +1624,29 @@ class automaton_thrift_Script_interpret_result {
 
 }
 
-class automaton_thrift_Script_isScript_args {
+class automaton_thrift_Automaton_isPlugin_args {
   static $_TSPEC;
 
-  public $scriptname = null;
+  public $name = null;
 
   public function __construct($vals=null) {
     if (!isset(self::$_TSPEC)) {
       self::$_TSPEC = array(
         1 => array(
-          'var' => 'scriptname',
+          'var' => 'name',
           'type' => TType::STRING,
           ),
         );
     }
     if (is_array($vals)) {
-      if (isset($vals['scriptname'])) {
-        $this->scriptname = $vals['scriptname'];
+      if (isset($vals['name'])) {
+        $this->name = $vals['name'];
       }
     }
   }
 
   public function getName() {
-    return 'Script_isScript_args';
+    return 'Automaton_isPlugin_args';
   }
 
   public function read($input)
@@ -1643,7 +1666,7 @@ class automaton_thrift_Script_isScript_args {
       {
         case 1:
           if ($ftype == TType::STRING) {
-            $xfer += $input->readString($this->scriptname);
+            $xfer += $input->readString($this->name);
           } else {
             $xfer += $input->skip($ftype);
           }
@@ -1660,10 +1683,10 @@ class automaton_thrift_Script_isScript_args {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_isScript_args');
-    if ($this->scriptname !== null) {
-      $xfer += $output->writeFieldBegin('scriptname', TType::STRING, 1);
-      $xfer += $output->writeString($this->scriptname);
+    $xfer += $output->writeStructBegin('Automaton_isPlugin_args');
+    if ($this->name !== null) {
+      $xfer += $output->writeFieldBegin('name', TType::STRING, 1);
+      $xfer += $output->writeString($this->name);
       $xfer += $output->writeFieldEnd();
     }
     $xfer += $output->writeFieldStop();
@@ -1673,7 +1696,7 @@ class automaton_thrift_Script_isScript_args {
 
 }
 
-class automaton_thrift_Script_isScript_result {
+class automaton_thrift_Automaton_isPlugin_result {
   static $_TSPEC;
 
   public $success = null;
@@ -1695,7 +1718,7 @@ class automaton_thrift_Script_isScript_result {
   }
 
   public function getName() {
-    return 'Script_isScript_result';
+    return 'Automaton_isPlugin_result';
   }
 
   public function read($input)
@@ -1732,7 +1755,7 @@ class automaton_thrift_Script_isScript_result {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_isScript_result');
+    $xfer += $output->writeStructBegin('Automaton_isPlugin_result');
     if ($this->success !== null) {
       $xfer += $output->writeFieldBegin('success', TType::BOOL, 0);
       $xfer += $output->writeBool($this->success);
@@ -1745,7 +1768,7 @@ class automaton_thrift_Script_isScript_result {
 
 }
 
-class automaton_thrift_Script_getAvailableScripts_args {
+class automaton_thrift_Automaton_getAvailablePlugins_args {
   static $_TSPEC;
 
 
@@ -1757,7 +1780,7 @@ class automaton_thrift_Script_getAvailableScripts_args {
   }
 
   public function getName() {
-    return 'Script_getAvailableScripts_args';
+    return 'Automaton_getAvailablePlugins_args';
   }
 
   public function read($input)
@@ -1787,7 +1810,7 @@ class automaton_thrift_Script_getAvailableScripts_args {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_getAvailableScripts_args');
+    $xfer += $output->writeStructBegin('Automaton_getAvailablePlugins_args');
     $xfer += $output->writeFieldStop();
     $xfer += $output->writeStructEnd();
     return $xfer;
@@ -1795,7 +1818,7 @@ class automaton_thrift_Script_getAvailableScripts_args {
 
 }
 
-class automaton_thrift_Script_getAvailableScripts_result {
+class automaton_thrift_Automaton_getAvailablePlugins_result {
   static $_TSPEC;
 
   public $success = null;
@@ -1821,7 +1844,7 @@ class automaton_thrift_Script_getAvailableScripts_result {
   }
 
   public function getName() {
-    return 'Script_getAvailableScripts_result';
+    return 'Automaton_getAvailablePlugins_result';
   }
 
   public function read($input)
@@ -1868,7 +1891,7 @@ class automaton_thrift_Script_getAvailableScripts_result {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_getAvailableScripts_result');
+    $xfer += $output->writeStructBegin('Automaton_getAvailablePlugins_result');
     if ($this->success !== null) {
       if (!is_array($this->success)) {
         throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
@@ -1893,29 +1916,29 @@ class automaton_thrift_Script_getAvailableScripts_result {
 
 }
 
-class automaton_thrift_Script_scriptUsage_args {
+class automaton_thrift_Automaton_pluginUsage_args {
   static $_TSPEC;
 
-  public $scriptname = null;
+  public $name = null;
 
   public function __construct($vals=null) {
     if (!isset(self::$_TSPEC)) {
       self::$_TSPEC = array(
         1 => array(
-          'var' => 'scriptname',
+          'var' => 'name',
           'type' => TType::STRING,
           ),
         );
     }
     if (is_array($vals)) {
-      if (isset($vals['scriptname'])) {
-        $this->scriptname = $vals['scriptname'];
+      if (isset($vals['name'])) {
+        $this->name = $vals['name'];
       }
     }
   }
 
   public function getName() {
-    return 'Script_scriptUsage_args';
+    return 'Automaton_pluginUsage_args';
   }
 
   public function read($input)
@@ -1935,7 +1958,7 @@ class automaton_thrift_Script_scriptUsage_args {
       {
         case 1:
           if ($ftype == TType::STRING) {
-            $xfer += $input->readString($this->scriptname);
+            $xfer += $input->readString($this->name);
           } else {
             $xfer += $input->skip($ftype);
           }
@@ -1952,10 +1975,10 @@ class automaton_thrift_Script_scriptUsage_args {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_scriptUsage_args');
-    if ($this->scriptname !== null) {
-      $xfer += $output->writeFieldBegin('scriptname', TType::STRING, 1);
-      $xfer += $output->writeString($this->scriptname);
+    $xfer += $output->writeStructBegin('Automaton_pluginUsage_args');
+    if ($this->name !== null) {
+      $xfer += $output->writeFieldBegin('name', TType::STRING, 1);
+      $xfer += $output->writeString($this->name);
       $xfer += $output->writeFieldEnd();
     }
     $xfer += $output->writeFieldStop();
@@ -1965,7 +1988,7 @@ class automaton_thrift_Script_scriptUsage_args {
 
 }
 
-class automaton_thrift_Script_scriptUsage_result {
+class automaton_thrift_Automaton_pluginUsage_result {
   static $_TSPEC;
 
   public $success = null;
@@ -1987,7 +2010,7 @@ class automaton_thrift_Script_scriptUsage_result {
         2 => array(
           'var' => 'ouch',
           'type' => TType::STRUCT,
-          'class' => 'automaton_thrift_ScriptNotLoadedException',
+          'class' => 'automaton_thrift_PluginNotLoadedException',
           ),
         );
     }
@@ -2005,7 +2028,7 @@ class automaton_thrift_Script_scriptUsage_result {
   }
 
   public function getName() {
-    return 'Script_scriptUsage_result';
+    return 'Automaton_pluginUsage_result';
   }
 
   public function read($input)
@@ -2040,7 +2063,7 @@ class automaton_thrift_Script_scriptUsage_result {
           break;
         case 2:
           if ($ftype == TType::STRUCT) {
-            $this->ouch = new automaton_thrift_ScriptNotLoadedException();
+            $this->ouch = new automaton_thrift_PluginNotLoadedException();
             $xfer += $this->ouch->read($input);
           } else {
             $xfer += $input->skip($ftype);
@@ -2058,7 +2081,7 @@ class automaton_thrift_Script_scriptUsage_result {
 
   public function write($output) {
     $xfer = 0;
-    $xfer += $output->writeStructBegin('Script_scriptUsage_result');
+    $xfer += $output->writeStructBegin('Automaton_pluginUsage_result');
     if ($this->success !== null) {
       $xfer += $output->writeFieldBegin('success', TType::STRING, 0);
       $xfer += $output->writeString($this->success);

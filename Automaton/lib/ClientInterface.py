@@ -13,23 +13,23 @@ class ClientInterface:
   def close(self):
     pass
 
-  def getAvailableScripts(self):
-    return self.client.getAvailableScripts()
+  def getAvailablePlugins(self):
+    return self.client.getAvailablePlugins()
 
-  def isScript(self, scriptname):
-    return self.client.isScript(scriptname)
+  def isPlugin(self, name):
+    return self.client.isPlugin(name)
 
-  def registerScript(self, scriptname):
-    return self.client.registerScript(self.serviceid, scriptname)
+  def registerPlugin(self, name):
+    return self.client.registerPlugin(self.serviceid, name)
 
-  def unregisterScript(self, scriptname):
-    return self.client.registerScript(self.serviceid, scriptname)
+  def unregisterPlugin(self, name):
+    return self.client.registerPlugin(self.serviceid, name)
 
-  def execute(self, scriptname, args):
-    return self.client.execute(self.serviceid, scriptname, args)
+  def execute(self, name, args):
+    return self.client.execute(self.serviceid, name, args)
 
   def interpret(self, raw):
     return self.client.interpret(self.serviceid, raw)
 
-  def scriptUsage(self, scriptname):
-    return self.client.scriptUsage(scriptname)
+  def pluginUsage(self, name):
+    return self.client.pluginUsage(name)

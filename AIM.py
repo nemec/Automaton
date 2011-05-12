@@ -94,14 +94,14 @@ class B(oscar.BOSConnection):
 
           if body == 'help':
             if args == '':
-              returned = ", ".join(self.factory.client.getAvailableScripts())
+              returned = ", ".join(self.factory.client.getAvailablePlugins())
             else:
-              returned = self.factory.client.scriptUsage(args)
+              returned = self.factory.client.pluginUsage(args)
           elif body == '/logout':
             self.factory.authenticated_users.remove(username)
             returned = "Logged out."
-          elif self.factory.client.isScript(body):
-            self.factory.client.registerScript(body)
+          elif self.factory.client.isPlugin(body):
+            self.factory.client.registerPlugin(body)
             returned = self.factory.client.execute(body, args)
           else:
             returned = "Command not found.\nDid you forget to import it?"
@@ -120,7 +120,7 @@ class AIMClientFactory(protocol.ReconnectingClientFactory):
 
   def __init__(self):
     self.authenticated_users = []
-    self.client = ClientWrapper.ClientWrapper(op['THRIFT_SERVER'])
+    self.client = ClientWrapper.ClientWrapper(op['THRIFT_SERVER'], appname='AIM')
     self.client.open()
 
   def buildProtocol(self, addr):
