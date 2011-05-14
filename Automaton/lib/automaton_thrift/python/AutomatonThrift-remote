@@ -13,7 +13,7 @@ from thrift.transport import TSocket
 from thrift.transport import THttpClient
 from thrift.protocol import TBinaryProtocol
 
-import Automaton
+import AutomatonThrift
 from ttypes import *
 
 if len(sys.argv) <= 1 or sys.argv[1] == '--help':
@@ -25,6 +25,8 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print '  void unregisterClient(string clientid)'
   print '  void allowService(string clientid, string name)'
   print '  void disallowService(string clientid, string name)'
+  print '  void allowAllServices(string clientid)'
+  print '  void disallowAllServices(string clientid)'
   print '  string execute(string clientid, string name, string arguments)'
   print '  string interpret(string clientid, string raw)'
   print '  bool isService(string name)'
@@ -75,7 +77,7 @@ else:
   else:
     transport = TTransport.TBufferedTransport(socket)
 protocol = TBinaryProtocol.TBinaryProtocol(transport)
-client = Automaton.Client(protocol)
+client = AutomatonThrift.Client(protocol)
 transport.open()
 
 if cmd == 'registerClient':
@@ -101,6 +103,18 @@ elif cmd == 'disallowService':
     print 'disallowService requires 2 args'
     sys.exit(1)
   pp.pprint(client.disallowService(args[0],args[1],))
+
+elif cmd == 'allowAllServices':
+  if len(args) != 1:
+    print 'allowAllServices requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.allowAllServices(args[0],))
+
+elif cmd == 'disallowAllServices':
+  if len(args) != 1:
+    print 'disallowAllServices requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.disallowAllServices(args[0],))
 
 elif cmd == 'execute':
   if len(args) != 3:

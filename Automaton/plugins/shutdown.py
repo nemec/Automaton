@@ -1,7 +1,23 @@
 import subprocess as sp
 
+import Automaton.lib.plugin
+
+def platform():
+  return ['linux']
+
 # Shuts down the host computer in the specified number of seconds
-class shutdown:
+class Shutdown(Automaton.lib.plugin.PluginInterface):
+
+  def __init__(self, registrar):
+    super(Shutdown, self).__init__(registrar)
+    registrar.register_service("shutdown", self.execute,
+      usage = """
+               USAGE: shutdown [when]
+               Shuts down the computer at the specified time. Defaults to now.
+              """)
+
+  def disable(self):
+    self.registrar.unregister_service("shutdown")
 
   def execute(self, arg = 'now'):
       try:
@@ -17,13 +33,4 @@ class shutdown:
           
       p = sp.Popen('shutdown -P ' + arg, stdout = sp.PIPE, shell = True)
       return p.communicate()[0]
-
-  def platform(self):
-    return ['linux']
-
-  def help(self):
-    return """
-            USAGE: shutdown when
-            Shuts down the computer at the specified time. Defaults to now.
-           """
 

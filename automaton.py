@@ -7,25 +7,16 @@ try:
   client.open()
 
   try:
-    command = sys.argv[1]
-    args = ' '.join(sys.argv[2:])
-    
-    if command == '-i':
-      [client.registerPlugin(x) for x in client.getAvailablePlugins()]
-      print client.interpret(args)
-    elif client.isPlugin(command):
-      client.registerPlugin(command)
-      print client.execute(command, args)
-    else:
-      print "Command not found"
-  except ClientWrapper.ServiceNotRegisteredException:
+    client.allowAllServices()
+    print client.interpret(' '.join(sys.argv[1:]))
+  except ClientWrapper.ClientNotRegisteredError:
     print "Service not registered"
-  except ClientWrapper.PluginNotLoadedException, e:
+  except ClientWrapper.ServiceNotProvidedError as e:
     print e
-  except ClientWrapper.PluginNotRegisteredException, e:
+  except ClientWrapper.ServiceNotRegisteredError as e:
     print e
   finally:
     client.close()
 
-except ClientWrapper.ThriftException, tx:
+except ClientWrapper.ClientException as tx:
   print repr(tx.message)

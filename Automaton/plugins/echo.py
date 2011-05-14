@@ -1,4 +1,17 @@
-class echo:
+import Automaton.lib.plugin
+
+class Echo(Automaton.lib.plugin.PluginInterface):
+
+  def __init__(self, registrar):
+    super(Echo, self).__init__(registrar)
+    registrar.register_service("echo", self.execute)
+
+  def disable(self):
+    self.registrar.unregister_service("echo",
+      usage = """
+               USAGE: echo message
+               Echoes a message back to the user.
+              """)
 
   def execute(self, arg = ''):
     return arg
@@ -10,7 +23,4 @@ class echo:
             "}"
 
   def help(self):
-    return """
-            USAGE: echo message
-            Echoes a message back to the user.
-           """
+    return 

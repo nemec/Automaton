@@ -6,7 +6,7 @@ import platformdata
 def log(message, exception = None):
   "@TODO logging"
   if exception:
-    message = message[0:-1] + ': %s' % str(exception)
+    message = message[0:-1] + ': ' + str(exception)
   time = datetime.now()
   print "Log",time,":",message
   logdir = platformdata.personaldir()
@@ -14,7 +14,7 @@ def log(message, exception = None):
     mkdir(logdir)
   logfile = os.path.join(logdir, "log.txt")
   with open(logfile, 'a') as f:
-    f.write("%s:%s\n" % (time,message))
+    f.write("{0}:{1}\n".format(time,message))
 
 # Logging client
 ''' import logging, logging.handlers

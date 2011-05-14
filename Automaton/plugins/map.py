@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import urllib
 import urllib2
 try:
@@ -9,7 +7,20 @@ except ImportError:
 import unicodedata
 import re
 
-class map:
+import Automaton.lib.plugin
+
+class Map(Automaton.lib.plugin.PluginInterface):
+
+  def __init__(self, registrar):
+    super(Map, self).__init__(registrar)
+    registrar.register_service("map", self.execute,
+      usage = """
+               USAGE: map [origin] to [destination]
+               Returns text directions from origin to destination from GMaps
+              """)
+
+  def disable(self):
+    self.registrar.unregister_service("map")
 
   def execute(self, arg = ''):
     if arg == '':
@@ -25,13 +36,13 @@ class map:
 
     if origin == '':
       try:
-        origin = self.call('latitude', '')
-      except Exception, e:
+        origin = self.registrar.request_service('latitude')
+      except Exception as e:
         print e
-        return self.help()
+        return "Could not determine location."
 
     params = {
-      'q':        'from:%s to:%s' % (origin, destination),
+      'q':        'from:{0} to:{1}'.format(origin, destination),
       'output':   'json',
       'oe':       'utf8',
     }
@@ -60,8 +71,3 @@ class map:
               "arguments = *"+\
             "}"
 
-  def help(self):
-    return """
-            USAGE: map [origin] to [destination]
-            Returns text directions from origin to destination from GMaps
-           """

@@ -1,5 +1,23 @@
 import subprocess as sp
-class exe:
+
+import Automaton.lib.plugin
+
+def platform():
+  return ['linux', 'mac', 'windows']
+
+class Exe(Automaton.lib.plugin.PluginInterface):
+
+  def __init__(self, registrar):
+    super(Exe, self).__init__(registrar)
+    registrar.register_service("exe", self.execute)
+
+  def disable(self):
+    self.registrar.unregister_service("exe",
+      usage = """
+               USAGE: exe command
+               Provide a command that will be executed in a spawned shell.
+              """)
+
   def execute(self, arg = ''):
       if arg == '':
           return ''
@@ -8,12 +26,3 @@ class exe:
       if len(out) == 0:
           return err
       return out
-
-  def platform(self):
-    return ['linux', 'mac', 'windows']
-
-  def help(self):
-    return """
-            USAGE: exe command
-            Provide a command that will be executed in a spawned shell.
-           """

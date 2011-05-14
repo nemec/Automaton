@@ -1,7 +1,22 @@
+import Automaton.lib.plugin
 import Automaton.lib.settings_loader as settings_loader
 
+def platform():
+  return ['linux', 'mac', 'windows']
+
 #Inserts your specified text into a "memo" textfile
-class memo:
+class Memo(Automaton.lib.plugin.PluginInterface):
+
+  def __init__(self, registrar):
+    super(Memo, self).__init__(registrar)
+    registrar.register_service("memo", self.execute,
+      usage = """
+               USAGE: memo message
+               Appends message to the file specified in the configuration file.
+              """)
+
+  def disable(self):
+    self.registrar.unregister_service("memo")
 
   def execute(self, arg = ''):
     # Load command settings from a configuration file
@@ -14,16 +29,3 @@ class memo:
     f.close()
     return "Inserted into memo file."
 
-  def platform(self):
-    return ['linux', 'mac', 'windows']
-
-  def help(self):
-    return """
-            USAGE: memo message
-            Appends message to the file specified in the configuration file.
-           """
-
-if __name__=="__main__":
-  __name__ = "memo"
-  m = memo()
-  print m.execute("testing")

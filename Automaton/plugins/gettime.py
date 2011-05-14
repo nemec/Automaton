@@ -1,9 +1,30 @@
 import time
 
-class gettime:
+import Automaton.lib.plugin
 
-  def execute(self, arg = ''):
-    if arg == "24":
+class GetTime(Automaton.lib.plugin.PluginInterface):
+
+  def __init__(self, registrar):
+    super(GetTime, self).__init__(registrar)
+    registrar.register_service("time", self.execute,
+      usage = """
+               USAGE: time
+               Returns the current time to the user.
+              """)
+    registrar.register_service("gettime", self.execute,
+      usage = """
+               USAGE: gettime
+               Returns the current time to the user.
+              """)
+
+
+  def disable(self):
+    registrar.unregister_service("time")
+    registrar.unregister_service("gettime")
+    
+
+  def execute(self, arg = '', **kwargs):
+    if arg == "24" or kwargs.get("TYPE", "") == "24":
       return time.strftime("%H:%M")
     else:
       return time.strftime("%I:%M %p")
@@ -14,13 +35,8 @@ class gettime:
               "arguments = 0"+\
             "}"
 
-  def help(self):
-    return """
-            USAGE: time
-            Returns the current time to the user.
-           """
 
 if __name__=="__main__":
-  t = gettime()
+  t = GetTime()
   print t.execute()
   print t.execute('24')

@@ -16,7 +16,7 @@ def do_valid_tag(db, code):
   query = 'SELECT "User Data"."First Name", "User Data"."Last Name" FROM "Users"."User Data" WHERE "User Data"."Username" = \'%s\';' % code
   try:
     cursor.execute(query)
-  except Exception, e:
+  except Exception as e:
     print e
     cursor.close()
     db.rollback()
@@ -27,14 +27,14 @@ def do_valid_tag(db, code):
     return None
   name =  " ".join(name)
   global client
-  client.execute("say", "Welcome back %s" % name)
+  client.execute("say", "Welcome back " + name)
 
 def checkid(db, idnum):
   cursor = db.cursor()
-  query = 'SELECT "Registered Keys"."Username" from "RFID"."Registered Keys" WHERE "Registered Keys"."ID" = \'%s\'' % idnum
+  query = 'SELECT "Registered Keys"."Username" from "RFID"."Registered Keys" WHERE "Registered Keys"."ID" = \'{0}\''.format(idnum)
   try:
     cursor.execute(query)
-  except Exception, e:
+  except Exception as e:
     print e
     cursor.close()
     db.rollback()
@@ -60,7 +60,7 @@ if op["DBPASS"]=="":
 
 try:
   db = pgdb.connect(user=op["DBUSER"], password=op["DBPASS"], host=op["DBHOST"], database="Automaton")
-except Exception, e:
+except Exception as e:
   print "Error connecting to database:",e
   sys.exit() 
 
@@ -99,7 +99,7 @@ while True:
         s.setRTS(0)
         time.sleep(2)
         s.setRTS(1)
-  except Exception, e:
+  except Exception as e:
     print e
     break
 

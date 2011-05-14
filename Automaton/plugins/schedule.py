@@ -5,16 +5,21 @@ import time
 import pickle
 import datetime
 import threading
+
+import Automaton.lib.plugin
 import Automaton.lib.utils as utils
 import Automaton.lib.logger as logger
 import Automaton.lib.platformdata as platformdata
 import Automaton.lib.settings_loader as settings_loader
 from Automaton.lib.PersistentQueue import PersistentPriorityQueue
 
+def platform():
+  return ['linux', 'windows', 'mac']
+
 if sys.version_info < (2, 7):
   raise Exception("Scheduler requires Python 2.7.")
 
-class schedule:
+class Schedule(Automaton.lib.plugin.PluginInterface):
 
   def remove_task_if_past(self):
     item = self.queue.front()
@@ -28,17 +33,18 @@ class schedule:
       t, cmd, arg = self.remove_task_if_past()
       if cmd is not None:
         try:
-          val = self.call(cmd, arg)
-        except Exception, e:
-          val = "Exception encountered: %s" % e
-        logger.log("Scheduled command %s has been run, with return value: \"%s\"" %
-                    (cmd, val))
+          val = self.registrar.request_service(cmd, arg)
+        except Exception as e:
+          val = "Exception encountered: {0}".format(e)
+        logger.log("Scheduled command {0} has been run, with "
+                   "return value: \"{1}\"".format(cmd, val))
       else:
         twait = max((t-datetime.datetime.now()).total_seconds(),0)
         self.event.wait(twait)
         self.event.clear()
   
-  def __init__(self):
+  def __init__(self, registrar):
+    super(Schedule, self).__init__(registrar)
     self.ops = {"QUEUE_FILE": None}
     self.ops.update(settings_loader.load_plugin_settings(__name__))
 
@@ -58,6 +64,16 @@ class schedule:
     thread = threading.Thread(target=self._executionthread)
     thread.setDaemon(True)
     thread.start()
+
+    registrar.register_service("schedule", self.execute,
+      usage = """
+               USAGE: schedule WHAT [at WHEN] | [in WHEN]
+               Schedules a command to be run at a specific time, repeating if
+               necessary.
+              """)
+
+  def disable(self):
+    self.registrar.unregister_service("schedule")
   
   def execute(self, arg = ''):
     t = 0
@@ -104,21 +120,6 @@ class schedule:
               "arguments = *"+\
             "}"
 
-  def platform(self):
-    return ['linux', 'windows', 'mac']
-
-  def help(self):
-    return """
-            USAGE: schedule WHAT [at WHEN] | [in WHEN]
-            Schedules a command to be run at a specific time, repeating if
-            necessary.
-           """
-  # Used only for debugging. Overwritten by the AutomatonServer in "production".
-  def call(self, cmd, arg):
-    if cmd == "echo":
-      return arg
-    else:
-      return "Please test with echo command."
 
 if __name__=="__main__":
   __name__ = "schedule"

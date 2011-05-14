@@ -5,10 +5,11 @@ import os.path
 import subprocess as sp
 from BeautifulSoup import BeautifulSoup
 
+import Automaton.lib.plugin
 import Automaton.lib.logger as logger
 import Automaton.lib.settings_loader as settings_loader
 
-class torrent:
+class Torrent(Automaton.lib.plugin.PluginInterface):
 
   search_urls = {
     "pirate_bay" : "http://thepiratebay.org/search.php?q=",
@@ -35,7 +36,7 @@ class torrent:
               #  title = title[len(details):]
               link = dict(info.findNext('a').attrs)['href']
               results.append((seeders, link))
-      except Exception, e:
+      except Exception as e:
         print e
         continue
 
@@ -54,18 +55,31 @@ class torrent:
                                                   os.path.basename(movie_name))
     try:
       urllib.urlretrieve(movie_name, filename)
-    except Exception, e:
+    except Exception as e:
       logger.log("Error downloading torrent:", e)
       raise Exception("Error downloading torrent.")
 
-    out = sp.call(["transmission-remote", "-a %s" % filename])
+    out = sp.call(["transmission-remote", "-a {0}".format(filename)])
     succ = out.lower().find("success") > 0
     if not succ:
       logger.log(out)
     return succ
 
-  def __init__(self):
+  def __init__(self, registrar):
+    super(Torrent, self).__init__(registrar)
     self.cmd_op = settings_loader.load_plugin_settings(__name__)
+
+    registrar.register_service("torrent", self.execute,
+      usage = """
+               USAGE: torrent [torrent file | media name | IMDB Link]
+               When provided with a .torrent file, it grabs the file and begins
+               downloading. With an IMDB link, it extracts the movie name and
+               attempts to find the .torrent file closest to what you're looking
+               for. A name does the same, except the media name is provided.
+              """)
+
+  def disable(self):
+    self.registrar.unregister_service("torrent")
 
 
   def execute(self, arg = ''):
@@ -90,7 +104,7 @@ class torrent:
               movie_name = movie_name[0:len(movie_name) - len(title_extra)]
           else:
             return "Error finding IMDB movie title."
-        except urllib2.URLError, e:
+        except urllib2.URLError as e:
           return "Error loading IMDB link."
       tfile = self.search(movie_name)
       if not tfile:
@@ -99,10 +113,10 @@ class torrent:
 
     try:
       if self.begin_torrent(tfile):
-        return "Now downloading %s" % movie_name
+        return "Now downloading {0}".format(movie_name)
       else:
         return "Torrent downloaded, but could not be started."
-    except Exception, e:
+    except Exception as e:
       logger.log("Error starting torrent", e)
       return "Error starting torrent."
 
@@ -112,14 +126,6 @@ class torrent:
               "arguments = *"+\
             "}"
 
-  def help(self):
-    return """
-            USAGE: torrent [file | name | IMDB Link]
-            When provided with a .torrent file, it grabs the file and begins
-            downloading. With an IMDB link, it extracts the movie name and
-            attempts to find the .torrent file closest to what you're looking
-            for. A name does the same, except the media name is provided.
-           """
 
 if __name__ == "__main__":
   __name__ = "torrent"

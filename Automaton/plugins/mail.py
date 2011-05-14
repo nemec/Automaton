@@ -2,10 +2,25 @@ import subprocess as sp
 import sys
 import imp
 
+import Automaton.lib.plugin
 import Automaton.lib.settings_loader as settings_loader
 
+def platform():
+  return ['linux']
+
 # Requires the program curl to be installed
-class mail:
+class Mail(Automaton.lib.plugin.PluginInterface):
+
+  def __init__(self, registrar):
+    super(Mail, self).__init__(registrar)
+    registrar.register_service("mail", self.execute,
+      usage = """
+               USAGE: mail
+               Checks the gmail account of the user specified in the configuration file.
+              """)
+
+  def disable(self):
+    self.registrar.unregister_service("mail")
 
   def execute(self, arg = ''):
     # Load command settings from a configuration file
@@ -22,13 +37,4 @@ class mail:
     if len(out) == 0:
         return err
     return out
-
-  def platform(self):
-    return ['linux']
-
-  def help(self):
-    return """
-            USAGE: mail
-            Checks the gmail account of the user specified in the configuration file.
-           """
 

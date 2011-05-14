@@ -5,7 +5,8 @@ import settings_loader
 
 class InputSanitizer:
 
-  def __init__(self):
+  def __init__(self, registrar):
+    self.registrar = registrar
     self.aliases = settings_loader.load_app_settings("InputSanitizer_Aliases")
     self.aliases['PREV'] = ""
 
@@ -23,18 +24,20 @@ class InputSanitizer:
     for word in re.split("\s+", msg):
       match = re.match("%(\w+)(.*)", word)
       if match:
-        cmd, sep, args = self.aliases[match.group(1).upper()].partition(" ")
-        print cmd
-        print args
+        name = match.group(1).upper()
+        if name in self.aliases:
+          cmd, sep, args = self.aliases[name].partition(" ")
+        elif name in self.registrar.services:
+          cmd, sep, args = (name, None, None)
         try:
           if sep is None:
-            ret += self.call(cmd)
+            ret += self.registrar.request_service(cmd)
           else:
-            ret += self.call(cmd, args)
-        except Exception, e:
-          logger.log("Exception encountered in alias %%%s: %s" %
-                                                        (match.group(1), e))
-          ret += "%%%s" % match.group(1)
+            ret += self.registrar.request_service(cmd, args)
+        except Exception as e:
+          logger.log("Exception encountered in alias "
+                     "%%{0}: {1}".format(match.group(1), e))
+          ret += "%%{0}".format(match.group(1))
         ret += match.group(2)
       else:
         ret += word
@@ -43,17 +46,16 @@ class InputSanitizer:
 
   # Defines a special "prev" alias that contains the output of the last
   # command run
-  def set_prev(self, alias):
-    self.aliases['PREV'] = "echo %s" % alias
+  def set_prev_alias(self, alias):
+    self.aliases['PREV'] = "echo " + alias
 
 if __name__ == "__main__":
   __name__ == "InputSanitizer"
   i = InputSanitizer()
   def call(s, args = ""):
     if s == "name":
-      return "Daniel"
+      return "Tim"
     if s == "me":
       return "Automaton"
     return ""
-  i.call = call
   print i.sanitize("Hello, %name. You may call me %me.")

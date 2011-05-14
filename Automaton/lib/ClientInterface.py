@@ -13,23 +13,29 @@ class ClientInterface:
   def close(self):
     pass
 
-  def getAvailablePlugins(self):
-    return self.client.getAvailablePlugins()
+  def getAvailableServices(self):
+    return self.client.getAvailableServices()
 
-  def isPlugin(self, name):
-    return self.client.isPlugin(name)
+  def isService(self, name):
+    return self.client.isService(name)
 
-  def registerPlugin(self, name):
-    return self.client.registerPlugin(self.serviceid, name)
+  def allowService(self, name):
+    return self.client.allowService(self.clientid, name)
 
-  def unregisterPlugin(self, name):
-    return self.client.registerPlugin(self.serviceid, name)
+  def disallowService(self, name):
+    return self.client.disallowService(self.clientid, name)
+
+  def allowAllServices(self):
+    return self.client.allowAllServices(self.clientid)
+
+  def disallowAllServices(self):
+    return self.client.disallowAllServices(self.clientid)
 
   def execute(self, name, args):
-    return self.client.execute(self.serviceid, name, args)
+    return self.client.execute(self.clientid, name, args)
 
   def interpret(self, raw):
-    return self.client.interpret(self.serviceid, raw)
+    return self.client.interpret(self.clientid, raw)
 
-  def pluginUsage(self, name):
-    return self.client.pluginUsage(name)
+  def serviceUsage(self, name):
+    return self.client.serviceUsage(name)

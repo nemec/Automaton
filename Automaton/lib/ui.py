@@ -88,13 +88,13 @@ class StatusIcon(gtk.StatusIcon):
             def cb_call(cmd, args):
               try:
                 if cmd == "help":
-                  output = self.server.pluginUsage(args)
+                  output = self.server.serviceUsage(args)
                 else:
-                  output = self.server.call(cmd, args)
-              except self.server.exceptions.PluginNotLoadedException, e:
-                output = e.__str__()
-              except Exception, e:
-                output = "Exception encountered: %s" % e
+                  output = self.server.registrar.request_service(cmd, args)
+              except self.server.exceptions.ServiceNotProvidedError as e:
+                output = str(e)
+              except Exception as e:
+                output = "Exception encountered: " + str(e)
               output = output.strip()
               if len(output) > 0:
                 buf = textview.get_buffer() 

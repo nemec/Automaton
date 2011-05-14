@@ -1,34 +1,38 @@
 namespace php automaton_thrift
 namespace py automaton_thrift
 
-exception PluginNotLoadedException {
+exception ServiceNotProvidedError {
   1:string action
 }
 
-exception PluginNotRegisteredException {
+exception ServiceNotRegisteredError {
   1:string action
 }
 
-exception ServiceNotRegisteredException{
+exception ClientNotRegisteredError{
 }
 
-service Automaton {
-  string registerService(1:string appname),
+service AutomatonThrift {
+  string registerClient(1:string appname),
 
-  void unregisterService(1:string serviceid) throws(1:ServiceNotRegisteredException oops),
+  void unregisterClient(1:string clientid) throws(1:ClientNotRegisteredError oops),
 
-  void registerPlugin(1:string serviceid, 2:string name) throws (1:ServiceNotRegisteredException oops, 2:PluginNotLoadedException ouch),
+  void allowService(1:string clientid, 2:string name) throws (1:ClientNotRegisteredError oops, 2:ServiceNotProvidedError ouch),
 
-  void unregisterPlugin(1:string serviceid, 2:string name) throws (1:ServiceNotRegisteredException oops, 2:PluginNotRegisteredException ouch),
+  void disallowService(1:string clientid, 2:string name) throws (1:ClientNotRegisteredError oops, 2:ServiceNotRegisteredError ouch),
 
-  string execute(1:string serviceid, 2:string name, 3:string arguments) throws(1:ServiceNotRegisteredException oops, 2:PluginNotRegisteredException ouch),
+  void allowAllServices(1:string clientid) throws (1:ClientNotRegisteredError oops),
 
-  string interpret(1:string serviceid, 2:string raw) throws(1:ServiceNotRegisteredException oops, 2:PluginNotRegisteredException ouch),
+  void disallowAllServices(1:string clientid) throws (1:ClientNotRegisteredError oops),
 
-  bool isPlugin(1:string name),
+  string execute(1:string clientid, 2:string name, 3:string arguments) throws(1:ClientNotRegisteredError oops, 2:ServiceNotRegisteredError ouch),
 
-  set<string> getAvailablePlugins(),
+  string interpret(1:string clientid, 2:string raw) throws(1:ClientNotRegisteredError oops, 2:ServiceNotRegisteredError ouch),
 
-  string pluginUsage(1:string name) throws (1:ServiceNotRegisteredException oops, 2:PluginNotLoadedException ouch)
+  bool isService(1:string name),
+
+  set<string> getAvailableServices(),
+
+  string serviceUsage(1:string name) throws (1:ClientNotRegisteredError oops, 2:ServiceNotProvidedError ouch)
 
 }

@@ -14,7 +14,7 @@ except:
   fastbinary = None
 
 
-class PluginNotLoadedException(Exception):
+class ServiceNotProvidedError(Exception):
   """
   Attributes:
    - action
@@ -51,7 +51,7 @@ class PluginNotLoadedException(Exception):
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('PluginNotLoadedException')
+    oprot.writeStructBegin('ServiceNotProvidedError')
     if self.action != None:
       oprot.writeFieldBegin('action', TType.STRING, 1)
       oprot.writeString(self.action)
@@ -73,7 +73,7 @@ class PluginNotLoadedException(Exception):
   def __ne__(self, other):
     return not (self == other)
 
-class PluginNotRegisteredException(Exception):
+class ServiceNotRegisteredError(Exception):
   """
   Attributes:
    - action
@@ -110,7 +110,7 @@ class PluginNotRegisteredException(Exception):
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('PluginNotRegisteredException')
+    oprot.writeStructBegin('ServiceNotRegisteredError')
     if self.action != None:
       oprot.writeFieldBegin('action', TType.STRING, 1)
       oprot.writeString(self.action)
@@ -132,7 +132,7 @@ class PluginNotRegisteredException(Exception):
   def __ne__(self, other):
     return not (self == other)
 
-class ServiceNotRegisteredException(Exception):
+class ClientNotRegisteredError(Exception):
 
   thrift_spec = (
   )
@@ -155,7 +155,7 @@ class ServiceNotRegisteredException(Exception):
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('ServiceNotRegisteredException')
+    oprot.writeStructBegin('ClientNotRegisteredError')
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 

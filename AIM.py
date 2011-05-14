@@ -94,15 +94,15 @@ class B(oscar.BOSConnection):
 
           if body == 'help':
             if args == '':
-              returned = ", ".join(self.factory.client.getAvailablePlugins())
+              returned = ", ".join(self.factory.client.getAvailableServices())
             else:
-              returned = self.factory.client.pluginUsage(args)
+              returned = self.factory.client.serviceUsage(args)
           elif body == '/logout':
             self.factory.authenticated_users.remove(username)
             returned = "Logged out."
-          elif self.factory.client.isPlugin(body):
-            self.factory.client.registerPlugin(body)
-            returned = self.factory.client.execute(body, args)
+          elif self.factory.client.isService(body):
+            self.factory.client.allowService(body)
+            returned = self.factory.client.interpret(body + " " + args)
           else:
             returned = "Command not found.\nDid you forget to import it?"
 
@@ -130,18 +130,12 @@ class AIMClientFactory(protocol.ReconnectingClientFactory):
     return proto
 
   def clientConnectionLost(self, connector, reason):
-    logger.log("Lost connection: %s" % reason)
-    reason.raiseException
-    if reason.check([ClientWrapper.WrapperException]):
+    logger.log("Lost connection: " + str(reason))
+    if reason.check([ClientWrapper.ClientException]):
       reactor.stop()
-    #TODO figure out a way to prevent the bot connecting multiple times.
-    #if(reason.check([ConnectionDone])==None):
-    #  protocol.ReconnectingClientFactory.clientConnectionLost(self, connector, reason)
-    #else:
-    #  print "hello"
 
   def clientConnectionFailed(self, connector, reason):
-    logger.log("Connection failed: %s" % reason)
+    logger.log("Connection failed: " + str(reason))
     protocol.ReconnectingClientFactory.clientConnectionFailed(self, connector, reason)
 
 reactor.connectTCP(op['HOST'], int(op['PORT']), AIMClientFactory())

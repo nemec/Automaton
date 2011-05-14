@@ -85,7 +85,7 @@ def handle_message(body, frm):
     client.close()
 
   except ClientWrapper.ThriftException, tx:
-    result =  '%s' % (tx.message)
+    result =  str(tx.message)
 
   if len(returned) > 160:
       result = result[0:160]
@@ -115,10 +115,10 @@ def send_mail(to, subject, text):
 
 def validate_address(db, frm):
   cursor = db.cursor()
-  query='select "Username" from "Users"."view_Email"where \'%s\'=ANY("Users"."view_Email"."Email");' % frm
+  query='select "Username" from "Users"."view_Email"where \'{0}\'=ANY("Users"."view_Email"."Email");'.format(frm)
   try:
     cursor.execute(query)
-  except Exception, e:
+  except Exception as e:
     print e
     cursor.close()
     db.rollback()
@@ -157,7 +157,7 @@ if not op.has_key('SMTP_PASSWORD'):
 
 try:
   db = pgdb.connect(user=op["DBUSER"], password=op["DBPASS"], host=op["DBHOST"], database="Automaton")
-except Exception, e:
+except Exception as e:
   log("Error connecting to database: %s" % e)
   sys.exit() 
 
@@ -169,7 +169,7 @@ while connectionTries > 0:
     server.login(op['IMAP_USER'], op['IMAP_PASSWORD'])
     server.select()
     break
-  except Exception, e:
+  except Exception as e:
     connectionTries = connectionTries - 1
     log("Error connecting to IMAP server: retries left (%s)" % connectionTries)
     time.sleep(5)
@@ -197,9 +197,9 @@ try:
         server.store(num, '+FLAGS', '\\Deleted')
     try:
       server.idle()
-    except IOError, e:
+    except IOError as e:
       log("Error with idle: %s" %e)
-except Exception, e:
+except Exception as e:
   log("Error during execution: %s" % e)
 
 server.expunge()

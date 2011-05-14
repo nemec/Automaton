@@ -9,7 +9,7 @@ import pickle
 
 class PersistentPriorityQueue(Queue.PriorityQueue):
   # Pickles queue to file on get/put
-  # Since it doesn't read the file once it's been
+  # Since it doesn't read the file again once it's been
   # loaded, queue files can't be shared between objects
   
   def __init__(self, maxsize=0, storagefile=None):

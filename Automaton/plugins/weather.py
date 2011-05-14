@@ -3,6 +3,7 @@ import re
 import urllib2
 from xml.dom import minidom
 
+import Automaton.lib.plugin
 import Automaton.lib.settings_loader as settings_loader
 
 
@@ -14,9 +15,10 @@ class cache:
   def __str__(self):
     return "(%s, %s)" % (self.ttl, self.val)
 
-class weather:
+class Weather(Automaton.lib.plugin.PluginInterface):
 
-  def __init__(self):
+  def __init__(self, registrar):
+    super(Weather, self).__init__(registrar)
     self.ttl = 3600 # seconds
     self.last = None # last weather value recorded, tuple of (location, value)
     cmd = settings_loader.load_plugin_settings(self.__class__.__name__)
@@ -37,6 +39,17 @@ class weather:
     # if current time in sec since epoch is less than ttl, cache has expired
     # should return val if cache is still valid
     self.cache = {}
+
+    registrar.register_service("weather", self.execute,
+      usage = """
+               USAGE: weather [location|alias]
+               Returns the weather for a provided location or alias. If no
+               location is provided, gets the weather data for the last
+               recorded position.
+              """)
+
+  def disable(self):
+    self.registrar.unregister_service("weather")
 
 
   def distance(a, b):
@@ -84,8 +97,8 @@ class weather:
               time = "tomorrow"
             else:
               time = self.gettimeofday()
-            ret = 'The weather %s is %s. ' % (time, condnode[0].firstChild.data)
-        except Exception, e:
+            ret = 'The weather {0} is {1}. '.format(time, condnode[0].firstChild.data)
+        except Exception as e:
           print "Weather", e
           pass
 
@@ -99,7 +112,7 @@ class weather:
             temp = int(t_high.getElementsByTagName("celsius")[0].firstChild.data)
             if self.format == 'K':
               temp = temp + 273
-          ret = ret + 'Highs in the %s %ss. ' % (self.tempmodifier(temp), str(temp-(temp%10)))
+          ret = ret + 'Highs in the {0} {1}s. '.format(self.tempmodifier(temp), str(temp-(temp%10)))
           
           t_low = w_node.getElementsByTagName("low")[0]
           if self.format == 'F':
@@ -108,24 +121,25 @@ class weather:
             temp = int(t_low.getElementsByTagName("celsius")[0].firstChild.data)
             if self.format == 'K':
               temp = temp + 273
-          ret = ret + 'Lows in the %s %ss. ' % (self.tempmodifier(temp), str(temp-(temp%10)))
-        except Exception, e:
+          ret = ret + 'Lows in the {0} {1}s. '.format(self.tempmodifier(temp), str(temp-(temp%10)))
+        except Exception as e:
           print "Temperature", e
           pass
-    except Exception, e:
+    except Exception as e:
       print e
       return "Error parsing temperature data."
 
     return ret
 
 
-  def execute(self, arg = None):
-    arg = arg.upper()
+  def fallback_interpreter(self, arg = None):
     if not arg:
-      return self.exe()
+      return {}
+
+    arg = arg.upper()
 
     if arg == "LAST":
-      return self.exe(LAST=True)
+      return {"LAST": True}
 
     kwargs = {}
     if arg.endswith("TOMORROW"):
@@ -137,13 +151,16 @@ class weather:
 
     kwargs["WHERE"] = arg
 
-    return self.exe(**kwargs)
+    return kwargs
   
-  def exe(self, **kwargs):
+  def execute(self, arg = None, **kwargs):
+    if len(kwargs) == 0:
+      kwargs = self.fallback_interpreter(arg)
+
     if kwargs.get("LAST", None):
       if self.last:
         if time.time() < self.last[1].ttl:
-          return "Data for %s: %s" % (self.last[0], self.last[1].val)
+          return "Data for {0}: {1}".format(self.last[0], self.last[1].val)
         else:
           self.last = None
       return "No recent data stored."
@@ -151,7 +168,8 @@ class weather:
     if len(kwargs) == 0:
       try:
         # Try to call on latitude plugin to get the current location
-        kwargs["WHERE"] = re.sub("[() ]", "", self.call('latitude', 'noreverse'))
+        kwargs["WHERE"] = re.sub("[() ]", "",
+                self.registrar.request_service('location', 'noreverse'))
       except:
         return "No current location is available."
 
@@ -176,11 +194,11 @@ class weather:
       else:
         self.cache.pop(location, None)
 
-    url = "http://api.wunderground.com/auto/wui/geo/ForecastXML/index.xml?query=%s" % re.sub('\s+', '%20', location)
+    url = "http://api.wunderground.com/auto/wui/geo/ForecastXML/index.xml?query=" + re.sub('\s+', '%20', location)
 
     resp = minidom.parse(urllib2.urlopen(urllib2.Request(url)))
     if resp == None:
-      return "Parsing failed for location %s" % location
+      return "Parsing failed for location " + location
 
     ret = self.parse_response(resp, forecastday)
 
@@ -200,16 +218,3 @@ class weather:
             "}"
             )
 
-
-  def help(self):
-    return """
-            USAGE: weather [location|alias]
-            Returns the weather for a provided location or alias. If no
-            location is provided, gets the weather data for the last
-            recorded position.
-           """
-
-
-if __name__=="__main__":
-  w = weather()
-  print w.execute()

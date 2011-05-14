@@ -1,13 +1,30 @@
 import subprocess as sp
 import gst
 import threading
-import Automaton.lib.platformdata as platformdata
 import os
 import gobject
 
+import Automaton.lib.plugin
+import Automaton.lib.platformdata as platformdata
+
 gobject.threads_init()
 
-class say:
+
+def platform():
+  return ['linux']
+
+class Say(Automaton.lib.plugin.PluginInterface):
+
+  def __init__(self, registrar):
+    super(Say, self).__init__(registrar)
+    registrar.register_service("say", self.execute,
+      usage = """
+               USAGE: say text
+                      Speaks the provided text to the speakers.
+              """)
+
+  def disable(self):
+    self.registrar.unregister_service("say")
 
   def execute(self, arg = ''):
     if arg == '':
@@ -50,15 +67,3 @@ class say:
     os.remove(tmp2)
     return ""
 
-  def platform(self):
-    return ['linux']
-
-  def help(self):
-    return """
-            USAGE: exe command
-            Provide a command that will be executed in a spawned shell.
-           """
-
-if __name__=="__main__":
-  s = say()
-  print s.execute("welcome to Automaton, please enjoy your stay")

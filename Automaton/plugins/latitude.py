@@ -2,8 +2,10 @@ import urllib
 import simplejson
 import httplib2
 import pickle
-import Automaton.lib.settings_loader as settings_loader
+
+import Automaton.lib.plugin
 import Automaton.lib.exceptions
+import Automaton.lib.settings_loader as settings_loader
 
 try:
   from apiclient.discovery import build
@@ -15,11 +17,33 @@ except ImportError:
         "modify the cmd_latitude.conf file to point towards that file."
   raise Automaton.lib.exceptions.ModuleLoadException()
 
-class latitude:
+
+def platform():
+  return ['linux', 'mac', 'windows']
+
+class Latitude(Automaton.lib.plugin.PluginInterface):
+
+  def __init__(self, registrar):
+    super(Latitude, self).__init__(registrar)
+    help = """
+            USAGE: {0} [noreverse]
+            Gets the latitude and longitude from the authenticated Google Latitude
+            account and then performs a reverse geolookup on it to get the most
+            accurate address information for that location. If 'noreverse' is
+            provided as an argument or there is no address info for the location,
+            the plain latitude and longitude are returned.
+           """
+    registrar.register_service("latitude", self.execute, usage=help.format("latitude"))
+    registrar.register_service("location", self.execute, usage=help.format("location"))
+
+  def disable(self):
+    self.registrar.unregister_service("latitude")
+    self.registrar.unregister_service("location")
+
   def lookup(self, lat = '', lng = ''):
 
     query = urllib.urlencode({'latlng' : ','.join((str(lat),str(lng)))})
-    url = 'http://maps.googleapis.com/maps/api/geocode/json?v=1.0&sensor=true&%s' % (query)
+    url = 'http://maps.googleapis.com/maps/api/geocode/json?v=1.0&sensor=true&' + query
     search_results = urllib.urlopen(url)
     json = simplejson.loads(search_results.read())
     if len(json['results']) > 0:
@@ -48,11 +72,11 @@ class latitude:
 
     if data.has_key('latitude') and data.has_key('longitude'):
       if arg == "noreverse":
-        return "(%s, %s)" % (data['latitude'], data['longitude'])
+        return "({0}, {1})".format(data['latitude'], data['longitude'])
       else:
         ret = self.lookup(data['latitude'], data['longitude'])
         if ret == None:
-          return "(%s, %s)" % (data['latitude'], data['longitude'])
+          return "({0}, {1})".format(data['latitude'], data['longitude'])
         else:
           return ret
     else:
@@ -67,22 +91,3 @@ class latitude:
               "arguments = 0"+\
             "}"
 
-  def platform(self):
-    return ['linux', 'mac', 'windows']
-
-  def help(self):
-    return """
-            USAGE: latitude [noreverse]
-            Gets the latitude and longitude from the authenticated Google Latitude
-            account and then performs a reverse geolookup on it to get the most
-            accurate address information for that location. If 'noreverse' is
-            provided as an argument or there is no address info for the location,
-            the plain latitude and longitude are returned.
-           """
-
-if __name__=="__main__":
-  __name__ = "latitude"
-  print "Testing the latitude command"
-  l = latitude()
-  print l.execute()
-  print l.execute("noreverse")

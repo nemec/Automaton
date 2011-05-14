@@ -22,21 +22,22 @@ class ClientWrapper(ClientInterface):
     self.transport = TTransport.TBufferedTransport(self.transport)
     protocol = TBinaryProtocol.TBinaryProtocol(self.transport)
     self.client = AutomatonThrift.Client(protocol)
+    self.clientid = None
   
   # Opens a connection to the server and registers the client
   def open(self):
     for x in xrange(5, 26, 10):
       try:
         self.transport.open()
-        self.serviceid = self.client.registerService(self.appname)
+        self.clientid = self.client.registerClient(self.appname)
         return
-      except WrapperException:
-        logger.log("Failed to connect to Thrift server. Retrying in %d seconds." % (x))
+      except ClientException:
+        logger.log("Failed to connect to Thrift server. Retrying in {0} seconds.".format(x))
         time.sleep(x)
-    raise WrapperException("Failed to connect to Thrift server. Exiting.")
+    raise ClientException("Failed to connect to Thrift server. Exiting.")
 
   # Unregisters from the server then closes the connection
   def close(self):
-    self.client.unregisterService(self.serviceid)
+    self.client.unregisterClient(self.clientid)
     self.transport.close()
 

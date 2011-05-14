@@ -1,4 +1,5 @@
 import re
+import nltk
 import logger
 
 class InterpreterRule:
@@ -10,31 +11,17 @@ class InterpreterRule:
     return repr(self.command)
 
 class Interpreter:
+  #text = nltk.word_tokenize("What is the weather in Katy, TX like today?")
+  #p = nltk.pos_tag(text)
 
-  # Grammar Example:
-  """
-      google{                       # pluginname
-        keywords = search | google  # keyword list
-        arguments = *               # argument indicator
-      }
-  """
-  # Case sensitive pluginname, 
-  # Whitespace unimportant
-  # Keywords is the list of keywords recognized as associated with the command
-  #  separated by '|'
-  # Arguments is an indicator of whether or not the command accepts arguments
-  #  Currently, only * and 0 are valid argument indicators
-  #  * - all text after the keyword is provided as an argument
-  #  0 - this command accepts no arguments
-
-  def __init__(self, services):
+  def __init__(self, registrar):
+    self.registrar = registrar
     self.grammarDict = {}
-    for service in services:
-      if hasattr(service, 'grammar'):
-        self.addGrammar(service.grammar())
+  #  self.init_grammars()
 
-  def recognizedWords(self):
-    return self.grammarDict.keys()
+  #def init_grammars(self):
+  #  for svc in self.registrar.services:
+  #    self.grammarDict
 
   def addGrammar(self, grm):
     grammar = re.sub(r'\s','',grm)
@@ -48,14 +35,13 @@ class Interpreter:
         if kw not  in self.grammarDict:
           self.grammarDict[kw] = InterpreterRule(x.group('plugin'), x.group('arg'))
         else:
-          logger.log("Ambiguous keyword %s for plugin %s." (kw, x.group('plugin')))
-          logger.log("Already exists for plugin %s." % self.grammarDict[kw].command)
+          logger.log("Ambiguous keyword {0} for plugin {1}.".format(kw, x.group('plugin')))
+          logger.log("Already exists for plugin {0}.".format(self.grammarDict[kw].command))
 
   # Tidies up the text for better processing, ignoring
   # certain "pretty" words that have no effect on the
   # meaning of the text.
   def cleanSpeech(self, raw):
-    raw = re.sub(r'please','',raw) # 'Please' is extraneous speech
     return raw
 
   # Converts the raw text into a (command, arguments) pair

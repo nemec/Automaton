@@ -1,6 +1,8 @@
 import re
-import Automaton.lib.ClientWrapper as ClientWrapper_thrift
-import Automaton.lib.ClientWrapper_pyro as ClientWrapper_pyro
+import threading
+import time
+
+import Automaton.lib.exceptions as exceptions
 
 # Format:
 #  key: scriptname, value: list of tuples to check
@@ -38,49 +40,225 @@ test_data ={"echo": [("hello", "hello")],
         "wiki": [("hello", "\"Hello is a salutation or greeting.+")],
        }
 
-tests = ["google""exe", "gettime", "echo", "google", "latitude", "mail", "map",
-         "weather", "wiki"]
+tests = ["google", "exe", "gettime", "echo", "google", "latitude", "mail", "map",
+         "weather", "wiki", "say"]
 
-success = set()
-failed = {}
-
-try:
-  
-  cthrift = ClientWrapper_thrift.ClientWrapper(appname="testharness")
-  cthrift.open()
+def test_client(client):
+  success = set()
+  failure = {}
 
   for key in test_data:
     if key in tests:
-      print "testing %s..." % key
+      print "testing {0}...".format(key)
       try:
-        if cthrift.isPlugin(key):
-          cthrift.registerPlugin(key)
+        if client.isService(key):
+          client.allowService(key)
           for test in test_data[key]:
-            resp = cthrift.execute(key, test[0]).strip()
+            resp = client.interpret(" ".join([key, test[0]])).strip()
             match = re.match(test[1] + "$", resp, flags=re.DOTALL)
-            if match and key not in failed:
+            if match and key not in failure:
               success.add(key)
             else:
-              failed[key] = "expected \"%s\", got \"%s\"" % (test[1], resp)
+              failure[key] = "expected \"{0}\", got \"{1}\"".format(test[1], resp)
               success.discard(key)
               break
         else:
-          failed[key] = "not loaded."
-      except Exception, e:
-        failed[key] = "encountered exception during execution: %s" % e
+          failure[key] = "not loaded."
+
+        try:
+          text = client.serviceUsage(key)
+          if len(text) == 0:
+            failure[key + "-help"] = "Help is empty."
+        except AttributeError:
+          if "help" not in failure:
+            failure["help"] = "client.serviceUsage cannot be found"
+        
+      except Exception as e:
+        failure[key] = "encountered exception during execution: " + e
         success.discard(key)
 
-  cthrift.close()
-except ClientWrapper_thrift.ThriftException, tx:
-  print '%s' % (tx.message)
+  if len(success) > 0:
+    print "Successful execution for:"
+    for script in success:
+      print " ", script
 
-if len(success) > 0:
-  print "Successful execution for:"
-  for script in success:
-    print script
+  if len(failure) > 0:
+    print
+    print "Failed execution for:"
+    for key in failure:
+      print " ", key, ":", failure[key]
 
-if len(failed) > 0:
-  print
-  print "Failed execution for:"
-  for key in failed:
-    print key, failed[key]
+
+def test_server():
+  from Automaton.lib.AutomatonServer_pyro import PyroServer
+  import Automaton.lib.ClientWrapper_pyro as ClientWrapper_pyro
+
+  print "Starting test server"
+
+  server = PyroServer(port = 9090)
+  server.initialize()
+
+  thread = threading.Thread(target=server.start)
+  thread.daemon = True
+  thread.start()
+  time.sleep(3) # wait for server to initialize
+
+  success = set()
+  failure = {}
+
+  try:
+    client = ClientWrapper_pyro.ClientWrapper(appname="testharness",port=9090)
+
+    test = "interpreting without registering"
+    try:
+      client.interpret("echo hello")
+      failure[test] = "Requesting service should fail."
+    except exceptions.ClientNotRegisteredError:
+      success.add(test)
+    client.open()
+
+    print "Starting server Testing..."
+
+    test = "serviceNotProvidedError"
+    try:
+      try:
+        client.allowService("asdkjhasdkjh")
+        failure[test] = "somehow registered service with random name..."
+      except exceptions.ServiceNotProvidedError:
+        success.add(test)
+    except Exception as e:
+      failure[test] = "Unknown exception encountered: " + e
+
+    test = "allowAllServices"
+    try:
+      client.allowAllServices()
+      try:
+        client.interpret("echo hello")
+        success.add(test)
+      except exceptions.ServiceNotRegisteredError:
+        failure[test] = "allowAllServices did not enable echo service"
+    except Exception as e:
+      failure[test] = "Unknown exception encountered: " + e
+
+    test = "disallowService"
+    try:
+      client.disallowService("echo")
+      try:
+        client.interpret("echo hello")
+        failure[test] = "disallowService did not disable echo service"
+      except exceptions.ServiceNotRegisteredError:
+        success.add(test)
+    except Exception as e:
+      failure[test] = "Unknown exception encountered: " + e
+
+    test = "allowService"
+    try:
+      client.allowService("echo")
+      try:
+        client.interpret("echo hello")
+        success.add(test)
+      except exceptions.ServiceNotRegisteredError:
+        failure[test] = "allowService did not enable echo service"
+    except Exception as e:
+      failure[test] = "Unknown exception encountered: " + e
+    
+    test = "isService"
+    try:
+      if client.isService("echo"):
+        success.add(test)
+      else:
+        failure[test] = "Failed to determine echo as a service"
+    except Exception as e:
+      failure[test] = "Unknown exception encountered: " + e
+
+    test = "getAvailableServices"
+    try:
+      if len(client.getAvailableServices()) > 0:
+        success.add(test)
+      else:
+        failure[test] = "No available services"
+    except Exception as e:
+      failure[test] = "Unknown exception encountered: " + e
+
+
+    if len(success) > 0:
+      print "Successful execution for:"
+      for script in success:
+        print " ", script
+
+    if len(failure) > 0:
+      print
+      print "Failed execution for:"
+      for key in failure:
+        print " ", key, ":", failure[key]
+
+    client.close()
+
+  except ClientWrapper_pyro.ClientException as tx:
+    print 'Client exception encountered: ' + tx.message
+
+  server.daemon.shutdown()
+
+
+def test_pyro():
+  from Automaton.lib.AutomatonServer_pyro import PyroServer
+  import Automaton.lib.ClientWrapper_pyro as ClientWrapper_pyro
+
+  print "Starting Pyro Server"
+
+  server = PyroServer(port = 9092)
+  server.initialize()
+
+  thread = threading.Thread(target=server.start)
+  thread.daemon = True
+  thread.start()
+  time.sleep(3) # wait for server to initialize
+
+  try:
+    client = ClientWrapper_pyro.ClientWrapper(appname="testharness",port=9092)
+    client.open()
+
+    print "Starting Pyro Testing..."
+
+    test_client(client)
+
+    client.close()
+
+  except ClientWrapper_pyro.ClientException as tx:
+    print 'Client exception encountered: ' + tx.message
+
+  server.daemon.shutdown()
+
+
+def test_thrift():
+  from Automaton.lib.AutomatonServer_thrift import ThriftServer
+  import Automaton.lib.ClientWrapper as ClientWrapper_thrift
+
+  print "Starting Thrift Server"
+
+  server = ThriftServer(port = 9091)
+  server.initialize()
+
+  thread = threading.Thread(target=server.start)
+  thread.daemon = True
+  thread.start()
+  time.sleep(3) # wait for server to initialize
+
+  try:
+    client = ClientWrapper_thrift.ClientWrapper(appname="testharness",port=9091)
+    client.open()
+
+    print "Starting Thrift Testing..."
+
+    test_client(client)
+
+    client.close()
+
+  except ClientWrapper_thrift.ClientException as tx:
+    print 'Client exception encountered: ' + tx.message
+
+
+if __name__ == "__main__":
+  test_server()
+  test_pyro()
+  #test_thrift()

@@ -10,13 +10,14 @@ class PyroServer(Pyro.core.ObjBase, AutomatonServer.AutomatonServer):
 
   daemon = None
 
-  def __init__(self, withgui = False):
+  def __init__(self, withgui = False, port = 9090):
     AutomatonServer.AutomatonServer.__init__(self, withgui)
     Pyro.core.ObjBase.__init__(self)
+    self.port = port
 
   def initialize(self):
     Pyro.core.initServer()
-    PyroServer.daemon=Pyro.core.Daemon(port=9090)
+    PyroServer.daemon=Pyro.core.Daemon(port=self.port)
     PyroServer.daemon.connect(self, "automaton")
     self.initialized = True
 

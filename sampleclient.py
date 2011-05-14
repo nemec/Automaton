@@ -21,5 +21,5 @@ try:
   finally:
     client.close()
 
-except ClientWrapper.ThriftException, tx:
-  print '%s' % (tx.message)
+except ClientWrapper.ThriftException as tx:
+  print str(tx.message)

@@ -1,34 +1,34 @@
 # These are the exceptions that may be raised by the server
 
-# Raised if the client tries to execute a command that doesn't exist.
-class PluginNotLoadedException(Exception):
+# Raised if the client tries to request a service that doesn't exist.
+class ServiceNotProvidedError(Exception):
   def __init__(self, action = None):
     self.action = action
 
   def __str__(self):
     if self.action:
-      return "Command %s is unknown." % repr(self.action)
+      return "Command {0} is unknown.".format(repr(self.action))
     else:
       return "Command is not unknown."
 
-# Raised if the client tries to execute a command that exists, but
-# hasn't been explicitly registered for the current service. Prevents
+# Raised if the client tries to request a service that exists, but
+# hasn't been explicitly registered for the current client. Prevents
 # rogue users from executing arbitrary commands.
-class PluginNotRegisteredException(Exception):
+class ServiceNotRegisteredError(Exception):
   def __init__(self, action = None):
     self.action = action
 
   def __str__(self):
     if self.action:
-      return "Command %s is not registered." % repr(self.action)
+      return "Command {0} is not registered.".format(repr(self.action))
     else:
       return "Command is not registered."
 
-# Raised if the client passes along a ServiceID that is not registered
-# with the server. The ServiceID is used to associate a client with only
+# Raised if the client passes along a ClientID that is not registered
+# with the server. The ClientID is used to associate a client with only
 # the commands it has explicitly registered.
-class ServiceNotRegisteredException(Exception):
+class ClientNotRegisteredError(Exception):
   pass
 
-class ModuleLoadException(Exception):
+class ModuleLoadError(Exception):
   pass
