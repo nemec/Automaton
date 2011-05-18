@@ -9,12 +9,12 @@ setup(name='Automaton',
       author='Daniel Nemec',
       author_email='djnemec@gmail.com',
 
-      packages=['Automaton',
-                'Automaton.plugins',
-                'Automaton.lib',
-                'Automaton.lib.automaton_thrift',
-                'Automaton.lib.automaton_thrift.python'],
-      package_data = {'Automaton': files},
-      scripts = ['AutomatonServer']
+      packages=['automaton',
+                'automaton.plugins',
+                'automaton.lib',
+                'automaton.lib.automaton_thrift',
+                'automaton.lib.automaton_thrift.python'],
+      package_data = {'automaton': files},
+      scripts = ['automaton_server']
      )
 

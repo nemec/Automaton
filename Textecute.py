@@ -2,7 +2,7 @@
 
 import sys
 
-import Automaton.lib.imaplib2 as imaplib2
+import automaton.lib.imaplib2 as imaplib2
 import os
 import re
 import smtplib
@@ -15,10 +15,10 @@ from email import Encoders
 
 import pgdb
 
-import Automaton.lib.settings_loader as settings_loader
-from Automaton.lib.logger import log
+import automaton.lib.settings_loader as settings_loader
+from automaton.lib.logger import log
 
-import Automaton.lib.ClientWrapper as ClientWrapper
+import automaton.client.thrift
 
 # This script reads the inbox of the given IMAP server,
 # checks for mail from the specified email address (in
@@ -71,9 +71,9 @@ def handle_message(body, frm):
 
   try:
     if op['THRIFT_SERVER']!='':
-      client = ClientWrapper.ClientWrapper(op['THRIFT_SERVER'], appname="textecute")
+      client = thrift.ClientWrapper(op['THRIFT_SERVER'], appname="textecute")
     else:
-      client = ClientWrapper.ClientWrapper()
+      client = thrift.ClientWrapper()
     client.open()
 
     if client.isPlugin(body):
@@ -84,7 +84,7 @@ def handle_message(body, frm):
 
     client.close()
 
-  except ClientWrapper.ThriftException, tx:
+  except thrift.ClientException as tx:
     result =  str(tx.message)
 
   if len(returned) > 160:

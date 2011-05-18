@@ -10,7 +10,7 @@ import audioop
 import alsaaudio as alsa
 import pocketsphinx as ps
 import subprocess
-import Automaton.lib.ClientWrapper as ClientWrapper
+import automaton.client.thrift as thrift_client
 
 filename = 'audio'
 volume_threshold = 500
@@ -45,7 +45,7 @@ def interpret_command(block):
 
 if __name__ == '__main__':
 
-  client = ClientWrapper.ClientWrapper("localhost", appname="sphinx")
+  client = thrift_client.ClientWrapper("localhost", appname="sphinx")
   client.open()
 
   client.allowAllServices()
@@ -74,7 +74,7 @@ if __name__ == '__main__':
       ret = "Sorry, I don't know how to interpret what you said."
       try:
         ret = client.interpret(block)
-      except ClientWrapper.ServiceNotRegisteredException:
+      except thrift_client.ServiceNotRegisteredException:
         pass
       print ret
       client.interpret('say' + ret)

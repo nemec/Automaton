@@ -4,11 +4,11 @@ import sys
 from twisted.words.protocols import oscar
 from twisted.internet import protocol, reactor
 from twisted.internet.error import ConnectionDone
-import Automaton.lib.settings_loader as settings_loader
+import automaton.lib.settings_loader as settings_loader
 
-import Automaton.lib.logger as logger
+import automaton.lib.logger as logger
 
-import Automaton.lib.ClientWrapper as ClientWrapper
+import automaton.client.thrift as thrift_client
 
 ## unescape
 # Removes HTML or XML character references and entities from a text string.
@@ -120,7 +120,7 @@ class AIMClientFactory(protocol.ReconnectingClientFactory):
 
   def __init__(self):
     self.authenticated_users = []
-    self.client = ClientWrapper.ClientWrapper(op['THRIFT_SERVER'], appname='AIM')
+    self.client = thrift_client.ClientWrapper(op['THRIFT_SERVER'], appname='AIM')
     self.client.open()
 
   def buildProtocol(self, addr):
@@ -131,7 +131,7 @@ class AIMClientFactory(protocol.ReconnectingClientFactory):
 
   def clientConnectionLost(self, connector, reason):
     logger.log("Lost connection: " + str(reason))
-    if reason.check([ClientWrapper.ClientException]):
+    if reason.check([thrift_client.ClientException]):
       reactor.stop()
 
   def clientConnectionFailed(self, connector, reason):

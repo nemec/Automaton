@@ -18,7 +18,7 @@ if __name__=="__main__":
       break
 
   if servertype not in ("thrift", "pyro", "local"):
-    print "USAGE: AutomatonServer.py [--nogui] [thrift|pyro]"
+    print "USAGE: AutomatonServer [--nogui] [thrift|pyro]"
     sys.exit()
 
   if servertype == "local" and not withgui:
@@ -26,11 +26,11 @@ if __name__=="__main__":
     sys.exit()
 
   if servertype == "local":
-    from Automaton.lib.AutomatonServer import AutomatonServer
+    from automaton.server.base import AutomatonServer
     server = AutomatonServer(withgui=withgui)
   elif servertype == "thrift":
     try:
-      from Automaton.lib.AutomatonServer_thrift import ThriftServer
+      from automaton.server.thrift import ThriftServer
       server = ThriftServer(withgui=withgui)
     except ImportError:
       servertype = "pyro"
@@ -38,7 +38,7 @@ if __name__=="__main__":
   # Not elseif so that we can fallthrough if thrift fails
   if servertype == "pyro":
     try:
-      from Automaton.lib.AutomatonServer_pyro import PyroServer
+      from automaton.server.pyro import PyroServer
       server = PyroServer(withgui=withgui)
     except ImportError:
       pass
@@ -47,11 +47,13 @@ if __name__=="__main__":
     print "Error: Specified server type not installed."
     sys.exit()
 
-  server.initialize()
+  # The local server has no initialization
+  if hasattr(server, "initialize"):
+    server.initialize()
 
   print 'Starting the server...'
   try:
     server.start()
   except KeyboardInterrupt:
-    pass
+    print "Keyboard Interrupt caught, exiting..."
 

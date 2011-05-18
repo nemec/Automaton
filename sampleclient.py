@@ -1,8 +1,8 @@
-import Automaton.lib.ClientWrapper as ClientWrapper
+from automaton.lib.client_wrapper_thrift import ClientWrapper
 
 try:
   
-  client = ClientWrapper.ClientWrapper(appname="sample")
+  client = ClientWrapper(appname="sample")
   client.open()
 
   try:

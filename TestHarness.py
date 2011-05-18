@@ -2,7 +2,7 @@ import re
 import threading
 import time
 
-import Automaton.lib.exceptions as exceptions
+import automaton.lib.exceptions as exceptions
 
 # Format:
 #  key: scriptname, value: list of tuples to check
@@ -90,8 +90,8 @@ def test_client(client):
 
 
 def test_server():
-  from Automaton.lib.AutomatonServer_pyro import PyroServer
-  import Automaton.lib.ClientWrapper_pyro as ClientWrapper_pyro
+  from automaton.server.pyro import PyroServer
+  import automaton.client.pyro as pyro
 
   print "Starting test server"
 
@@ -107,7 +107,7 @@ def test_server():
   failure = {}
 
   try:
-    client = ClientWrapper_pyro.ClientWrapper(appname="testharness",port=9090)
+    client = pyro.ClientWrapper(appname="testharness",port=9090)
 
     test = "interpreting without registering"
     try:
@@ -194,15 +194,15 @@ def test_server():
 
     client.close()
 
-  except ClientWrapper_pyro.ClientException as tx:
+  except pyro.ClientException as tx:
     print 'Client exception encountered: ' + tx.message
 
   server.daemon.shutdown()
 
 
 def test_pyro():
-  from Automaton.lib.AutomatonServer_pyro import PyroServer
-  import Automaton.lib.ClientWrapper_pyro as ClientWrapper_pyro
+  from automaton.server.pyro import PyroServer
+  import automaton.client.pyro as pyro
 
   print "Starting Pyro Server"
 
@@ -215,7 +215,7 @@ def test_pyro():
   time.sleep(3) # wait for server to initialize
 
   try:
-    client = ClientWrapper_pyro.ClientWrapper(appname="testharness",port=9092)
+    client = pyro.ClientWrapper(appname="testharness",port=9092)
     client.open()
 
     print "Starting Pyro Testing..."
@@ -224,15 +224,15 @@ def test_pyro():
 
     client.close()
 
-  except ClientWrapper_pyro.ClientException as tx:
+  except pyro.ClientException as tx:
     print 'Client exception encountered: ' + tx.message
 
   server.daemon.shutdown()
 
 
 def test_thrift():
-  from Automaton.lib.AutomatonServer_thrift import ThriftServer
-  import Automaton.lib.ClientWrapper as ClientWrapper_thrift
+  from automaton.server.thrift import ThriftServer
+  import automaton.client.thrift as thrift
 
   print "Starting Thrift Server"
 
@@ -245,7 +245,7 @@ def test_thrift():
   time.sleep(3) # wait for server to initialize
 
   try:
-    client = ClientWrapper_thrift.ClientWrapper(appname="testharness",port=9091)
+    client = thrift.ClientWrapper(appname="testharness",port=9091)
     client.open()
 
     print "Starting Thrift Testing..."
@@ -254,11 +254,11 @@ def test_thrift():
 
     client.close()
 
-  except ClientWrapper_thrift.ClientException as tx:
+  except thrift.ClientException as tx:
     print 'Client exception encountered: ' + tx.message
 
 
 if __name__ == "__main__":
-  test_server()
-  test_pyro()
-  #test_thrift()
+  #test_server()
+  #test_pyro()
+  test_thrift()

@@ -13,14 +13,11 @@ class Sample(automaton.lib.plugin.PluginInterface):
     super(Sample, self).__init__(registrar)
     self.grammar = "*"
     help = """
-            USAGE: sampleplugin name
+            USAGE: {0} name
             Prints "hello" along with the provided name
            """
-    self.registrar.register_service("test", self.execute, help)
-    self.registrar.register_service("sampleplugin", self.execute, help)
-
-    # if the plugin needs to do background work, spin off a thread here.
-    # make sure the thread stops when self.disable() is called
+    self.registrar.register_service("test", self.execute, self.grammar, help.format("test"))
+    self.registrar.register_service("sampleplugin", self.execute, self.grammar, help.format("sampleplugin"))
 
   def disable(self):
     self.registrar.remove_service("test")
@@ -51,11 +48,8 @@ class Sample(automaton.lib.plugin.PluginInterface):
     if "title" in kwargs:
       name = kwargs["title"]
     try:
-      echo = self.registrar.request_service("echo", "Hello, " + name)
+      echo = self.registrar.request_service("echo", "Hello, {0}".format(name))
     except ServiceDoesNotExist:
       return "Please load the echo module before running this program."
     return echo
 
-
-  def help(self):
-    return 

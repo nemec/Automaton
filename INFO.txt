@@ -1,3 +1,14 @@
+
+[PURPOSE]
+This application aims to be a Digital Life Assistant (DLA) to handle interfacing
+between a person (or persons) and a computer through any number of interfaces.
+The server itself aims to be extensible, so that clients can be built to
+communicate with Automaton through things like speech, IM, email, and command 
+line or graphical interfaces. Plugins, also extensible, can be built to run
+on the server and communicate with each other and the clients and do almost
+anything.
+
+[BACKGROUND]
 This application originated in 2009, back before I had a smartphone. I wanted a
 way to interface with a computer through SMS, and I definitely couldn't afford
 a dedicated cell phone to receive the messages and relay them to a computer,
@@ -10,6 +21,60 @@ quick translation of a phrase, but it wasn't really as effective as a smart
 phone due to the fact that I was only able to poll for new messages every X
 minutes (I had not yet discovered the IDLE command). I used that application
 for a year until I got a smart phone, then it outlived its usefulness and
-disappeared from use.
+disappeared from use. Soon after, I saw the movie Iron Man II and ran into
+Project Jarvis somewhere online (projectjarvis.com). I had a similar thing
+going, but his was definitely far more featureful. As Project Jarvis was built
+on AppleScript, I held no hope of it being ported to anything useful to me
+on a Linux machine, so I went about extending my existing app. After eventually
+throwing out most of my code, I built the original Automaton then tore it apart
+a number of more times to get the design where it is now.
 
+[DESIGN]
+Server:
+The AutomatonServer class can be initialized on its own, without a "server"
+component. In this case the GUI MUST be enabled or else there will be no way
+to interact with the system. Server components can be swapped out easily -
+a ClientWrapper and Server class must be created for each component. The
+ClientWrapper handles a client connecting to the server, and should follow
+the ClientInterface. The Server class sits on the Automaton machine and handles
+communication with each client. When initialized, the core of the server runs
+through each of the plugins in the Automaton.plugins module and imports them
+one by one. Each of the plugins registers any services and objects it provides,
+spins off a worker thread if it needs one, and initializes any data that it
+needs.
 
+Producer/Consumer:
+There are two types of classes that operate on data in the Automaton system.
+Every plugin is a producer. A plugin will initialize itself by registering
+objects and services with the registrar. Both services and objects are available
+to any loaded plugin, so using the registrar a plugin may communicate with other
+plugins, get data from them, and listen for changes to objects they are
+interested in. On the other side, we have consumers. Any plugin may be a
+consumer, all it needs to do is request a service from another loaded plugin, 
+grab an object, or listen for changes to an object. ALL clients, however, are
+only consumers. Since plugins can act as consumers on their own, the only real
+difference between clients and plugins is that clients are more transient. A
+human isn't required to sit behind a client communicating with the server, but
+any client, since it's communicating over a network that may or may not be
+unstable, is not allowed to act as a producer. Of course, the client may request
+the service of a plugin that stores / otherwise produces data, but that's up to
+the implementation of the plugin, not the client. Plugins are all running on the
+Automaton machine itself, so barring unhandled exceptions they should be
+available for use at any time.
+
+Plugins:
+Every plugin module should contain a class that implements
+Automaton.lib.PluginInterface. When the server loads a plugin's module, it
+inspects the module's classes for ones that implement the interface and runs
+the first one it finds as the plugin body. This decouples the actual class
+name from the module which can be used to avoid trouble with overwriting
+keywords and other naming troubles. The plugin is provided a registrar object,
+with which it can register and request services and objects. A service
+consists of a callable, most often part of the plugin class itself, that
+will be called when that service is requested. If the service is registered
+with a grammar, the interpreter will take the request string that's produced
+from a client and convert it into a dictionary of keyword arguments that are
+then passed to the service. If no interpreter is present, the argument string
+itself will be passed to the plugin where the service can decide to implement
+a "fallback interpreter" to parse the string (usually in the style of a command
+line statement) or pass back a notification of failure.

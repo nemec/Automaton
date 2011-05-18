@@ -1,7 +1,7 @@
 #!/usr/bin/env/python
 
-import Automaton.lib.settings_loader as settings_loader
-import Automaton.lib.logger as logger
+import automaton.lib.settings_loader as settings_loader
+import automaton.lib.logger as logger
 import serial
 import sys
 from struct import unpack
@@ -9,7 +9,7 @@ import time
 
 import pgdb
 
-import Automaton.lib.ClientWrapper as ClientWrapper
+from automaton.lib.client_wrapper_thrift import ClientWrapper
 
 def do_valid_tag(db, code):
   cursor = db.cursor()
