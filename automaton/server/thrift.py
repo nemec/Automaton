@@ -13,8 +13,9 @@ from thrift.server import TServer
 
 from automaton.server.base import AutomatonServer
 
+
 class ThriftServer(AutomatonServer):
-  def __init__(self, withgui = False, port = 9090):
+  def __init__(self, withgui=False, port=9090):
     AutomatonServer.__init__(self, withgui)
     self.port = port
     self.exceptions = automaton.lib.thrift.python.ttypes
@@ -26,12 +27,14 @@ class ThriftServer(AutomatonServer):
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 
     #Threaded server allows for multiple connections
-    self.server = TServer.TThreadedServer(processor, transport, tfactory, pfactory)
+    self.server = TServer.TThreadedServer(processor,
+                                        transport, tfactory, pfactory)
 
   def _start(self):
     self.server.serve()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
   server = ThriftServer()
 
   server.initialize()
@@ -41,4 +44,3 @@ if __name__=="__main__":
     server.start()
   except KeyboardInterrupt:
     pass
-

@@ -5,14 +5,17 @@ import sys
 import uuid
 import inspect
 import threading
+
 import automaton.plugins
 import automaton.lib.utils as utils
 import automaton.lib.logger as logger
-import automaton.lib.platformdata as platformdata
 import automaton.lib.registrar as registrar
 import automaton.lib.exceptions as exceptions
-from automaton.lib.plugin import PluginInterface, UnsuccessfulExecution
+import automaton.lib.platformdata as platformdata
+from automaton.lib.clientmanager import ClientManager
 import automaton.lib.input_sanitizer as input_sanitizer
+from automaton.lib.plugin import PluginInterface, UnsuccessfulExecution
+
 
 class AutomatonServer(object):
 
@@ -21,7 +24,7 @@ class AutomatonServer(object):
       self.obj = plugin
       self.lock = threading.Lock()
 
-  def __init__(self, withgui = False, useinterpreter = False):
+  def __init__(self, withgui=False, useinterpreter=False):
 
     self.needsgui = withgui
 
@@ -33,7 +36,7 @@ class AutomatonServer(object):
     self.sanitizer = input_sanitizer.InputSanitizer(self.registrar)
 
     # A dictionary mapping clientids to registered plugins
-    self.registeredClients = {}
+    self.clientmanager = ClientManager()
 
     # Update __init__.py in the automaton package when a new plugin is added
     self.loadedPlugins = {}
@@ -49,12 +52,10 @@ class AutomatonServer(object):
     else:
       self.interpreter = None
 
-
   """ Start plugin initialization section """
-
   def enablePlugin(self, name):
     # Imports the plugin module
-    module = __import__('automaton.plugins.{0}'.format(name), fromlist= [name])
+    module = __import__('automaton.plugins.{0}'.format(name), fromlist=[name])
     # Either no platform restriction is provided, or the platform is
     # in the restriction set
     if not hasattr(module, 'platform') or (platformdata.platform in
@@ -64,7 +65,8 @@ class AutomatonServer(object):
       # If there is more than one class in a file, only the first is
       # instantiated.
       classes = inspect.getmembers(module,
-          lambda obj: inspect.isclass(obj) and issubclass(obj, PluginInterface))
+          lambda obj: inspect.isclass(obj) and
+                      issubclass(obj, PluginInterface))
       if len(classes) == 0:
         raise ImportError("No class in {0} implements "
                 "automaton.lib.plugins.PluginInterface".format(name))
@@ -80,46 +82,46 @@ class AutomatonServer(object):
     if name in self.loadedPlugins:
       self.loadedPlugins[name].lock.acquire()
       try:
-        cmd = reload(__import__('automaton.plugins.{0}'.format(name), fromlist = [name]))
+        cmd = reload(__import__('automaton.plugins.{0}'.format(name),
+                                fromlist=[name]))
         self.loadedPlugins[name].obj = getattr(cmd, name)()
         logger.log("Plugin {0} has been successfully reloaded.".format(name))
       except Exception as e:
         print e
         self.disablePlugin(name)
-        error = "Exception encountered reloading {0}. Plugin disabled.".format(name)
+        error = ("Exception encountered reloading {0}. "
+                  "Plugin disabled.".format(name))
         logger.log(name)
       finally:
         self.loadedPlugins[name].lock.release()
 
-
   """ Start public server functions """
-
   # Registers a client service with the server. Calculates a UUID that will
   # identify which plugins are loaded for each client service
   # Arguments: none
   # Return value: string
   # Throws: none
-  def registerClient(self, appname = None):
-    id = str(uuid.uuid1())
-    while id in self.registeredClients:
-      id = str(uuid.uuid1())
+  def registerClient(self, appname=None):
+    ident = str(uuid.uuid1())
+    while ident in self.clientmanager.registeredclients:
+      ident = str(uuid.uuid1())
     if appname is not None:
-      id = re.sub('[\W_]+', '', appname) + '-' + id
-    logger.log("Registering client {0}".format(id))
-    self.registeredClients[id]=set()
-    return id
+      ident = re.sub('[\W_]+', '', appname) + '-' + ident
+    logger.log("Registering client {0}".format(ident))
+    self.clientmanager.add_client(ident)
+    return ident
 
-  # Unregisters a client service from the server. Any further use of its clientid will
-  # result in a ServiceNotRegisteredError
+  # Unregisters a client service from the server. Any further use of its
+  # clientid will result in a ServiceNotRegisteredError
   # Arguments: clientid:string - id associated with a registered service
   # Return value: void
   # Throws: ClientNotRegisteredError
   def unregisterClient(self, clientid):
-    if clientid not in self.registeredClients:
+    if clientid not in self.clientmanager.registeredclients:
       raise self.exceptions.ClientNotRegisteredError()
 
     logger.log("Unregistering client {0}".format(clientid))
-    del self.registeredClients[clientid]
+    del self.clientmanager.registeredclients[clientid]
 
   # Registers a service for use by a client.
   # Arguments: clientid:string, name:string
@@ -127,14 +129,14 @@ class AutomatonServer(object):
   # Throws: ClientNotRegisteredError, ServiceNotLoadedException
   def allowService(self, clientid, name):
     name = name.lower()
-    if clientid not in self.registeredClients:
+    if clientid not in self.clientmanager.registeredclients:
       raise self.exceptions.ClientNotRegisteredError()
     if name not in self.registrar.services:
       raise self.exceptions.ServiceNotProvidedError(name)
 
-    if name not in self.registeredClients[clientid]:
+    if name not in self.clientmanager.registeredclients[clientid].plugins:
       logger.log("Adding service {0} for client {1}".format(name, clientid))
-      self.registeredClients[clientid].add(name)
+      self.clientmanager.registeredclients[clientid].plugins.add(name)
 
   # Unregisters a service from being used in a client.
   # Arguments: clientid:string, name:string
@@ -142,24 +144,22 @@ class AutomatonServer(object):
   # Throws: ClientNotRegisteredError, ServiceNotRegisteredError
   def disallowService(self, clientid, name):
     name = name.lower()
-    if clientid not in self.registeredClients:
+    if clientid not in self.clientmanager.registeredclients:
       raise self.exceptions.ClientNotRegisteredError()
-    if name not in self.registeredClients[clientid]:
+    if name not in self.clientmanager.registeredclients[clientid].plugins:
       raise self.exceptions.ServiceNotRegisteredError(name)
 
     logger.log("Removing service {0} for client {1}".format(name, clientid))
-    self.registeredClients[clientid].remove(name)
-
+    self.clientmanager.registeredclients[clientid].plugins.remove(name)
 
   def allowAllServices(self, clientid):
     logger.log("Allowing all services for client {0}".format(clientid))
-    self.registeredClients[clientid] = set(self.registrar.services.keys())
-
+    self.clientmanager.registeredclients[clientid].plugins = set(
+                                              self.registrar.services.keys())
 
   def disallowAllServices(self, clientid):
     logger.log("Removing all services for client {0}".format(clientid))
-    self.registeredClients[clientid] = set()
-
+    self.clientmanager.registeredclients[clientid].plugins = set()
 
   # Uses the interpreter to translate the raw (arbitrary) text into
   # a command:arguments pair that is then executed like normal
@@ -168,13 +168,14 @@ class AutomatonServer(object):
   # Throws: ClientNotRegisteredError, ServiceNotRegisteredError,
   #         UnknownActionException
   def interpret(self, clientid, raw):
-    if clientid not in self.registeredClients:
+    if clientid not in self.clientmanager.registeredclients:
       raise self.exceptions.ClientNotRegisteredError()
     if self.interpreter is not None:
       command, args = self.interpreter.interpret(raw)
     else:
-      command, sep, args = raw.partition(" ") # split on the first space
-    if command.lower() not in self.registeredClients[clientid]:
+      command, sep, args = raw.partition(" ")
+    if (command.lower() not in
+          self.clientmanager.registeredclients[clientid].plugins):
       raise self.exceptions.ServiceNotRegisteredError(command)
 
     args = self.sanitizer.alias(args)
@@ -185,8 +186,9 @@ class AutomatonServer(object):
     except UnsuccessfulExecution as e:
       output = "Execution failed: " + str(e)
     self.sanitizer.set_prev_alias(output)
+    self.clientmanager.registeredclients[clientid].history.append(raw)
+    print self.clientmanager.registeredclients[clientid].history
     return output
-  
 
   # Tests if the specified service is provided or not.
   # Querying is possible even when unregistered
@@ -215,15 +217,13 @@ class AutomatonServer(object):
       raise self.exceptions.ServiceNotProvidedError(name)
     return self.registrar.services[name].usage
 
-
   """ Start server initialization functions """
-
-  # Ensures that any networking is done in a separate thread from 
+  # Ensures that any networking is done in a separate thread from UI
   def start(self):
     if hasattr(self, "_start"):
       # Spawn a second thread for the _start method
       if self.needsgui:
-        thread = threading.Thread(target = self._start)
+        thread = threading.Thread(target=self._start)
         thread.setDaemon(True)
         thread.start()
         self.load_gui()
@@ -238,8 +238,8 @@ class AutomatonServer(object):
     try:
       import gtk
     except ImportError:
-      logger.log("gtk toolkit not present, so no graphical user interface will "
-             "be available.")
+      logger.log("gtk toolkit not present, so no graphical "
+                  "user interface will be available.")
     import automaton.lib.ui as ui
     ui.StatusIcon(self)
     gtk.gdk.threads_init()

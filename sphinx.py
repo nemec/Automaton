@@ -7,19 +7,22 @@
 import os
 import time
 import audioop
+import subprocess
 import alsaaudio as alsa
 import pocketsphinx as ps
-import subprocess
+
 import automaton.client.thrift as thrift_client
+
 
 filename = 'audio'
 volume_threshold = 500
+
 
 # Records audio to a file until two seconds of 'silence' have passed
 # Silence is defined as any audio below volume_threshold
 def record_audio(pcm_in, data, vol):
   print 'Recording. Two seconds of silence will commit the command.'
-  buf = open(filename,'w+b')
+  buf = open(filename, 'w+b')
   time_start = time.time()
   while ((time.time() - time_start) < 2) or (vol > volume_threshold):
     if vol > volume_threshold:
@@ -27,10 +30,11 @@ def record_audio(pcm_in, data, vol):
     buf.write(data)
     l, data = pcm_in.read()
     vol = audioop.max(data, 2)
-    time.sleep(.001)       
+    time.sleep(.001)
   buf.close()
 
-# Uses Pocketsphinx to decode audio from the default file 
+
+# Uses Pocketsphinx to decode audio from the default file
 def decode_audio():
   print 'Beginning to decode input...'
   buf = open(filename, 'rb')
@@ -39,9 +43,10 @@ def decode_audio():
   buf.close()
   return block[0]
 
+
 def interpret_command(block):
-  
   return ''
+
 
 if __name__ == '__main__':
 
@@ -52,7 +57,8 @@ if __name__ == '__main__':
 
   d = ps.Decoder()
 
-  # Prepare the CAPTURE device. It must use 16k Hz, little endian, 16 bit signed integer
+  # Prepare the CAPTURE device. It must use 16k Hz,
+  # little endian, 16 bit signed integer
   pcm_in = alsa.PCM(alsa.PCM_CAPTURE, alsa.PCM_NONBLOCK, 'default')
   pcm_in.setchannels(1)
   pcm_in.setrate(16000)
@@ -60,7 +66,7 @@ if __name__ == '__main__':
   # Size of block of each read
   pcm_in.setperiodsize(512)
 
-  print  
+  print
   print 'Waiting for input...'
 
   while True:
@@ -78,5 +84,5 @@ if __name__ == '__main__':
         pass
       print ret
       client.interpret('say' + ret)
-      print  
+      print
       print 'Waiting for input...'

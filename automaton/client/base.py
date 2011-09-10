@@ -1,7 +1,8 @@
 import sys
 
+
 class ClientInterface:
-  
+
   def __init__(self, server='localhost', port=9090):
     self.client = None
 

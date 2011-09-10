@@ -38,6 +38,7 @@ import automaton.client.thrift
         error return values for commands?
 '''''''''''''''''''''
 
+
 def handle_message(body, frm):
 
   global op
@@ -48,29 +49,28 @@ def handle_message(body, frm):
   # guarantees on correct parsing for all
   # mail servers.
   for line in body.split("\n"):
-      line=line.strip()
-      if len(line) >0 and not line[0] == "-" \
-        and line.find(":") == -1:
-          body=line
+      line = line.strip()
+      if len(line) > 0 and not line[0] == "-" and line.find(":") == -1:
+          body = line
           break
   # Program automatically lower-cases all text
   # in the command. To override the functionality,
   # prepend the message with an @ symbol.
-  if body[0]=='@':
-      body=body[1:]
+  if body[0] == '@':
+      body = body[1:]
   else:
-      body=body.lower()
-  ix=body.find(' ')
+      body = body.lower()
+  ix = body.find(' ')
   returned = ''
   # Split command and arguments if there are any.
   if ix > -1:
-    args = body[ix+1:]
+    args = body[ix + 1:]
     body = body[0:ix]
   else:
     args = ''
 
   try:
-    if op['THRIFT_SERVER']!='':
+    if op['THRIFT_SERVER'] != '':
       client = thrift.ClientWrapper(op['THRIFT_SERVER'], appname="textecute")
     else:
       client = thrift.ClientWrapper()
@@ -85,22 +85,23 @@ def handle_message(body, frm):
     client.close()
 
   except thrift.ClientException as tx:
-    result =  str(tx.message)
+    result = str(tx.message)
 
   if len(returned) > 160:
       result = result[0:160]
   print result
-  if len(result) > 0: # If there's a returned value, send it back
+  if len(result) > 0:  # If there's a returned value, send it back
       send_mail(frm, "Textecute", result)
+
 
 def send_mail(to, subject, text):
     # Mail function example found at http://kutuma.blogspot.com
     msg = MIMEMultipart()
-    SMTP_SERVER=op['SMTP_SERVER']
-    SMTP_PORT=op['SMTP_PORT']
-    SMTP_USER=op['SMTP_USER']
-    SMTP_PASSWORD=op['SMTP_PASSWORD']
-    msg['From'] = SMTP_USER+"@"+SMTP_SERVER[SMTP_SERVER.find('.')+1:]
+    SMTP_SERVER = op['SMTP_SERVER']
+    SMTP_PORT = op['SMTP_PORT']
+    SMTP_USER = op['SMTP_USER']
+    SMTP_PASSWORD = op['SMTP_PASSWORD']
+    msg['From'] = SMTP_USER + "@" + SMTP_SERVER[SMTP_SERVER.find('.') + 1:]
     msg['To'] = to
     msg['Subject'] = subject
 
@@ -113,9 +114,11 @@ def send_mail(to, subject, text):
     mailServer.sendmail(SMTP_USER, to, msg.as_string())
     mailServer.close()
 
+
 def validate_address(db, frm):
   cursor = db.cursor()
-  query='select "Username" from "Users"."view_Email"where \'{0}\'=ANY("Users"."view_Email"."Email");'.format(frm)
+  query = ('select "Username" from "Users"."view_Email" where '
+          '\'{0}\'=ANY("Users"."view_Email"."Email");'.format(frm))
   try:
     cursor.execute(query)
   except Exception as e:
@@ -126,18 +129,20 @@ def validate_address(db, frm):
   name = cursor.fetchone()
   cursor.close()
   if name != None:
-    name =  " ".join(name)
+    name = " ".join(name)
   return name
 
+
 # Initialize empty list of settings
-op={'IMAP_SERVER': 'imap.gmail.com',
-    'IMAP_PORT':993,
-    'IMAP_USER':'', 'IMAP_PASSWORD':'',
-    'SMTP_SERVER':'smtp.gmail.com',
-    'SMTP_PORT':587,
-    "DBHOST":"localhost",
-    "DBUSER":"Textecute",
-    "DBPASS":""
+op = {'IMAP_SERVER': 'imap.gmail.com',
+      'IMAP_PORT': 993,
+      'IMAP_USER': '',
+      'IMAP_PASSWORD': '',
+      'SMTP_SERVER': 'smtp.gmail.com',
+      'SMTP_PORT': 587,
+      'DBHOST": 'localhost',
+      'DBUSER": 'Textecute',
+      'DBPASS": ''
    }
 
 op.update(settings_loader.load_app_settings(sys.argv[0]))
@@ -150,22 +155,23 @@ for operator in ('IMAP_USER', 'IMAP_PASSWORD', 'DBPASS'):
 
 # Set SMTP authentication to the same as IMAP
 # if none has been provided.
-if not op.has_key('SMTP_USER'):
-  op['SMTP_USER']=op['IMAP_USER']
-if not op.has_key('SMTP_PASSWORD'):
-  op['SMTP_PASSWORD']=op['IMAP_PASSWORD']
+if not 'SMTP_USER' in op:
+  op['SMTP_USER'] = op['IMAP_USER']
+if not'SMTP_PASSWORD' in op:
+  op['SMTP_PASSWORD'] = op['IMAP_PASSWORD']
 
 try:
-  db = pgdb.connect(user=op["DBUSER"], password=op["DBPASS"], host=op["DBHOST"], database="Automaton")
+  db = pgdb.connect(user=op["DBUSER"], password=op["DBPASS"],
+                    host=op["DBHOST"], database="Automaton")
 except Exception as e:
   log("Error connecting to database: %s" % e)
-  sys.exit() 
+  sys.exit()
 
 connectionTries = 3
 while connectionTries > 0:
   try:
     # connect to server
-    server = imaplib2.IMAP4_SSL(op['IMAP_SERVER'], op['IMAP_PORT']) # gmail uses SSL on port 993
+    server = imaplib2.IMAP4_SSL(op['IMAP_SERVER'], op['IMAP_PORT'])
     server.login(op['IMAP_USER'], op['IMAP_PASSWORD'])
     server.select()
     break
@@ -180,28 +186,31 @@ if connectionTries <= 0:
 
 try:
   while True:
-    # list items on server
+    # list new items on server
     typ, data = server.search(None, "UNSEEN")
 
     # check for new messages
     for num in data[0].split():
         typ, data = server.fetch(num, '(BODY[HEADER.FIELDS (FROM)])')
-        frm=re.search("[\w.]*@[\w.]*", data[0][1][6:].strip()).group() # Parses the FROM string so that just the email address is used
-        user=validate_address(db, frm)
+
+        # Parses the FROM string so that just the email address is used
+        frm = re.search("[\w.]*@[\w.]*", data[0][1][6:].strip()).group()
+        user = validate_address(db, frm)
         if user != None:
           typ, dat = server.fetch(num, '(BODY[TEXT])')
-          handle_message(dat[0][1].strip(),frm)
-          #threading.Thread(target=handle_message, args=(dat[0][1].strip(),frm)).start()
+          handle_message(dat[0][1].strip(), frm)
+          #threading.Thread(target=handle_message,
+          #                 args=(dat[0][1].strip(),frm)).start()
+
         # Mark as read and archive - doesn't actually delete the message.
         server.store(num, '+FLAGS', '\\Seen')
         server.store(num, '+FLAGS', '\\Deleted')
     try:
       server.idle()
     except IOError as e:
-      log("Error with idle: %s" %e)
+      log("Error with idle: {0}".format(e))
 except Exception as e:
-  log("Error during execution: %s" % e)
+  log("Error during execution: {0}".format(e))
 
 server.expunge()
 server.logout()
-

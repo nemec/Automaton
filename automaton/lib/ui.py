@@ -1,7 +1,9 @@
 import os
 import gtk
 import threading
+
 from automaton.lib.plugin import UnsuccessfulExecution
+
 
 class StatusIcon(gtk.StatusIcon):
   def __init__(self, server):
@@ -21,7 +23,7 @@ class StatusIcon(gtk.StatusIcon):
             </ui>
           '''
     actions = [
-      ('Menu',  None, 'Menu'),
+      ('Menu', None, 'Menu'),
       ('Reload', None, 'Reload'),
       ('Registrar', None, 'Show Registrar Data', None, None,
                                                      self.show_registrar_data),
@@ -56,11 +58,10 @@ class StatusIcon(gtk.StatusIcon):
 
     self.build_command_window()
 
-
   def build_command_window(self):
     self.window_active = False
     self.window = gtk.Window()
-    self.window_display_position = (300,300)
+    self.window_display_position = (300, 300)
     self.window_display_size = (300, 200)
     self.window.set_title("Automaton Command Window")
     vbox = gtk.VBox(False, 3)
@@ -81,7 +82,7 @@ class StatusIcon(gtk.StatusIcon):
     button.connect('clicked', clear_log)
 
     f = gtk.Fixed()
-    f.put(button,0,0)
+    f.put(button, 0, 0)
     vbox.pack_start(entry, False, False, 0)
     vbox.pack_start(scrollview, True, True, 0)
     vbox.pack_end(f, False, False)
@@ -91,7 +92,7 @@ class StatusIcon(gtk.StatusIcon):
         text = widget.get_text()
         widget.set_text('')
         cmd, sep, args = text.partition(' ')
-        
+
         def cb_call(cmd, args):
           try:
             if cmd == "help":
@@ -106,21 +107,20 @@ class StatusIcon(gtk.StatusIcon):
             output = "Exception encountered: " + str(e)
           output = output.strip()
           if len(output) > 0:
-            buf = textview.get_buffer() 
+            buf = textview.get_buffer()
             end = buf.get_end_iter()
             if buf.get_char_count() > 0:
-              buf.insert(end,'\n')
+              buf.insert(end, '\n')
             buf.insert(end, output)
             textview.scroll_mark_onscreen(buf.get_insert())
           return False
 
-        threading.Thread(target=cb_call, args=(cmd, args)).start()      
+        threading.Thread(target=cb_call, args=(cmd, args)).start()
     entry.connect('activate', send_command, output)
 
     self.window.connect('delete-event', self.hide_command_window)
 
     self.window.add(vbox)
-
 
   def on_command_activate(self, icon):
     if self.server:
@@ -132,7 +132,6 @@ class StatusIcon(gtk.StatusIcon):
         self.window.present()
       else:
         self.hide_command_window()
-        
 
   def hide_command_window(self, *args):
     self.window.hide()
@@ -140,7 +139,6 @@ class StatusIcon(gtk.StatusIcon):
     self.window_display_position = self.window.get_position()
     self.window_display_size = self.window.get_size()
     return True
-
 
   def show_registrar_data(self, event):
     win = gtk.Window()
@@ -151,10 +149,10 @@ class StatusIcon(gtk.StatusIcon):
     def set_buf(output, text):
       output.set_editable(False)
       output.set_cursor_visible(False)
-      buf = output.get_buffer() 
+      buf = output.get_buffer()
       end = buf.get_end_iter()
       if buf.get_char_count() > 0:
-        buf.insert(end,'\n')
+        buf.insert(end, '\n')
       buf.insert(end, text)
 
     def get_service_data():
@@ -194,22 +192,19 @@ class StatusIcon(gtk.StatusIcon):
       vbox.pack_start(scrollview, frame[2], frame[2], 0)
 
     win.add(vbox)
-    win.connect('destroy', lambda x :x.destroy())
+    win.connect('destroy', lambda x: x.destroy())
     win.show_all()
     win.present()
 
   def on_reload(self, item):
     self.server.reloadPlugin(item.get_label())
 
-
   def on_popup_menu(self, widget, button, time):
     self.menu.popup(None, None, gtk.status_icon_position_menu,
                                                           button, time, widget)
 
-
   def on_quit(self, data):
     gtk.main_quit()
-
 
   def on_about(self, data):
     dialog = gtk.AboutDialog()
@@ -225,4 +220,3 @@ if __name__ == '__main__':
   StatusIcon(None)
   gtk.threads_init()
   gtk.main()
-

@@ -9,20 +9,21 @@ import re
 
 import automaton.lib.plugin as plugin
 
+
 class Map(plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(Map, self).__init__(registrar)
     registrar.register_service("map", self.execute,
-      usage = """
-               USAGE: map [origin] to [destination]
-               Returns text directions from origin to destination from GMaps
-              """)
+      usage="""
+             USAGE: map [origin] to [destination]
+             Returns text directions from origin to destination from GMaps
+            """)
 
   def disable(self):
     self.registrar.unregister_service("map")
 
-  def execute(self, arg = ''):
+  def execute(self, arg=''):
     if arg == '':
       return self.help()
 
@@ -42,12 +43,12 @@ class Map(plugin.PluginInterface):
         raise plugin.UnsuccessfulExecution("Could not determine location.")
 
     params = {
-      'q':        'from:{0} to:{1}'.format(origin, destination),
-      'output':   'json',
-      'oe':       'utf8',
+      'q': 'from:{0} to:{1}'.format(origin, destination),
+      'output': 'json',
+      'oe': 'utf8',
     }
 
-    encoded_params = urllib.urlencode(params)    
+    encoded_params = urllib.urlencode(params)
     url = 'http://maps.google.com/maps/nav?' + encoded_params
     request = urllib2.Request(url)
     resp = urllib2.urlopen(request)
@@ -58,17 +59,19 @@ class Map(plugin.PluginInterface):
       steps = response['Directions']['Routes'][0]['Steps']
       ret = ""
       for line in steps:
-        ret = ret + line['descriptionHtml'] + ' for ' + line['Distance']['html'] + '\n'
-        ret = re.sub(r'<.*?>', '', ret) # Strips HTML tags
-        ret = re.sub(r'&[^ ]*?;', '', ret) # Strips HTML special characters (ie. &quot; )
+        ret = (ret + line['descriptionHtml'] +
+                ' for ' + line['Distance']['html'] + '\n')
+        # Strips HTML tags
+        ret = re.sub(r'<.*?>', '', ret)
+        # Strips HTML special characters (ie. &quot; )
+        ret = re.sub(r'&[^ ]*?;', '', ret)
       return ret.rstrip()
     elif status_code == 602:
       raise plugin.UnsuccessfulExecution('malformed query')
     raise plugin.UnsuccessfulExecution("Unknown status code: " + status_code)
 
   def grammar(self):
-    return  "map{"+\
-              "keywords = map | directions | direction | navigate"+\
-              "arguments = *"+\
-            "}"
-
+    return ("map{\n"
+              "keywords = map | directions | direction | navigate\n"
+              "arguments = *\n"
+            "}")

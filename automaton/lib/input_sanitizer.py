@@ -52,10 +52,12 @@ class InputSanitizer:
 if __name__ == "__main__":
   __name__ == "InputSanitizer"
   i = InputSanitizer()
-  def call(s, args = ""):
+
+  def call(s, args=""):
     if s == "name":
       return "Tim"
     if s == "me":
       return "Automaton"
     return ""
+
   print i.sanitize("Hello, %name. You may call me %me.")

@@ -9,10 +9,11 @@ import automaton.lib.plugin as plugin
 import automaton.lib.logger as logger
 import automaton.lib.settings_loader as settings_loader
 
+
 class Torrent(plugin.PluginInterface):
 
   search_urls = {
-    "pirate_bay" : "http://thepiratebay.org/search.php?q=",
+    "pirate_bay": "http://thepiratebay.org/search.php?q=",
   }
 
   def search(self, name):
@@ -49,7 +50,6 @@ class Torrent(plugin.PluginInterface):
 
       return top
 
-
   def begin_torrent(self, movie_name):
     filename = os.path.join(self.cmd_op["DOWNLOAD_DIR"],
                                                   os.path.basename(movie_name))
@@ -70,19 +70,18 @@ class Torrent(plugin.PluginInterface):
     self.cmd_op = settings_loader.load_plugin_settings(__name__)
 
     registrar.register_service("torrent", self.execute,
-      usage = """
-               USAGE: torrent [torrent file | media name | IMDB Link]
-               When provided with a .torrent file, it grabs the file and begins
-               downloading. With an IMDB link, it extracts the movie name and
-               attempts to find the .torrent file closest to what you're looking
-               for. A name does the same, except the media name is provided.
-              """)
+      usage="""
+             USAGE: torrent [torrent file | media name | IMDB Link]
+             When provided with a .torrent file, it grabs the file and begins
+             downloading. With an IMDB link, it extracts the movie name and
+             attempts to find the .torrent file closest to what you're looking
+             for. A name does the same, except the media name is provided.
+            """)
 
   def disable(self):
     self.registrar.unregister_service("torrent")
 
-
-  def execute(self, arg = ''):
+  def execute(self, arg=''):
     movie_name = arg
 
     if "DOWNLOAD_DIR" not in self.cmd_op:
@@ -121,10 +120,10 @@ class Torrent(plugin.PluginInterface):
       return "Error starting torrent."
 
   def grammar(self):
-    return  "echo{"+\
-              "keywords = torrent"+\
-              "arguments = *"+\
-            "}"
+    return ("torrent{\n"
+              "keywords = torrent\n"
+              "arguments = *\n"
+            "}")
 
 
 if __name__ == "__main__":
@@ -133,4 +132,5 @@ if __name__ == "__main__":
   #print t.execute("http://www.imdb.com/title/tt1014759/")
   print t.execute("Alice in Wonderland")
   #print t.execute("Alice in Wonderland 2010")
-  #print t.execute("http://torrents.thepiratebay.org/5556606/Alice_in_Wonderland_(2010)_DVDRip_XviD-DiAMOND.5556606.TPB.torrent")
+  #print t.execute("http://torrents.thepiratebay.org/5556606/"
+  #       "Alice_in_Wonderland_(2010)_DVDRip_XviD-DiAMOND.5556606.TPB.torrent")

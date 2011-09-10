@@ -17,16 +17,18 @@ import platformdata
 def load_plugin_settings(name):
   # Removes all "upper" module indicators, if present
   name = utils.get_module_name(name)
-  name = os.path.join("plugins", name+".conf")
+  name = os.path.join("plugins", name + ".conf")
   return __load_settings(name)
+
 
 # Function used by apps to load their settings
 # Before calling __load_settings it removes the absolute path provided
 # by sys.argv in the app and removes the .py file extension if it exists.
 def load_app_settings(name):
   name = utils.get_module_name(name)
-  name = os.path.join("apps", name+".conf")
+  name = os.path.join("apps", name + ".conf")
   return __load_settings(name)
+
 
 # Private function that loads settings, since both plugins and apps
 # have the same settings file format
@@ -35,9 +37,9 @@ def __load_settings(name):
   settings = None
   # Try the home directory first, then system, then local settings
   for path in platformdata.getDirHierarchy():
-    filepath = os.path.join(path,name)
+    filepath = os.path.join(path, name)
     if os.path.isfile(filepath):
-      with open(filepath,"r") as settingsFile:
+      with open(filepath, "r") as settingsFile:
         settings = settingsFile.readlines()
       if settings != None:
         break
@@ -46,11 +48,11 @@ def __load_settings(name):
       if len(line.strip()) == 0:
         continue
       # Lines beginning with # are comments
-      if line[0]=='#':
+      if line[0] == '#':
         continue
       ix = line.find('=')
       if ix < 0:
-        logger.log("Cannot read settings line: "+line)
+        logger.log("Cannot read settings line: " + line)
         continue
-      op[line[0:ix].strip().upper()]=line[ix+1:].strip()
+      op[line[0:ix].strip().upper()] = line[ix + 1:].strip()
   return op

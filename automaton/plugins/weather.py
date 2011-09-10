@@ -15,16 +15,17 @@ class cache:
   def __str__(self):
     return "({0}, {1})".format(self.ttl, self.val)
 
+
 class Weather(plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(Weather, self).__init__(registrar)
-    self.ttl = 3600 # seconds
-    self.last = None # last weather value recorded, tuple of (location, value)
+    self.ttl = 3600  # seconds
+    self.last = None  # last weather value recorded, tuple of (location, value)
     cmd = settings_loader.load_plugin_settings(self.__class__.__name__)
     self.locations = cmd
     self.format = 'F'
-    if self.locations.has_key("FORMAT"):
+    if "FORMAT" in self.locations:
       if len(self.locations["FORMAT"]) > 0:
         ch = self.locations["FORMAT"][0].upper()
         if ch in ('F', 'C', 'K'):
@@ -34,29 +35,27 @@ class Weather(plugin.PluginInterface):
 
     # remove spaces after commas - these would screw up lat/long searches
     for loc in self.locations:
-      self.locations[loc] = re.sub(',\s*',',',self.locations[loc])
+      self.locations[loc] = re.sub(',\s*', ',', self.locations[loc])
     # dict of location:cache pairs
     # if current time in sec since epoch is less than ttl, cache has expired
     # should return val if cache is still valid
     self.cache = {}
 
     registrar.register_service("weather", self.execute,
-      usage = """
-               USAGE: weather [location|alias]
-               Returns the weather for a provided location or alias. If no
-               location is provided, gets the weather data for the last
-               recorded position.
-              """)
+      usage="""
+             USAGE: weather [location|alias]
+             Returns the weather for a provided location or alias. If no
+             location is provided, gets the weather data for the last
+             recorded position.
+            """)
 
   def disable(self):
     self.registrar.unregister_service("weather")
-
 
   def distance(a, b):
     # TODO use haversine formula with lat/long to cache close locations?
     # http://www.movable-type.co.uk/scripts/latlong.html
     return a == b
-
 
   def tempmodifier(self, temp):
     if (temp % 10) < 4:
@@ -65,7 +64,6 @@ class Weather(plugin.PluginInterface):
       return "mid"
     else:
       return "high"
-
 
   def gettimeofday(self):
     hr = time.localtime().tm_hour
@@ -79,7 +77,6 @@ class Weather(plugin.PluginInterface):
       return "this evening"
     else:
       return "tonight"
-
 
   def parse_response(self, resp, forecastday):
     ret = ''
@@ -97,7 +94,8 @@ class Weather(plugin.PluginInterface):
               time = "tomorrow"
             else:
               time = self.gettimeofday()
-            ret = 'The weather {0} is {1}. '.format(time, condnode[0].firstChild.data)
+            ret = 'The weather {0} is {1}. '.format(time,
+                    condnode[0].firstChild.data)
         except Exception as e:
           print "Weather ", e
           pass
@@ -107,21 +105,27 @@ class Weather(plugin.PluginInterface):
           temp = 0
           t_high = w_node.getElementsByTagName("high")[0]
           if self.format == 'F':
-            temp = int(t_high.getElementsByTagName("fahrenheit")[0].firstChild.data)
+            temp = int(t_high.getElementsByTagName(
+                                      "fahrenheit")[0].firstChild.data)
           else:
-            temp = int(t_high.getElementsByTagName("celsius")[0].firstChild.data)
+            temp = int(t_high.getElementsByTagName(
+                                      "celsius")[0].firstChild.data)
             if self.format == 'K':
               temp = temp + 273
-          ret = ret + 'Highs in the {0} {1}s. '.format(self.tempmodifier(temp), str(temp-(temp%10)))
-          
+          ret = ret + 'Highs in the {0} {1}s. '.format(self.tempmodifier(temp),
+                                                      str(temp - (temp % 10)))
+
           t_low = w_node.getElementsByTagName("low")[0]
           if self.format == 'F':
-            temp = int(t_low.getElementsByTagName("fahrenheit")[0].firstChild.data)
+            temp = int(t_low.getElementsByTagName(
+                                      "fahrenheit")[0].firstChild.data)
           else:
-            temp = int(t_low.getElementsByTagName("celsius")[0].firstChild.data)
+            temp = int(t_low.getElementsByTagName(
+                                      "celsius")[0].firstChild.data)
             if self.format == 'K':
               temp = temp + 273
-          ret = ret + 'Lows in the {0} {1}s. '.format(self.tempmodifier(temp), str(temp-(temp%10)))
+          ret = ret + 'Lows in the {0} {1}s. '.format(self.tempmodifier(temp),
+                                                      str(temp - (temp % 10)))
         except Exception as e:
           print "Temperature", e
           pass
@@ -131,8 +135,7 @@ class Weather(plugin.PluginInterface):
 
     return ret
 
-
-  def fallback_interpreter(self, arg = None):
+  def fallback_interpreter(self, arg=None):
     if not arg:
       return {}
 
@@ -147,13 +150,13 @@ class Weather(plugin.PluginInterface):
       arg = arg[:-len("TOMORROW")].strip()
 
     if arg.startswith("AT") or arg.startswith("IN"):
-      arg = arg[len("AT")+1:].strip()
+      arg = arg[len("AT") + 1:].strip()
 
     kwargs["WHERE"] = arg
 
     return kwargs
-  
-  def execute(self, arg = None, **kwargs):
+
+  def execute(self, arg=None, **kwargs):
     if len(kwargs) == 0:
       kwargs = self.fallback_interpreter(arg)
 
@@ -194,27 +197,28 @@ class Weather(plugin.PluginInterface):
       else:
         self.cache.pop(location, None)
 
-    url = "http://api.wunderground.com/auto/wui/geo/ForecastXML/index.xml?query=" + re.sub('\s+', '%20', location)
+    url = ("http://api.wunderground.com/auto/wui/geo/ForecastXML/"
+            "index.xml?query=" + re.sub('\s+', '%20', location))
 
     resp = minidom.parse(urllib2.urlopen(urllib2.Request(url)))
     if resp == None:
-      raise plugin.UnsuccessfulExecution("Parsing failed for location " + location)
+      raise plugin.UnsuccessfulExecution(
+                      "Parsing failed for location " + location)
 
     ret = self.parse_response(resp, forecastday)
 
     if ret == '':
-      raise plugin.UnsuccessfulExecution("There is no weather data for this location")
+      raise plugin.UnsuccessfulExecution(
+                      "There is no weather data for this location")
 
-    self.last = (location, cache(time.time()+self.ttl, ret))
+    self.last = (location, cache(time.time() + self.ttl, ret))
     self.cache[location] = self.last[1]
 
     return ret
 
-
   def grammar(self):
-    return  ("weather{"
+    return ("weather{"
               "keywords = weather"
               "arguments = *"
             "}"
             )
-

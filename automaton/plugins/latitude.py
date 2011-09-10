@@ -17,11 +17,12 @@ except ImportError:
   print "Follow the installation information then try out the Latitude sample."
   print "If the sample works, move the latitude.dat file somewhere safe and" +\
         "modify the cmd_latitude.conf file to point towards that file."
-  raise automaton.lib.exceptions.ModuleLoadException()
+  raise automaton.lib.exceptions.ModuleLoadError()
 
 
 def platform():
   return ['linux', 'mac', 'windows']
+
 
 class Latitude(plugin.PluginInterface):
 
@@ -29,14 +30,17 @@ class Latitude(plugin.PluginInterface):
     super(Latitude, self).__init__(registrar)
     help = """
             USAGE: {0} [noreverse]
-            Gets the latitude and longitude from the authenticated Google Latitude
-            account and then performs a reverse geolookup on it to get the most
-            accurate address information for that location. If 'noreverse' is
-            provided as an argument or there is no address info for the location,
+            Gets the latitude and longitude from the authenticated
+            Google Latitude account and then performs a reverse
+            geolookup on it to get the most accurate address
+            information for that location. If 'noreverse' is provided
+            as an argument or there is no address info for the location,
             the plain latitude and longitude are returned.
            """
-    registrar.register_service("latitude", self.execute, usage=help.format("latitude"))
-    registrar.register_service("location", self.execute, usage=help.format("location"))
+    registrar.register_service("latitude", self.execute,
+      usage=help.format("latitude"))
+    registrar.register_service("location", self.execute,
+      usage=help.format("location"))
 
     utils.spawn_thread(self.location_updater)
 
@@ -50,10 +54,10 @@ class Latitude(plugin.PluginInterface):
       self.registrar.register_object("location", location)
       time.sleep(30)
 
-  def lookup(self, lat = '', lng = ''):
-
-    query = urllib.urlencode({'latlng' : ','.join((str(lat),str(lng)))})
-    url = 'http://maps.googleapis.com/maps/api/geocode/json?v=1.0&sensor=true&' + query
+  def lookup(self, lat='', lng=''):
+    query = urllib.urlencode({'latlng': ','.join((str(lat), str(lng)))})
+    url = ('http://maps.googleapis.com/maps/api/geocode/'
+            'json?v=1.0&sensor=true&' + query)
     search_results = urllib.urlopen(url)
     json = simplejson.loads(search_results.read())
     if len(json['results']) > 0:
@@ -61,13 +65,14 @@ class Latitude(plugin.PluginInterface):
     else:
       return None
 
-  def execute(self, arg = '', **kwargs):
+  def execute(self, arg='', **kwargs):
     if arg == "noreverse":
       kwargs["noreverse"] = True
     cmd_op = settings_loader.load_plugin_settings(__name__)
-    if not cmd_op.has_key('AUTHPATH'):
-      raise plugin.PluginError("Server not authenticated with Google Latitude.")
-    
+    if not 'AUTHPATH' in cmd_op:
+      raise plugin.PluginError("Server not authenticated "
+                                "with Google Latitude.")
+
     try:
       f = open(cmd_op['AUTHPATH'], "r")
       credentials = pickle.loads(f.read())
@@ -92,14 +97,13 @@ class Latitude(plugin.PluginInterface):
         else:
           return ret
     else:
-      if data.has_key('kind'):
+      if 'kind' in data:
         raise plugin.UnsuccessfulExecution("No latitude data available.")
       else:
         raise plugin.UnsuccessfulExecution("Error in Latitude response.")
 
   def grammar(self):
-    return  "latitude{"+\
-              "keywords = latitude | where | location | address"+\
-              "arguments = 0"+\
-            "}"
-
+    return  ("latitude{\n"
+              "keywords = latitude | where | location | address\n"
+              "arguments = 0\n"
+            "}")

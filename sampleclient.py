@@ -1,7 +1,6 @@
 from automaton.lib.client_wrapper_thrift import ClientWrapper
 
 try:
-  
   client = ClientWrapper(appname="sample")
   client.open()
 

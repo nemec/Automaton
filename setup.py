@@ -14,7 +14,6 @@ setup(name='Automaton',
                 'automaton.lib',
                 'automaton.lib.automaton_thrift',
                 'automaton.lib.automaton_thrift.python'],
-      package_data = {'automaton': files},
-      scripts = ['automaton_server']
+      package_data={'automaton': files},
+      scripts=['automaton_server']
      )
-

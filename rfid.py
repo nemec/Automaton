@@ -1,19 +1,21 @@
 #!/usr/bin/env/python
 
-import automaton.lib.settings_loader as settings_loader
-import automaton.lib.logger as logger
 import serial
 import sys
 from struct import unpack
 import time
-
 import pgdb
 
+import automaton.lib.logger as logger
+import automaton.lib.settings_loader as settings_loader
 from automaton.lib.client_wrapper_thrift import ClientWrapper
+
 
 def do_valid_tag(db, code):
   cursor = db.cursor()
-  query = 'SELECT "User Data"."First Name", "User Data"."Last Name" FROM "Users"."User Data" WHERE "User Data"."Username" = \'%s\';' % code
+  query = ('SELECT "User Data"."First Name", "User Data"."Last Name" FROM '
+           '"Users"."User Data" WHERE "User Data"."Username" '
+           '= \'{0}\';'.format(code))
   try:
     cursor.execute(query)
   except Exception as e:
@@ -25,13 +27,15 @@ def do_valid_tag(db, code):
   cursor.close()
   if name == None:
     return None
-  name =  " ".join(name)
+  name = " ".join(name)
   global client
   client.execute("say", "Welcome back " + name)
 
+
 def checkid(db, idnum):
   cursor = db.cursor()
-  query = 'SELECT "Registered Keys"."Username" from "RFID"."Registered Keys" WHERE "Registered Keys"."ID" = \'{0}\''.format(idnum)
+  query = ('SELECT "Registered Keys"."Username" FROM "RFID"."Registered Keys" '
+           'WHERE "Registered Keys"."ID" = \'{0}\''.format(idnum))
   try:
     cursor.execute(query)
   except Exception as e:
@@ -40,29 +44,31 @@ def checkid(db, idnum):
     db.rollback()
     return None
   if cursor.rowcount > 0:
-    data=cursor.fetchone()[0]
+    data = cursor.fetchone()[0]
   else:
     data = None
   cursor.close()
   return data
+
 
 try:
   s = serial.Serial("/dev/ttyUSB0", 2400)
 except serial.serialutil.SerialException:
   s = serial.Serial("/dev/ttyUSB1", 2400)
 
-op = {"DBHOST":"localhost", "DBUSER":"RFID", "DBPASS":""}
+op = {"DBHOST": "localhost", "DBUSER": "RFID", "DBPASS": ""}
 op.update(settings_loader.load_app_settings(sys.argv[0]))
 
-if op["DBPASS"]=="":
+if op["DBPASS"] == "":
   logger.log("Error: no db password provided")
   sys.exit()
 
 try:
-  db = pgdb.connect(user=op["DBUSER"], password=op["DBPASS"], host=op["DBHOST"], database="Automaton")
+  db = pgdb.connect(user=op["DBUSER"], password=op["DBPASS"],
+                    host=op["DBHOST"], database="Automaton")
 except Exception as e:
-  print "Error connecting to database:",e
-  sys.exit() 
+  print "Error connecting to database:", e
+  sys.exit()
 
 client = ClientWrapper.ClientWrapper(op["THRIFT_SERVER"])
 client.open()
@@ -88,14 +94,14 @@ while True:
         if val == (10, ) or val == (13, ):
           break
         idnum += char
-      
+
       if len(idnum) == 10:
         username = checkid(db, idnum)
         if username != None:
-          logger.log("Valid tag: "+idnum)
+          logger.log("Valid tag: " + idnum)
           do_valid_tag(db, username)
         else:
-          logger.log("Invalid tag: "+idnum)
+          logger.log("Invalid tag: " + idnum)
         s.setRTS(0)
         time.sleep(2)
         s.setRTS(1)

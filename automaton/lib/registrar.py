@@ -1,12 +1,16 @@
 import copy
-from utils import locked
 from threading import Lock
+
+from utils import locked
+
 
 class ServiceDoesNotExist(Exception):
   pass
 
+
 class ObjectDoesNotExist(Exception):
   pass
+
 
 class Event:
     """ Event Handler
@@ -18,19 +22,17 @@ class Event:
     def __init__(self):
         self.handlers = set()
 
-
     def handle(self, handler):
         self.handlers.add(handler)
         return self
-
 
     def unhandle(self, handler):
         try:
             self.handlers.remove(handler)
         except:
-            raise ValueError("Handler is not handling this event, so cannot unhandle it.")
+            raise ValueError("Handler is not handling this event, "
+                              "so cannot unhandle it.")
         return self
-
 
     def fire(self, *args, **kargs):
         for handler in self.handlers:
@@ -40,14 +42,14 @@ class Event:
               # We don't want a rogue handler to mess up everyone else
               print e
 
-
     def getHandlerCount(self):
         return len(self.handlers)
 
     __iadd__ = handle
     __isub__ = unhandle
     __call__ = fire
-    __len__  = getHandlerCount
+    __len__ = getHandlerCount
+
 
 class Registrar(object):
   """
@@ -59,18 +61,17 @@ class Registrar(object):
 
   class __repo_svc(object):
     """ Repository Service
-        Consists of the service function, a grammar that defines how 
+        Consists of the service function, a grammar that defines how
         a POS tagged query is to be turned into the service's arguments
         (structure defined in interpreter.py), and a lock that controls
         concurrent access to the service.
 
     """
-    def __init__(self, svc, grammar = None, usage = ''):
+    def __init__(self, svc, grammar=None, usage=''):
       self.svc = svc
       self.grammar = grammar
       self.usage = usage
       self.lock = Lock()
-
 
   class __repo_obj(object):
     """ Repository Object
@@ -84,16 +85,13 @@ class Registrar(object):
       self.obj = obj
       self.change_event = Event()
 
-
   def __init__(self):
     self.objects = {}
     self.services = {}
     self.__obj_lock = Lock()
 
-
-  def register_service(self, svc_name, svc, grammar = None, usage = ''):
+  def register_service(self, svc_name, svc, grammar=None, usage=''):
     self.services[svc_name.lower()] = self.__repo_svc(svc, grammar, usage)
-
 
   def remove_service(self, svc_name):
     svc_name = svc_name.lower()
@@ -103,14 +101,12 @@ class Registrar(object):
         with locked(service.lock):
           del self.services[name]
 
-
   def request_service(self, svc_name, *args, **kwargs):
     svc_name = svc_name.lower()
     if svc_name not in self.services:
       raise ServiceDoesNotExist("Service does not exist.")
     with locked(self.services[svc_name].lock):
       return self.services[svc_name].svc(*args, **kwargs)
-
 
   def register_object(self, obj_name, obj):
     """ Register Object
@@ -127,12 +123,10 @@ class Registrar(object):
       # Prevents the handler from needing a call to get_object
       self.objects[obj_name].change_event.fire(obj)
 
-
   def remove_object(self, obj_name):
     obj_name = obj_name.lower()
     with locked(self.__obj_lock):
       del self.objects[obj_name]
-
 
   def register_object_listener(self, obj_name, callback):
     obj_name = obj_name.lower()
@@ -141,12 +135,10 @@ class Registrar(object):
 
     self.objects[obj_name].change_event += callback
 
-
   def remove_object_listener(self, obj_name, callback):
     obj_name = obj_name.lower()
     if obj_name in self.objects:
       self.objects[obj_name].change_event -= callback
-
 
   def get_object(self, obj_name):
     """ get_object returns a deep copy of the object in the repository """
@@ -161,6 +153,7 @@ if __name__ == "__main__":
   class D(object):
     def __init__(self, i=4):
       self.c = i
+
   class C(object):
     def __init__(self):
       self.x = D()

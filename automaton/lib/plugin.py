@@ -1,4 +1,5 @@
 
+
 class UnsuccessfulExecution(Exception):
   """ UnsuccessfulExecution errors are not necessarily fatal.
       All they represent is a failure on the service's part to
@@ -9,7 +10,7 @@ class UnsuccessfulExecution(Exception):
   """
   pass
 
+
 class PluginInterface(object):
   def __init__(self, registrar):
     self.registrar = registrar
-

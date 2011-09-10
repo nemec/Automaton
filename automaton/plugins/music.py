@@ -1,21 +1,23 @@
-# requires mpd.py from http://code.google.com/p/client175/source/browse/trunk/mpd.py
+# requires mpd.py from
+# http://code.google.com/p/client175/source/browse/trunk/mpd.py
 import mpd
 
 import automaton.lib.plugin
+
 
 class Music(automaton.lib.plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(Music, self).__init__(registrar)
     self.client = mpd.MPDClient()
-    self.client.connect("localhost",6600)
+    self.client.connect("localhost", 6600)
     self.version = map(lambda x: int(x), self.client.mpd_version.split('.'))
 
     registrar.register_service("music", self.execute,
-      usage = """
-               USAGE: music [play|pause|stop]
-               Controls an mpd server
-              """)
+      usage="""
+             USAGE: music [play|pause|stop]
+             Controls an mpd server
+            """)
 
   def disable(self):
     self.registrar.unregister_service("music")
@@ -23,7 +25,7 @@ class Music(automaton.lib.plugin.PluginInterface):
   def canFind(self):
     return not ((self.version[0] == 0) and (self.version[1] < 16))
 
-  def execute(self, arg = ''):
+  def execute(self, arg=''):
     if arg.startswith("play"):
       # Format of "play artist/album"
       search = arg[4:].strip()
@@ -52,8 +54,7 @@ class Music(automaton.lib.plugin.PluginInterface):
     return ""
 
   def grammar(self):
-    return  "music{"+\
-              "keywords = music | sound"+\
-              "arguments = *"+\
-            "}"
-
+    return ("music{\n"
+              "keywords = music | sound\n"
+              "arguments = *\n"
+            "}")

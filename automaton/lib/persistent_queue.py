@@ -7,18 +7,19 @@ import pickle
 # implemented. If you are interested in scalable object persistence, check
 # out http://www.zodb.org/
 
+
 class PersistentPriorityQueue(Queue.PriorityQueue):
   # Pickles queue to file on get/put
   # Since it doesn't read the file again once it's been
   # loaded, queue files can't be shared between objects
-  
+
   def __init__(self, maxsize=0, storagefile=None):
     self.file = storagefile
     Queue.PriorityQueue.__init__(self, maxsize)
 
   def _init(self, maxsize):
     self.__load()
-  
+
   def _put(self, item):
     Queue.PriorityQueue._put(self, item)
     if self.file is not None:
@@ -67,7 +68,6 @@ class PersistentPriorityQueue(Queue.PriorityQueue):
     finally:
       self.not_empty.release()
 
-
   def front_nowait(self):
     self.not_empty.acquire()
     try:
@@ -77,7 +77,7 @@ class PersistentPriorityQueue(Queue.PriorityQueue):
     finally:
       self.not_empty.release()
 
-if __name__=="__main__":
+if __name__ == "__main__":
   q = PersistentPriorityQueue(storagefile="file")
   q.put(5)
   q.put(3)
