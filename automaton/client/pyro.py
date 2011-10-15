@@ -1,6 +1,6 @@
 import sys
 import Pyro.core
-from exceptions import *
+from automaton.lib.exceptions import *
 from automaton.client.base import ClientInterface
 
 
