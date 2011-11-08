@@ -7,7 +7,12 @@ try:
 
   try:
     client.allowAllServices()
-    print client.interpret(' '.join(sys.argv[1:]))
+    
+    cmd = ' '.join(sys.argv[1:])
+    if cmd == "help":
+      print client.getAvailableServices()
+    else:
+      print client.interpret(cmd)
   except thrift_client.ClientNotRegisteredError:
     print "Service not registered"
   except thrift_client.ServiceNotProvidedError as e:

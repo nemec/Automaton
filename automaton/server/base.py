@@ -187,7 +187,7 @@ class AutomatonServer(object):
       output = "Execution failed: " + str(e)
     self.sanitizer.set_prev_alias(output)
     self.clientmanager.registeredclients[clientid].history.append(raw)
-    print self.clientmanager.registeredclients[clientid].history
+    print "History: ", self.clientmanager.registeredclients[clientid].history
     return output
 
   # Tests if the specified service is provided or not.

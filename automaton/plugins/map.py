@@ -14,14 +14,18 @@ class Map(plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(Map, self).__init__(registrar)
-    registrar.register_service("map", self.execute,
-      usage="""
-             USAGE: map [origin] to [destination]
+    
+    usage = """
+             USAGE: {0} [origin] to [destination]
              Returns text directions from origin to destination from GMaps
-            """)
+            """
+    
+    registrar.register_service("map", self.execute, usage=usage.format("map"))
+    registrar.register_service("directions", self.execute, usage=usage.format("directions"))
 
   def disable(self):
     self.registrar.unregister_service("map")
+    self.registrar.unregister_service("directions")
 
   def execute(self, arg=''):
     if arg == '':
