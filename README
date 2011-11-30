@@ -13,6 +13,10 @@ http://wiki.apache.org/thrift/ RPC project. This allows the server to be written
 in a single language and allow easy access to the scripts from many other
 languages and remote computers.
 
+Links
+=====
+http://www.youtube.com/user/AutomatonServer
+
 Requirements
 ============
 
