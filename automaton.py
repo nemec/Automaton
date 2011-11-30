@@ -1,5 +1,5 @@
 import sys
-import automaton.client.pyro as thrift_client
+import automaton.client.thrift as thrift_client
 
 try:
   client = thrift_client.ClientWrapper("localhost", appname="cmd")

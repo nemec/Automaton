@@ -27,11 +27,11 @@ if __name__=="__main__":
 
   if servertype == "local":
     from automaton.server.base import AutomatonServer
-    server = AutomatonServer(withgui=withgui)
+    server = AutomatonServer(withgui=withgui, useinterpreter=True)
   elif servertype == "thrift":
     try:
       from automaton.server.thrift import ThriftServer
-      server = ThriftServer(withgui=withgui)
+      server = ThriftServer(withgui=withgui, useinterpreter=True)
     except ImportError:
       servertype = "pyro"
 
@@ -39,7 +39,7 @@ if __name__=="__main__":
   if servertype == "pyro":
     try:
       from automaton.server.pyro import PyroServer
-      server = PyroServer(withgui=withgui)
+      server = PyroServer(withgui=withgui, useinterpreter=True)
     except ImportError:
       pass
 

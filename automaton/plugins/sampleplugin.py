@@ -12,7 +12,9 @@ class Sample(automaton.lib.plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(Sample, self).__init__(registrar)
-    self.grammar = "*"
+    self.grammar = {
+      "title": [],
+    }
     help = """
             USAGE: {0} name
             Prints "hello" along with the provided name

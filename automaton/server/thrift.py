@@ -15,14 +15,14 @@ from automaton.server.base import AutomatonServer
 
 
 class ThriftServer(AutomatonServer):
-  def __init__(self, withgui=False, port=9090):
-    AutomatonServer.__init__(self, withgui)
+  def __init__(self, withgui=False, useinterpreter=False, port=9090):
+    AutomatonServer.__init__(self, withgui, useinterpreter)
     self.port = port
     self.exceptions = automaton.lib.thrift.python.ttypes
 
   def initialize(self):
     processor = AutomatonThrift.Processor(self)
-    transport = TSocket.TServerSocket(self.port)
+    transport = TSocket.TServerSocket(None, self.port)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 

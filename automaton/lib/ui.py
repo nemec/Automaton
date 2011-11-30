@@ -98,7 +98,7 @@ class StatusIcon(gtk.StatusIcon):
             if cmd == "help":
               output = self.server.serviceUsage(args)
             else:
-              output = self.server.registrar.request_service(cmd, args)
+              output = self.server.registrar.request_service(cmd, **args) or "No output."
           except self.server.exceptions.ServiceNotProvidedError as e:
             output = str(e)
           except UnsuccessfulExecution as e:

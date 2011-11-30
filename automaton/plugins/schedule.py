@@ -32,10 +32,12 @@ class Schedule(automaton.lib.plugin.PluginInterface):
 
   def _executionthread(self):
     while True:
-      t, cmd, arg = self.remove_task_if_past()
-      if cmd is not None:
+      t, command = self.remove_task_if_past()
+      if command is not None:
         try:
-          val = self.registrar.request_service(cmd, arg)
+          cmd, args = self.interpreter.interpret(command)
+          if cmd is not None:
+            val = self.registrar.request_service(cmd, args)
         except Exception as e:
           val = "Exception encountered: {0}".format(e)
         logger.log("Scheduled command {0} has been run, with "
@@ -62,12 +64,19 @@ class Schedule(automaton.lib.plugin.PluginInterface):
       logger.log("Scheduler could not find an existing queue file and "
                  "no write access to create a new one. Any scheduled tasks "
                  "will disappear once server is stopped.")
+                 
+    self.interpreter = 
     self.event = threading.Event()
     thread = threading.Thread(target=self._executionthread)
     thread.setDaemon(True)
     thread.start()
 
     registrar.register_service("schedule", self.execute,
+      grammar={
+        "at": ["at"],
+        "in": ["in"],
+        "command": [],
+      },
       usage="""
              USAGE: schedule WHAT [at WHEN] | [in WHEN]
              Schedules a command to be run at a specific time, repeating if
@@ -76,53 +85,52 @@ class Schedule(automaton.lib.plugin.PluginInterface):
 
   def disable(self):
     self.registrar.unregister_service("schedule")
+    
+  #def fallback_interpreter(self, arg=''):
+  #  match = re.match(r"(?P<cmd>.*?) "
+  #                   r"(?P<args>.*?)\s*"
+  #                   r"((?P<in>in)|(?P<at>at))\s*"
+  #                   r"(?P<time>.*)"
+  #                   r"(?(in)(?P<tscale>hour|minute|second)s?)",
+  #                   arg, flags=re.I)
 
-  def execute(self, arg=''):
+  def execute(self, arg='', **kwargs):
     t = 0
-    # Matches either "cmd arg in x seconds" or "cmd arg at time"
-    match = re.match(r"(?P<cmd>.*?) "
-                     r"(?P<args>.*?)\s*"
-                     r"((?P<in>in)|(?P<at>at))\s*"
-                     r"(?P<time>.*)"
-                     r"(?(in)(?P<tscale>hour|minute|second)s?)",
-                     arg, flags=re.I)
-    if match:
-      # Relative time
-      if match.group('in'):
+    
+    if "command" not in kwargs:
+      raise plugin.UnsuccessfulExecutionError("No command provided.")
+    
+    if "in" in kwargs:
+      try:
+        time, scale = kwargs["in"].split()
+      except ValueError:
+        raise plugin.UnsuccessfulExecution("Error parsing time.")
+      try:
+        t = int(time)
+      except ValueError:
         try:
-          t = int(match.group('time'))
-        except ValueError:
-          try:
-            t = utils.text_to_int(match.group('time'))
-          except:
-            raise plugin.UnsuccessfulExecution("Error parsing time.")
-        scale = match.group('tscale')
-        if scale == "hour":
-          t = datetime.datetime.now() + datetime.timedelta(hours=t)
-        elif scale == "minute":
-          t = datetime.datetime.now() + datetime.timedelta(minutes=t)
-        elif scale == "second":
-          t = datetime.datetime.now() + datetime.timedelta(seconds=t)
-        else:
-          raise plugin.UnsuccessfulExecution(
-                            "Could not determine time scale (h/m/s).")
-      # Absolute time
-      else:
-        t = utils.text_to_absolute_time(match.group('time'))
-        if not t:
+          t = utils.text_to_int(time)
+        except:
           raise plugin.UnsuccessfulExecution("Error parsing time.")
+      if scale.startswith("h")):
+        t = datetime.datetime.now() + datetime.timedelta(hours=t)
+      elif scale.startswith("m"):
+        t = datetime.datetime.now() + datetime.timedelta(minutes=t)
+      elif scale.startswith("s"):
+        t = datetime.datetime.now() + datetime.timedelta(seconds=t)
+      else:
+        raise plugin.UnsuccessfulExecution(
+                          "Could not determine time scale (h/m/s).")
+    elif "at" in kwargs:
+      t = utils.text_to_absolute_time(match.group('time'))
+      if not t:
+        raise plugin.UnsuccessfulExecution("Error parsing time.")        
     else:
-      raise plugin.UnsuccessfulExecution('Command could not be scheduled.')
+      raise plugin.UnsuccessfulExecution('Command could not be scheduled. Must specify "in" or "at"')
 
-    self.queue.put((t, match.group('cmd'), match.group('args')))
+    self.queue.put((t, kwargs["command"]))
     self.event.set()
     return 'Command scheduled.'
-
-  def grammar(self):
-    return ("schedule{\n"
-              "keywords = schedule\n"
-              "arguments = *\n"
-            "}")
 
 
 if __name__ == "__main__":

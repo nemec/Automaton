@@ -7,12 +7,15 @@ class GetTime(automaton.lib.plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(GetTime, self).__init__(registrar)
+    
     registrar.register_service("time", self.execute,
+      grammar={},
       usage="""
                USAGE: time
                Returns the current time to the user.
               """)
     registrar.register_service("gettime", self.execute,
+      grammar={},
       usage="""
                USAGE: gettime
                Returns the current time to the user.

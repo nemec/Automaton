@@ -20,8 +20,10 @@ class Map(plugin.PluginInterface):
              Returns text directions from origin to destination from GMaps
             """
     
-    registrar.register_service("map", self.execute, usage=usage.format("map"))
-    registrar.register_service("directions", self.execute, usage=usage.format("directions"))
+    grammar = {"to":["ending at", "to"], "from":[ "starting at", "from"]}
+    
+    registrar.register_service("map", self.interpret, grammar=grammar, usage=usage.format("map"))
+    registrar.register_service("directions", self.interpret, grammar=grammar, usage=usage.format("directions"))
 
   def disable(self):
     self.registrar.unregister_service("map")
@@ -38,7 +40,15 @@ class Map(plugin.PluginInterface):
       destination = arg
       destination = re.sub("^to ", "", destination)
       origin = ''
+    return self.interpret(TO=origin, FROM=destination)
 
+  def interpret(self, arg='', **kwargs):
+    if "TO" not in kwargs:
+      return "Please provide a destination."
+      
+    origin = kwargs.get("FROM", '')
+    destination = kwargs["TO"]
+    
     if origin == '':
       try:
         origin = self.registrar.request_service('latitude')
@@ -73,9 +83,3 @@ class Map(plugin.PluginInterface):
     elif status_code == 602:
       raise plugin.UnsuccessfulExecution('malformed query')
     raise plugin.UnsuccessfulExecution("Unknown status code: " + status_code)
-
-  def grammar(self):
-    return ("map{\n"
-              "keywords = map | directions | direction | navigate\n"
-              "arguments = *\n"
-            "}")

@@ -13,11 +13,15 @@ class Music(automaton.lib.plugin.PluginInterface):
     self.client.connect("localhost", 6600)
     self.version = map(lambda x: int(x), self.client.mpd_version.split('.'))
 
-    registrar.register_service("music", self.execute,
-      usage="""
-             USAGE: music [play|pause|stop]
-             Controls an mpd server
-            """)
+    #registrar.register_service("music", self.execute, {"target": []},
+    #  usage="""
+    #         USAGE: music [play|pause|stop]
+    #         Controls an mpd server
+    #        """)
+    
+    registrar.register_service("play", self.play, {"target": []})
+    registrar.register_service("pause", self.pause, {})
+    registrar.register_service("stop", self.stop, {})
 
   def disable(self):
     self.registrar.unregister_service("music")
@@ -25,7 +29,18 @@ class Music(automaton.lib.plugin.PluginInterface):
   def canFind(self):
     return not ((self.version[0] == 0) and (self.version[1] < 16))
 
-  def execute(self, arg=''):
+  def play(self, arg='', **kwargs):
+    print kwargs, arg
+    self.execute("play " + kwargs["TARGET"])
+
+  def stop(self, arg='', **kwargs):
+    self.client.stop()
+    
+  def pause(self, arg='', **kwargs):
+    self.client.pause()
+
+  def execute(self, arg='', **kwargs):
+    print arg
     if arg.startswith("play"):
       # Format of "play artist/album"
       search = arg[4:].strip()

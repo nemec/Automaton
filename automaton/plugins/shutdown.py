@@ -13,6 +13,7 @@ class Shutdown(automaton.lib.plugin.PluginInterface):
   def __init__(self, registrar):
     super(Shutdown, self).__init__(registrar)
     registrar.register_service("shutdown", self.execute,
+      grammar={"when": []},
       usage="""
              USAGE: shutdown [when]
              Shuts down the computer at the specified time. Defaults to now.
@@ -21,17 +22,20 @@ class Shutdown(automaton.lib.plugin.PluginInterface):
   def disable(self):
     self.registrar.unregister_service("shutdown")
 
-  def execute(self, arg='now'):
+  def execute(self, arg='now', **kwargs):
+    if "when" not in kwargs:
+      kwargs["when"] = "now"
+      
+    try:
+      int(kwargs["when"])
+    except ValueError:  # arg is not int
       try:
-          int(arg)
-      except ValueError:  # arg is not int
-          try:
-              if arg.find(':') > 0:  # Possibly in hh:mm format
-                  int(arg.split(':')[0]) + int(arg.split(':')[1])
-              elif not arg == 'now':  # Otherwise must be 'now'
-                  return ''
-          except ValueError:
-              return ''
+        if kwargs["when"].find(':') > 0:  # Possibly in hh:mm format
+          int(kwargs["when"].split(':')[0]) + int(kwargs["when"].split(':')[1])
+        elif kwargs["when"] != 'now':  # Otherwise must be 'now'
+          return ''
+      except ValueError:
+        return ''
 
-      p = sp.Popen('shutdown -P ' + arg, stdout=sp.PIPE, shell=True)
-      return p.communicate()[0]
+    p = sp.Popen('shutdown -P ' + kwargs["when"], stdout=sp.PIPE, shell=True)
+    return p.communicate()[0]

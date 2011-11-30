@@ -40,8 +40,13 @@ class Weather(plugin.PluginInterface):
     # if current time in sec since epoch is less than ttl, cache has expired
     # should return val if cache is still valid
     self.cache = {}
+    
+    grammar = {
+      "when": ["for", "be like"],
+      "where": ["at","near","in"],
+    }
 
-    registrar.register_service("weather", self.execute,
+    registrar.register_service("weather", self.execute, grammar=grammar,
       usage="""
              USAGE: weather [location|alias]
              Returns the weather for a provided location or alias. If no
@@ -141,18 +146,18 @@ class Weather(plugin.PluginInterface):
 
     arg = arg.upper()
 
-    if arg == "LAST":
-      return {"LAST": True}
+    if arg == "last":
+      return {"last": True}
 
     kwargs = {}
     if arg.endswith("TOMORROW"):
-      kwargs["WHEN"] = "TOMORROW"
+      kwargs["when"] = "TOMORROW"
       arg = arg[:-len("TOMORROW")].strip()
 
-    if arg.startswith("AT") or arg.startswith("IN"):
-      arg = arg[len("AT") + 1:].strip()
+    if arg.startswith("at") or arg.startswith("in"):
+      arg = arg[len("at") + 1:].strip()
 
-    kwargs["WHERE"] = arg
+    kwargs["where"] = arg
 
     return kwargs
 
@@ -160,7 +165,7 @@ class Weather(plugin.PluginInterface):
     if len(kwargs) == 0:
       kwargs = self.fallback_interpreter(arg)
 
-    if kwargs.get("LAST", None):
+    if kwargs.get("last", None):
       if self.last:
         if time.time() < self.last[1].ttl:
           return "Data for {0}: {1}".format(self.last[0], self.last[1].val)
@@ -171,19 +176,19 @@ class Weather(plugin.PluginInterface):
     if len(kwargs) == 0:
       try:
         # Try to call on latitude plugin to get the current location
-        kwargs["WHERE"] = re.sub("[() ]", "",
+        kwargs["where"] = re.sub("[() ]", "",
                 self.registrar.request_service('location', 'noreverse'))
       except:
         raise plugin.UnsuccessfulExecution("No current location is available.")
 
     forecastday = 0
-    if "WHEN" in kwargs:
-      if kwargs["WHEN"] == "TODAY":
+    if "when" in kwargs:
+      if kwargs["when"] == "TODAY":
         forecastday = 0
-      if kwargs["WHEN"] == "TOMORROW":
+      if kwargs["when"] == "TOMORROW":
         forecastday = 1
 
-    location = kwargs["WHERE"]
+    location = kwargs["where"]
 
     # Sub any aliases
     if location in self.locations:
@@ -215,10 +220,3 @@ class Weather(plugin.PluginInterface):
     self.cache[location] = self.last[1]
 
     return ret
-
-  def grammar(self):
-    return ("weather{"
-              "keywords = weather"
-              "arguments = *"
-            "}"
-            )

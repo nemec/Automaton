@@ -10,8 +10,8 @@ class PyroServer(Pyro.core.ObjBase, AutomatonServer):
 
   daemon = None
 
-  def __init__(self, withgui=False, port=9090):
-    AutomatonServer.__init__(self, withgui)
+  def __init__(self, withgui=False, useinterpreter=False, port=9090):
+    AutomatonServer.__init__(self, withgui, useinterpreter)
     Pyro.core.ObjBase.__init__(self)
     self.port = port
 
