@@ -11,7 +11,7 @@ import subprocess
 import alsaaudio as alsa
 import pocketsphinx as ps
 
-import automaton.client.thrift as thrift_client
+import automaton.client.pyro as thrift_client
 
 
 filename = 'audio'
