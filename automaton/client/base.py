@@ -1,10 +1,11 @@
 import sys
-
+import automaton.lib.exceptions as exceptions
 
 class ClientInterface:
 
   def __init__(self, server='localhost', port=9090):
     self.client = None
+    self.exceptions = exceptions
 
   # Opens a connection to the server and registers the client
   def open(self):

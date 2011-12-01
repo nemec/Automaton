@@ -12,11 +12,11 @@ import automaton.lib.settings_loader as settings_loader
 try:
   from apiclient.discovery import build
 except ImportError:
-  print "Requires the google-api-python-client to be installed " +\
-        "(http://code.google.com/p/google-api-python-client/)"
-  print "Follow the installation information then try out the Latitude sample."
-  print "If the sample works, move the latitude.dat file somewhere safe and" +\
-        "modify the cmd_latitude.conf file to point towards that file."
+  print ("Requires the google-api-python-client to be installed "
+      "(http://code.google.com/p/google-api-python-client/)\n"
+      "Follow the installation information then try out the Latitude sample.\n"
+      "If the sample works, move the latitude.dat file somewhere safe and "
+      "modify the cmd_latitude.conf file to point towards that file.")
   raise automaton.lib.exceptions.ModuleLoadError()
 
 
@@ -50,9 +50,12 @@ class Latitude(plugin.PluginInterface):
 
   def location_updater(self):
     while True:
-      location = self.execute(noreverse=True)
-      self.registrar.register_object("location", location)
-      time.sleep(30)
+      try:
+        location = self.execute(noreverse=True)
+        self.registrar.register_object("location", location)
+        time.sleep(30)
+      except plugin.UnsuccessfulExecution:
+        pass
 
   def lookup(self, lat='', lng=''):
     query = urllib.urlencode({'latlng': ','.join((str(lat), str(lng)))})

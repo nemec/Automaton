@@ -12,6 +12,7 @@ import alsaaudio as alsa
 import pocketsphinx as ps
 
 import automaton.client.pyro as thrift_client
+import automaton.lib.exceptions
 
 
 filename = 'audio'
@@ -54,8 +55,12 @@ if __name__ == '__main__':
   client.open()
 
   client.allowAllServices()
+  
+  hmdir = "/usr/share/pocketsphinx/model/hmm/wsj1"
+  lmd = "/usr/share/pocketsphinx/model/lm/wsj/wlist5o.3e-7.vp.tg.lm.DMP"
+  dictd = "/usr/share/pocketsphinx/model/lm/wsj/wlist5o.dic"
 
-  d = ps.Decoder()
+  d = ps.Decoder(hmm=hmdir, lm=lmd, dict=dictd)
 
   # Prepare the CAPTURE device. It must use 16k Hz,
   # little endian, 16 bit signed integer
@@ -80,9 +85,9 @@ if __name__ == '__main__':
       ret = "Sorry, I don't know how to interpret what you said."
       try:
         ret = client.interpret(block)
-      except thrift_client.ServiceNotRegisteredException:
+      except automaton.lib.exceptions.ServiceNotRegisteredError:
         pass
       print ret
-      client.interpret('say' + ret)
+      client.interpret('say ' + ret)
       print
       print 'Waiting for input...'

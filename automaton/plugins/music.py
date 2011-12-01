@@ -30,8 +30,9 @@ class Music(automaton.lib.plugin.PluginInterface):
     return not ((self.version[0] == 0) and (self.version[1] < 16))
 
   def play(self, arg='', **kwargs):
-    print kwargs, arg
-    self.execute("play " + kwargs["TARGET"])
+    if not "target" in kwargs:
+      return "No target provided."
+    self.execute("play " + kwargs["target"])
 
   def stop(self, arg='', **kwargs):
     self.client.stop()

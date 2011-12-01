@@ -15,8 +15,8 @@ from automaton.server.base import AutomatonServer
 
 
 class ThriftServer(AutomatonServer):
-  def __init__(self, withgui=False, useinterpreter=False, port=9090):
-    AutomatonServer.__init__(self, withgui, useinterpreter)
+  def __init__(self, withgui=False, port=9090):
+    AutomatonServer.__init__(self, withgui)
     self.port = port
     self.exceptions = automaton.lib.thrift.python.ttypes
 

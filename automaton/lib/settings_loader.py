@@ -2,7 +2,7 @@ import os
 import re
 import utils
 import logger
-import platformdata
+import autoplatform
 
 # settings_loader takes a plugin name, opens the associated settings
 # file, and reads all of the settings into a dictionary. It then
@@ -36,7 +36,7 @@ def __load_settings(name):
   op = {}
   settings = None
   # Try the home directory first, then system, then local settings
-  for path in platformdata.getDirHierarchy():
+  for path in autoplatform.getDirHierarchy():
     filepath = os.path.join(path, name)
     if os.path.isfile(filepath):
       with open(filepath, "r") as settingsFile:

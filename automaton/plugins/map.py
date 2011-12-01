@@ -29,25 +29,25 @@ class Map(plugin.PluginInterface):
     self.registrar.unregister_service("map")
     self.registrar.unregister_service("directions")
 
-  def execute(self, arg=''):
-    if arg == '':
-      return self.help()
+  #def execute(self, arg=''):
+  #  if arg == '':
+  #    return self.help()
 
-    arg = re.sub(r'^from', '', arg)
+  #  arg = re.sub(r'^from', '', arg)
 
-    origin, sep, destination = arg.partition(" to ")
-    if sep == '':
-      destination = arg
-      destination = re.sub("^to ", "", destination)
-      origin = ''
-    return self.interpret(TO=origin, FROM=destination)
+  #  origin, sep, destination = arg.partition(" to ")
+  #  if sep == '':
+  #    destination = arg
+  #    destination = re.sub("^to ", "", destination)
+  #    origin = ''
+  #  return self.interpret(TO=origin, FROM=destination)
 
   def interpret(self, arg='', **kwargs):
-    if "TO" not in kwargs:
+    if "to" not in kwargs:
       return "Please provide a destination."
       
-    origin = kwargs.get("FROM", '')
-    destination = kwargs["TO"]
+    origin = kwargs.get("from", '')
+    destination = kwargs["to"]
     
     if origin == '':
       try:

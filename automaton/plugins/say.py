@@ -5,7 +5,7 @@ import os
 import gobject
 
 import automaton.lib.plugin
-import automaton.lib.platformdata as platformdata
+import automaton.lib.autoplatform as autoplatform
 
 gobject.threads_init()
 
@@ -30,8 +30,8 @@ class Say(automaton.lib.plugin.PluginInterface):
   def execute(self, arg=''):
     if arg == '':
       return ''
-    tmp = platformdata.getExistingFile("say.wav")
-    tmp2 = platformdata.getExistingFile("say2.wav")
+    """tmp = autoplatform.getExistingFile("say.wav")
+    tmp2 = autoplatform.getExistingFile("say2.wav")
     ## aplay, mplayer, etc all hang for >5 sec after playing, so gstreamer
     ## is used to significantly reduce that time
     #cmd = ('/opt/swift/bin/swift "'+arg+'" -o '+tmp+' && sox -V1 '+tmp+
@@ -64,5 +64,6 @@ class Say(automaton.lib.plugin.PluginInterface):
     finally:
       player.set_state(gst.STATE_NULL)
 
-    os.remove(tmp2)
+    os.remove(tmp2)"""
+    os.system('espeak "{0}"'.format(arg))
     return ""

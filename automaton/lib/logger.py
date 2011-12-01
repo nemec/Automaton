@@ -2,7 +2,7 @@ import os.path
 from os import mkdir
 from datetime import datetime
 
-import platformdata
+import autoplatform
 
 
 def log(message, exception=None):
@@ -11,7 +11,7 @@ def log(message, exception=None):
     message = message[0:-1] + ': ' + str(exception)
   time = datetime.now()
   print "Log", time, ":", message
-  logdir = platformdata.personaldir()
+  logdir = autoplatform.personaldir()
   if not os.path.exists(logdir):
     mkdir(logdir)
   logfile = os.path.join(logdir, "log.txt")

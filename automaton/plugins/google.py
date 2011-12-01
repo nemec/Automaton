@@ -17,21 +17,26 @@ class Google(plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(Google, self).__init__(registrar)
+    #registrar.register_service("google", self.execute,
+    #  usage="""
+    #          USAGE: google query
+    #          The query will be submitted to google, returning the first
+    #          page of results in text
+    #        """)
+    
     registrar.register_service("google", self.execute,
-      usage="""
-              USAGE: google query
-              The query will be submitted to google, returning the first
-              page of results in text
-            """)
+      grammar={"how": ["how to"]})
+    registrar.register_service("know", self.execute,
+      grammar={"how": ["about"]})
 
   def disable(self):
     self.registrar.unregister_service("google")
 
-  def execute(self, arg=''):
+  def execute(self, **kwargs):
 
-      if arg == '':
+      if "how" not in kwargs:
           raise plugin.UnsuccessfulExecution('Error: No search string.')
-      query = urllib.urlencode({'q': arg})
+      query = urllib.urlencode({'q': kwargs["how"]})
       url = ('http://ajax.googleapis.com/ajax/services/'
               'search/web?v=1.0&' + query)
       search_results = urllib.urlopen(url)
@@ -50,9 +55,3 @@ class Google(plugin.PluginInterface):
       return unicodedata.normalize('NFKD',
                       unicode(ret, "utf-8")).encode('ascii', 'ignore')
       #return unicodedata.normalize('NFKD', ret).encode('ascii','ignore')
-
-  def grammar(self):
-    return ("google{\n"
-              "keywords = search | google\n"
-              "arguments = *\n"
-            "}")

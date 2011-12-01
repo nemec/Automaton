@@ -18,18 +18,21 @@ class Wiki(automaton.lib.plugin.PluginInterface):
              USAGE: wiki page
              Grabs the beginning of the specified wikipedia page.
             """)
+    #registrar.register_service("know", self.execute,
+    #  grammar={"page": ["about"]})
 
   def disable(self):
     self.registrar.unregister_service("wiki")
+    self.registrar.unregister_service("know")
     
   def fallback_interpreter(self, arg=''):
-    return self.execute(PAGE=arg)
+    return self.execute(page=arg)
 
   def execute(self, arg='', **kwargs):
-    if "PAGE" not in kwargs:
+    if "page" not in kwargs:
       return "No page to look for"
 
-    p = sp.Popen("dig +short txt \"" + kwargs["PAGE"].replace(" ", "_") + ".wp.dg.cx\"",
+    p = sp.Popen("dig +short txt \"" + kwargs["page"].replace(" ", "_") + ".wp.dg.cx\"",
           stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
     out, err = p.communicate()
     if len(out) == 0:
