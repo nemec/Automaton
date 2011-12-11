@@ -12,7 +12,7 @@ import automaton.lib.settings_loader as settings_loader
 try:
   from apiclient.discovery import build
 except ImportError:
-  raise automaton.lib.exceptions.ModuleLoadError(
+  raise plugin.PluginLoadError(
       "Requires the google-api-python-client to be installed "
       "(http://code.google.com/p/google-api-python-client/)\n"
       "Follow the installation information then try out the Latitude sample.\n"
@@ -73,7 +73,7 @@ class Latitude(plugin.PluginInterface):
       kwargs["noreverse"] = True
     cmd_op = settings_loader.load_plugin_settings(__name__)
     if not 'AUTHPATH' in cmd_op:
-      raise plugin.PluginError("Server not authenticated "
+      raise plugin.UnsuccessfulExecution("Server not authenticated "
                                 "with Google Latitude.")
 
     try:
