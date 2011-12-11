@@ -32,7 +32,3 @@ class ServiceNotRegisteredError(Exception):
 # the commands it has explicitly registered.
 class ClientNotRegisteredError(Exception):
   pass
-
-
-class ModuleLoadError(Exception):
-  pass

@@ -3,19 +3,21 @@
 # Start Automaton Server
 #
 
+EXECPATH=/home/dan/prg/py/Automaton
+
 case "$1" in
    'start')
-      /home/dan/prg/py/Automaton/AutomatonServer.py & ;;
+      $EXECPATH/AutomatonServer & ;;
    'stop')
-      for process in $(pgrep -f AutomatonServer.py)
+      for process in $(pgrep -f AutomatonServer)
         do kill $process
       done ;;
    'restart')
-      for process in $(pgrep -f AutomatonServer.py);
+      for process in $(pgrep -f AutomatonServer);
         do kill $process
       done
       sleep 5
-      /home/dan/prg/py/Automaton/AutomatonServer.py & ;;
+      $EXECPATH/AutomatonServer & ;;
    *)
       echo "usage $0 start|stop|restart" ;;
 esac

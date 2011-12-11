@@ -1,6 +1,14 @@
 from automaton.lib.registrar import ServiceDoesNotExist, ObjectDoesNotExist
 import automaton.lib.plugin
 
+try:
+  pass
+except ImportError:
+  raise automaton.lib.plugin.PluginLoadError(
+    "Raise this exception if something bad can happen when loading "
+    "the plugin. Plugin is not enabled if an exception is raised when loading.")
+
+
 
 class Sample(automaton.lib.plugin.PluginInterface):
   """ Sample Plugin

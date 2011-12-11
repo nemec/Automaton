@@ -22,7 +22,7 @@ class ThriftServer(AutomatonServer):
 
   def initialize(self):
     processor = AutomatonThrift.Processor(self)
-    transport = TSocket.TServerSocket(None, self.port)
+    transport = TSocket.TServerSocket(port=self.port)
     tfactory = TTransport.TBufferedTransportFactory()
     pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 

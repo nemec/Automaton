@@ -89,27 +89,14 @@ class B(oscar.BOSConnection):
           else:
             multiparts[0] = ("I don't take orders from you!",)
         else:
-          ix = body.find(' ')
-
           returned = ''
-          args = ''
-          if ix > -1:
-            args = unescape(body[ix + 1:])
-            body = unescape(body[0:ix])
-
           if body == 'help':
-            if args == '':
-              returned = ", ".join(self.factory.client.getAvailableServices())
-            else:
-              returned = self.factory.client.serviceUsage(args)
-          elif body == '/logout':
+            returned = ", ".join(self.factory.client.getAvailableServices())
+          elif body.startswith('/logout'):
             self.factory.authenticated_users.remove(username)
             returned = "Logged out."
-          elif self.factory.client.isService(body):
-            self.factory.client.allowService(body)
-            returned = self.factory.client.interpret(body + " " + args)
           else:
-            returned = "Command not found.\nDid you forget to import it?"
+            returned = self.factory.client.interpret(body)
 
           multiparts[0] = (returned,)
         self.lastUser = user.name
@@ -130,6 +117,7 @@ class AIMClientFactory(protocol.ReconnectingClientFactory):
     self.client = thrift_client.ClientWrapper(op['THRIFT_SERVER'],
                                               appname='AIM')
     self.client.open()
+    self.client.allowAllServices()
 
   def buildProtocol(self, addr):
     #return protocol.ClientCreator(reactor, OA, op['USER'], op['PASS'])

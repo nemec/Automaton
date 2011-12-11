@@ -11,6 +11,10 @@ class UnsuccessfulExecution(Exception):
   pass
 
 
+class PluginLoadError(Exception):
+  pass
+
+
 class PluginInterface(object):
   def __init__(self, registrar):
     self.registrar = registrar

@@ -1,3 +1,3 @@
-__all__ = ["echo", "exe", "google", "memo", "translate",
+__all__ = ["echo", "google", "memo", "translate",
           "wiki", "mail", "say", "map", "latitude", "music",
-          "weather", "gettime", "torrent", "skynet"]
+          "weather", "gettime", "torrent"]

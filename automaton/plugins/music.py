@@ -12,16 +12,15 @@ class Music(automaton.lib.plugin.PluginInterface):
     self.client = mpd.MPDClient()
     self.client.connect("localhost", 6600)
     self.version = map(lambda x: int(x), self.client.mpd_version.split('.'))
-
-    #registrar.register_service("music", self.execute, {"target": []},
-    #  usage="""
-    #         USAGE: music [play|pause|stop]
-    #         Controls an mpd server
-    #        """)
     
     registrar.register_service("play", self.play, {"target": []})
+    registrar.register_service("listen", self.play, {"target": ["listen to"]})
     registrar.register_service("pause", self.pause, {})
     registrar.register_service("stop", self.stop, {})
+    registrar.register_service("song", self.song, {
+      "next": ["next"],
+      "previous": ["previous"],
+    })
 
   def disable(self):
     self.registrar.unregister_service("music")
@@ -29,48 +28,33 @@ class Music(automaton.lib.plugin.PluginInterface):
   def canFind(self):
     return not ((self.version[0] == 0) and (self.version[1] < 16))
 
-  def play(self, arg='', **kwargs):
-    if not "target" in kwargs:
-      return "No target provided."
-    self.execute("play " + kwargs["target"])
+  def song(self, **kwargs):
+    if "next" in kwargs:
+      self.client.next()
+    elif "previous" in kwargs:
+      self.client.previous()
 
-  def stop(self, arg='', **kwargs):
+  def stop(self, **kwargs):
     self.client.stop()
     
-  def pause(self, arg='', **kwargs):
+  def pause(self, **kwargs):
     self.client.pause()
 
-  def execute(self, arg='', **kwargs):
-    print arg
-    if arg.startswith("play"):
+  def play(self, **kwargs):
+    if "target" in kwargs:
       # Format of "play artist/album"
-      search = arg[4:].strip()
-      if self.canFind() and len(search) > 0:
+      if self.canFind() and len(kwargs["target"]) > 0:
         self.client.clear()
-        for song in self.client.search("artist", search):
-          print song
+        for song in self.client.search("artist", kwargs["target"]):
           try:
             self.client.add(song['file'])
           except:
             print "Could not add song {0}".format(song)
         self.client.play()
-      # Play whatever's in there
-      else:
-        state = self.client.status()['state']
-        if state == "stop":
-          self.client.play()
-        elif state == "pause":
-          self.client.pause()
-
-    elif arg.startswith("stop"):
-      self.client.stop()
-
-    elif arg.startswith("pause"):
-      self.client.pause()
-    return ""
-
-  def grammar(self):
-    return ("music{\n"
-              "keywords = music | sound\n"
-              "arguments = *\n"
-            "}")
+    # Play whatever's in there
+    else:
+      state = self.client.status()['state']
+      if state == "stop":
+        self.client.play()
+      elif state == "pause":
+        self.client.pause()

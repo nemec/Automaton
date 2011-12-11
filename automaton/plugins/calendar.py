@@ -8,6 +8,9 @@ import gdata.calendar.client
 import automaton.lib.plugin
 import automaton.lib.settings_loader as settings_loader
 
+raise automaton.lib.plugin.PluginLoadError("Incomplete plugin. "
+  "Loading has no effect.")
+
 
 class Calendar(automaton.lib.plugin.PluginInterface):
 
