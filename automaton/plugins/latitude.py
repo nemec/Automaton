@@ -68,9 +68,7 @@ class Latitude(plugin.PluginInterface):
     else:
       return None
 
-  def execute(self, arg='', **kwargs):
-    if arg == "noreverse":
-      kwargs["noreverse"] = True
+  def execute(self, **kwargs):
     cmd_op = settings_loader.load_plugin_settings(__name__)
     if not 'AUTHPATH' in cmd_op:
       raise plugin.UnsuccessfulExecution("Server not authenticated "
@@ -104,9 +102,3 @@ class Latitude(plugin.PluginInterface):
         raise plugin.UnsuccessfulExecution("No latitude data available.")
       else:
         raise plugin.UnsuccessfulExecution("Error in Latitude response.")
-
-  def grammar(self):
-    return  ("latitude{\n"
-              "keywords = latitude | where | location | address\n"
-              "arguments = 0\n"
-            "}")

@@ -16,6 +16,7 @@ class Mail(plugin.PluginInterface):
   def __init__(self, registrar):
     super(Mail, self).__init__(registrar)
     registrar.register_service("mail", self.execute,
+      grammar={},
       usage="""
              USAGE: mail
              Checks the gmail account of the user specified in
@@ -25,7 +26,7 @@ class Mail(plugin.PluginInterface):
   def disable(self):
     self.registrar.unregister_service("mail")
 
-  def execute(self, arg=''):
+  def execute(self, **kwargs):
     # Load command settings from a configuration file
     cmd_op = settings_loader.load_plugin_settings(__name__)
     if not 'MAIL_USER' in cmd_op or not 'MAIL_PASS' in  cmd_op:

@@ -83,7 +83,6 @@ class AutomatonServer(object):
         self.loadedPlugins[name].obj = getattr(cmd, name)()
         logger.log("Plugin {0} has been successfully reloaded.".format(name))
       except Exception as e:
-        print e
         self.disablePlugin(name)
         error = ("Exception encountered reloading {0}. "
                   "Plugin disabled.".format(name))
@@ -166,11 +165,8 @@ class AutomatonServer(object):
   def interpret(self, clientid, raw):
     if clientid not in self.clientmanager.registeredclients:
       raise self.exceptions.ClientNotRegisteredError()
-    if self.interpreter is not None:
-      command, args = self.interpreter.interpret(raw)
-    else:
-      command, sep, args = raw.partition(" ")
-      
+
+    command, args = self.interpreter.interpret(raw)      
     if command is None:
       return "Execution failed: could not find command."
       
@@ -190,7 +186,6 @@ class AutomatonServer(object):
     else:
       output = "No output."
     self.clientmanager.registeredclients[clientid].history.append((command, args))
-    print "History: ", self.clientmanager.registeredclients[clientid].history
     
     return output
 

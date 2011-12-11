@@ -9,7 +9,8 @@ import threading
 import automaton.lib.utils as utils
 import automaton.lib.plugin as plugin
 import automaton.lib.logger as logger
-import automaton.lib.platformdata as platformdata
+import automaton.lib.interpreter as interpreter
+import automaton.lib.autoplatform as autoplatform
 import automaton.lib.settings_loader as settings_loader
 from automaton.lib.persistent_queue import PersistentPriorityQueue
 
@@ -21,7 +22,7 @@ def platform():
   return ['linux', 'windows', 'mac']
 
 
-class Schedule(automaton.lib.plugin.PluginInterface):
+class Schedule(plugin.PluginInterface):
 
   def remove_task_if_past(self):
     item = self.queue.front()
@@ -32,16 +33,15 @@ class Schedule(automaton.lib.plugin.PluginInterface):
 
   def _executionthread(self):
     while True:
-      t, command = self.remove_task_if_past()
+      t, command, args = self.remove_task_if_past()
       if command is not None:
+        val = None
         try:
-          cmd, args = self.interpreter.interpret(command)
-          if cmd is not None:
-            val = self.registrar.request_service(cmd, args)
+          val = self.registrar.request_service(command, **args)
         except Exception as e:
           val = "Exception encountered: {0}".format(e)
         logger.log("Scheduled command {0} has been run, with "
-                   "return value: \"{1}\"".format(cmd, val))
+                   "return value: \"{1}\"".format(command, val))
       else:
         twait = max((t - datetime.datetime.now()).total_seconds(), 0)
         self.event.wait(twait)
@@ -64,45 +64,37 @@ class Schedule(automaton.lib.plugin.PluginInterface):
       logger.log("Scheduler could not find an existing queue file and "
                  "no write access to create a new one. Any scheduled tasks "
                  "will disappear once server is stopped.")
-                 
-    self.interpreter = 
+
     self.event = threading.Event()
     thread = threading.Thread(target=self._executionthread)
     thread.setDaemon(True)
     thread.start()
 
-    registrar.register_service("schedule", self.execute,
+    self.registrar = registrar
+    self.interpreter = interpreter.Interpreter(self.registrar)
+    self.registrar.register_service("schedule", self.execute,
       grammar={
         "at": ["at"],
         "in": ["in"],
         "command": [],
       },
-      usage="""
-             USAGE: schedule WHAT [at WHEN] | [in WHEN]
-             Schedules a command to be run at a specific time, repeating if
-             necessary.
-            """)
+      usage=("USAGE: schedule WHAT [at WHEN] | [in WHEN]\n"
+            "Schedules a command to be run at a specific time, repeating if\n"
+            "necessary."))
 
   def disable(self):
     self.registrar.unregister_service("schedule")
-    
-  #def fallback_interpreter(self, arg=''):
-  #  match = re.match(r"(?P<cmd>.*?) "
-  #                   r"(?P<args>.*?)\s*"
-  #                   r"((?P<in>in)|(?P<at>at))\s*"
-  #                   r"(?P<time>.*)"
-  #                   r"(?(in)(?P<tscale>hour|minute|second)s?)",
-  #                   arg, flags=re.I)
 
-  def execute(self, arg='', **kwargs):
+  def execute(self, **kwargs):
     t = 0
-    
     if "command" not in kwargs:
-      raise plugin.UnsuccessfulExecutionError("No command provided.")
+      raise plugin.UnsuccessfulExecution("No command provided.")
     
     if "in" in kwargs:
       try:
-        time, scale = kwargs["in"].split()
+        ix = kwargs["in"].rfind(" ")
+        time = kwargs["in"][:ix]
+        scale = kwargs["in"][ix + 1:]
       except ValueError:
         raise plugin.UnsuccessfulExecution("Error parsing time.")
       try:
@@ -112,7 +104,7 @@ class Schedule(automaton.lib.plugin.PluginInterface):
           t = utils.text_to_int(time)
         except:
           raise plugin.UnsuccessfulExecution("Error parsing time.")
-      if scale.startswith("h")):
+      if scale.startswith("h"):
         t = datetime.datetime.now() + datetime.timedelta(hours=t)
       elif scale.startswith("m"):
         t = datetime.datetime.now() + datetime.timedelta(minutes=t)
@@ -128,17 +120,30 @@ class Schedule(automaton.lib.plugin.PluginInterface):
     else:
       raise plugin.UnsuccessfulExecution('Command could not be scheduled. Must specify "in" or "at"')
 
-    self.queue.put((t, kwargs["command"]))
+    cmd, args = self.interpreter.interpret(kwargs["command"])
+    if cmd is None:
+      raise plugin.UnsuccessfulExecution("Provided text could not be "
+        "converted into a command.")
+    self.queue.put((t, cmd, args))
     self.event.set()
     return 'Command scheduled.'
 
 
 if __name__ == "__main__":
   __name__ = "schedule"
-  s = schedule()
-  print s.execute("echo done! in ten and a half seconds")
+  import automaton.lib.registrar as registrar
+  r = registrar.Registrar()
+  def echo(**kwargs):
+    return kwargs["command"]
+  r.register_service("echo", echo, {"command":[]})
+  
+  s = Schedule(r)
+  args = {"command": "echo done!", "in": "ten and a half seconds"}
+  print s.execute(**args)
   time.sleep(3)
-  print s.execute("echo first in one second")
+  
+  args = {"command": "echo first", "in": "one second"}
+  print s.execute(**args)
   #print s.execute("echo absolute at 10:05pm")
   #s.execute("echo absolute at 5:00 A.M.")
   #s.execute("echo absolute at 5:00:4 AM")

@@ -10,16 +10,12 @@ class GetTime(automaton.lib.plugin.PluginInterface):
     
     registrar.register_service("time", self.execute,
       grammar={},
-      usage="""
-               USAGE: time
-               Returns the current time to the user.
-              """)
+      usage=("USAGE: time\n"
+             "Returns the current time to the user."))
     registrar.register_service("gettime", self.execute,
       grammar={},
-      usage="""
-               USAGE: gettime
-               Returns the current time to the user.
-              """)
+      usage=("USAGE: gettime\n"
+             "Returns the current time to the user."))
 
   def disable(self):
     registrar.unregister_service("time")
@@ -30,12 +26,6 @@ class GetTime(automaton.lib.plugin.PluginInterface):
       return time.strftime("%H:%M")
     else:
       return time.strftime("%I:%M %p")
-
-  def grammar(self):
-    return ("gettime{\n"
-              "keywords = time\n"
-              "arguments = 0\n"
-            "}")
 
 
 if __name__ == "__main__":

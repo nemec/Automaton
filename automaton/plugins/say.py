@@ -19,16 +19,15 @@ class Say(automaton.lib.plugin.PluginInterface):
   def __init__(self, registrar):
     super(Say, self).__init__(registrar)
     registrar.register_service("say", self.execute,
-      usage="""
-             USAGE: say text
-                    Speaks the provided text to the speakers.
-            """)
+      grammar={"text": []},
+      usage=("USAGE: say text\n"
+             "Speaks the provided text to the speakers."))
 
   def disable(self):
     self.registrar.unregister_service("say")
 
-  def execute(self, arg=''):
-    if arg == '':
+  def execute(self, **kwargs):
+    if not "text" not in kwargs:
       return ''
     """tmp = autoplatform.getExistingFile("say.wav")
     tmp2 = autoplatform.getExistingFile("say2.wav")
@@ -65,5 +64,5 @@ class Say(automaton.lib.plugin.PluginInterface):
       player.set_state(gst.STATE_NULL)
 
     os.remove(tmp2)"""
-    os.system('espeak "{0}"'.format(arg))
+    os.system('espeak "{0}"'.format(kwargs["text"]))
     return ""

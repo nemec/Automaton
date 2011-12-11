@@ -15,10 +15,8 @@ class Map(plugin.PluginInterface):
   def __init__(self, registrar):
     super(Map, self).__init__(registrar)
     
-    usage = """
-             USAGE: {0} [origin] to [destination]
-             Returns text directions from origin to destination from GMaps
-            """
+    usage = ("USAGE: {0} [origin] to [destination]\n"
+             "Returns text directions from origin to destination from GMaps")
     
     grammar = {"to":["ending at", "to"], "from":[ "starting at", "from"]}
     

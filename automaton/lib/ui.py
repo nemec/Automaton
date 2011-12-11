@@ -91,11 +91,13 @@ class StatusIcon(gtk.StatusIcon):
       if widget.get_text_length() > 0:
         text = widget.get_text()
         widget.set_text('')
-        cmd, sep, args = text.partition(' ')
+        cmd, args = self.server.interpreter.interpret(text)
 
         def cb_call(cmd, args):
           try:
-            if cmd == "help":
+            if cmd is None:
+              output = "Could not parse input."
+            elif cmd == "help":
               output = self.server.serviceUsage(args)
             else:
               output = self.server.registrar.request_service(cmd, **args) or "No output."

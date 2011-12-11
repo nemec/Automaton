@@ -22,8 +22,7 @@ class Exe(automaton.lib.plugin.PluginInterface):
   def disable(self):
     self.registrar.unregister_service("exe")
 
-  def execute(self, arg='', **kwargs):
-    print arg, kwargs
+  def execute(self, **kwargs):
     if "command" not in kwargs:
       return "No command entered."
     
