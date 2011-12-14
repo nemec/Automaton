@@ -19,19 +19,22 @@ class Memo(plugin.PluginInterface):
           "Error: no memo file provided in the config.")
     
     registrar.register_service("memo", self.execute,
-      grammar={"memo": []}
+      grammar={"memo": []},
       usage=("USAGE: memo message\n"
              "Appends message to the file specified "
-             "in the configuration file."))
+             "in the configuration file."),
+      namespace=__name__)
     
     registrar.register_service("remember", self.execute,
-      grammar={"memo": []}
+      grammar={"memo": []},
       usage=("USAGE: remember message\n"
              "Appends message to the file specified "
-             "in the configuration file."))
+             "in the configuration file."),
+      namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("memo")
+    self.registrar.unregister_service("memo", namespace=__name__)
+    self.registrar.unregister_service("remember", namespace=__name__)
 
   def execute(self, **kwargs):
     f = open(self.cmd_op['MEMO_FILE'], "a")

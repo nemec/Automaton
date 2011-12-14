@@ -2,7 +2,7 @@ import sys
 import automaton.client.thrift as thrift_client
 
 try:
-  client = thrift_client.ClientWrapper("192.168.1.102", appname="cmd")
+  client = thrift_client.ClientWrapper("localhost", appname="cmd")
   client.open()
 
   try:

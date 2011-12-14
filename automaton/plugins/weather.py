@@ -52,10 +52,11 @@ class Weather(plugin.PluginInterface):
              Returns the weather for a provided location or alias. If no
              location is provided, gets the weather data for the last
              recorded position.
-            """)
+            """,
+      namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("weather")
+    self.registrar.unregister_service("weather", namespace=__name__)
 
   def distance(a, b):
     # TODO use haversine formula with lat/long to cache close locations?

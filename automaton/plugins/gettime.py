@@ -11,15 +11,17 @@ class GetTime(automaton.lib.plugin.PluginInterface):
     registrar.register_service("time", self.execute,
       grammar={},
       usage=("USAGE: time\n"
-             "Returns the current time to the user."))
+             "Returns the current time to the user."),
+      namespace=__name__)
     registrar.register_service("gettime", self.execute,
       grammar={},
       usage=("USAGE: gettime\n"
-             "Returns the current time to the user."))
+             "Returns the current time to the user."),
+      namespace=__name__)
 
   def disable(self):
-    registrar.unregister_service("time")
-    registrar.unregister_service("gettime")
+    registrar.unregister_service("time", namespace=__name__)
+    registrar.unregister_service("gettime", namespace=__name__)
 
   def execute(self, arg='', **kwargs):
     if arg == "24" or kwargs.get("TYPE", "") == "24":

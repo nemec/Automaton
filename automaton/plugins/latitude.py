@@ -38,15 +38,17 @@ class Latitude(plugin.PluginInterface):
             the plain latitude and longitude are returned.
            """
     registrar.register_service("latitude", self.execute,
-      usage=help.format("latitude"))
+      usage=help.format("latitude"),
+      namespace=__name__)
     registrar.register_service("location", self.execute,
-      usage=help.format("location"))
+      usage=help.format("location"),
+      namespace=__name__)
 
     utils.spawn_thread(self.location_updater)
 
   def disable(self):
-    self.registrar.unregister_service("latitude")
-    self.registrar.unregister_service("location")
+    self.registrar.unregister_service("latitude", namespace=__name__)
+    self.registrar.unregister_service("location", namespace=__name__)
 
   def location_updater(self):
     while True:

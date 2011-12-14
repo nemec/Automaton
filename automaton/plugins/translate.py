@@ -77,10 +77,11 @@ class Translate(automaton.lib.plugin.PluginInterface):
         "text": [],
         "from": ["from"],
         "to": ["to"],
-      },)
+      },
+      namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("translate")
+    self.registrar.unregister_service("translate", namespace=__name__)
 
   def execute(self, **kwargs):
       # The google translate API can be found here:

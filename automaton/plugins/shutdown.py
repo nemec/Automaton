@@ -17,10 +17,11 @@ class Shutdown(automaton.lib.plugin.PluginInterface):
       usage="""
              USAGE: shutdown [when]
              Shuts down the computer at the specified time. Defaults to now.
-            """)
+            """,
+      namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("shutdown")
+    self.registrar.unregister_service("shutdown", namespace=__name__)
 
   def execute(self, arg='now', **kwargs):
     if "when" not in kwargs:

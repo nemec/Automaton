@@ -1,6 +1,8 @@
 import copy
 from threading import Lock
+from collections import defaultdict
 
+from interpreter import Interpreter
 from utils import locked
 
 
@@ -63,14 +65,18 @@ class Registrar(object):
     """ Repository Service
         Consists of the service function, a grammar that defines how
         a POS tagged query is to be turned into the service's arguments
-        (structure defined in interpreter.py), and a lock that controls
-        concurrent access to the service.
+        (structure defined in interpreter.py), a lock that controls
+        concurrent access to the service, and an optional namespace to
+        prevent plugins offering similar/same services from stepping on
+        each others' toes.
 
     """
-    def __init__(self, svc, grammar=None, usage=''):
+    def __init__(self, name, svc, grammar=None, usage='', namespace=None):
+      self.name = name
       self.svc = svc
       self.grammar = grammar
       self.usage = usage
+      self.namespace = None
       self.lock = Lock()
 
   class __repo_obj(object):
@@ -87,26 +93,39 @@ class Registrar(object):
 
   def __init__(self):
     self.objects = {}
-    self.services = {}
+    self.services = defaultdict(dict)
     self.__obj_lock = Lock()
+    self.interpreter = Interpreter(self)
 
-  def register_service(self, svc_name, svc, grammar=None, usage=''):
-    self.services[svc_name.lower()] = self.__repo_svc(svc, grammar, usage)
+  def find_best_service(self, query):
+    return self.interpreter.best_interpretation(query)
 
-  def remove_service(self, svc_name):
+  def find_services(self, query):
+    return self.interpreter.interpret(query)
+
+  def register_service(self, svc_name, svc_func,
+      grammar=None, usage='', namespace=None):
+    self.services[svc_name.lower()][namespace] = self.__repo_svc(
+        name=svc_name.lower(), svc=svc_func, grammar=grammar,
+        usage=usage, namespace=namespace)
+
+  def remove_service(self, svc_name, namespace=None):
     svc_name = svc_name.lower()
-    for name in self.services:
-      service = self.services[name]
-      if service.svc == svc:
-        with locked(service.lock):
-          del self.services[name]
+    if (svc_name in self.services and
+        namespace in self.services[svc_name]):
+      with locked(self.services[svc_name][namespace].lock):
+        if len(self.services[svc_name]) == 1:
+          del self.services[svc_name]  # last service by this name
+        else:  # remove the service namespace
+          del self.services[svc_name][namespace]
 
-  def request_service(self, svc_name, *args, **kwargs):
+  def request_service(self, svc_name, namespace=None, *args, **kwargs):
     svc_name = svc_name.lower()
-    if svc_name not in self.services:
+    if (svc_name not in self.services or
+        namespace not in self.services[svc_name]):
       raise ServiceDoesNotExist("Service does not exist.")
-    with locked(self.services[svc_name].lock):
-      return self.services[svc_name].svc(*args, **kwargs)
+    with locked(self.services[svc_name][namespace].lock):
+      return self.services[svc_name][namespace].svc(*args, **kwargs)
 
   def register_object(self, obj_name, obj):
     """ Register Object
@@ -181,8 +200,8 @@ if __name__ == "__main__":
   r.remove_object_listener("o", func_a)
   r.register_object("o", 8)
 
-  def service(name):
-    print "Hello, {0}.".format(name)
+  def service(**kwargs):
+    print "Hello, {0}.".format(kwargs["name"])
 
   r.register_service("name", service)
-  r.request_service("name", "tim")
+  r.request_service("name", name="tim")

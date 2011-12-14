@@ -27,10 +27,10 @@ class Calendar(automaton.lib.plugin.PluginInterface):
                                 self.settings["PASSWORD"],
                                 self.cal_client.source)
 
-    registrar.register_service("calendar", self.execute)
+    registrar.register_service("calendar", self.execute, namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("calendar")
+    self.registrar.unregister_service("calendar", namespace=__name__)
 
   def execute(self, arg='', **kwargs):
     pass

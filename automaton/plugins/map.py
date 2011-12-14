@@ -20,12 +20,14 @@ class Map(plugin.PluginInterface):
     
     grammar = {"to":["ending at", "to"], "from":[ "starting at", "from"]}
     
-    registrar.register_service("map", self.interpret, grammar=grammar, usage=usage.format("map"))
-    registrar.register_service("directions", self.interpret, grammar=grammar, usage=usage.format("directions"))
+    registrar.register_service("map", self.interpret,
+      grammar=grammar, usage=usage.format("map"), namespace=__name__)
+    registrar.register_service("directions", self.interpret,
+      grammar=grammar, usage=usage.format("directions"), namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("map")
-    self.registrar.unregister_service("directions")
+    self.registrar.unregister_service("map", namespace=__name__)
+    self.registrar.unregister_service("directions", namespace=__name__)
 
   #def execute(self, arg=''):
   #  if arg == '':

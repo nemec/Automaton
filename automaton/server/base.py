@@ -11,7 +11,6 @@ import automaton.lib.utils as utils
 import automaton.lib.logger as logger
 import automaton.lib.registrar as registrar
 import automaton.lib.exceptions as exceptions
-import automaton.lib.interpreter as interpreter
 import automaton.lib.autoplatform as autoplatform
 from automaton.lib.clientmanager import ClientManager
 import automaton.lib.input_sanitizer as input_sanitizer
@@ -45,8 +44,6 @@ class AutomatonServer(object):
         self.enablePlugin(plugin)
       except Exception as e:
         logger.log("Error loading module {0}.".format(plugin), e)
-
-    self.interpreter = interpreter.Interpreter(self.registrar)
 
   """ Start plugin initialization section """
   def enablePlugin(self, name):
@@ -166,19 +163,26 @@ class AutomatonServer(object):
     if clientid not in self.clientmanager.registeredclients:
       raise self.exceptions.ClientNotRegisteredError()
 
-    command, args = self.interpreter.interpret(raw)      
-    if command is None:
-      return "Execution failed: could not find command."
-      
-    if (command.lower() not in
-          self.clientmanager.registeredclients[clientid].plugins):
-      raise self.exceptions.ServiceNotRegisteredError(command)
+    matches = self.registrar.find_services(raw)
+    
+    # remove all unregistered services
+    matches = [match for match in matches if 
+      match[0] in self.clientmanager.registeredclients[clientid].plugins]
 
-    #args = self.sanitizer.alias(args)
-    #args = self.sanitizer.sanitize(args)
+    if len(matches) == 0:
+      return "Execution failed: could not find a registered command."
 
+    limit = 1  # How many results to try before quitting
     try:
-      output = self.registrar.request_service(command, **args)
+      for (ix, (command, namespace, args)) in enumerate(matches):
+        if ix == limit:
+          break
+        #args = self.sanitizer.alias(args)
+        #args = self.sanitizer.sanitize(args)
+        output = self.registrar.request_service(
+          svc_name=command, namespace=namespace, **args)
+        if output:
+          break  # We got some good output, don't continue to the next ranked
     except UnsuccessfulExecution as e:
       output = "Execution failed: " + str(e)
     if output is not None:

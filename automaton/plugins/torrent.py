@@ -76,10 +76,11 @@ class Torrent(plugin.PluginInterface):
              downloading. With an IMDB link, it extracts the movie name and
              attempts to find the .torrent file closest to what you're looking
              for. A name does the same, except the media name is provided.
-            """)
+            """,
+      namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("torrent")
+    self.registrar.unregister_service("torrent", namespace=__name__)
 
   def execute(self, arg=''):
     movie_name = arg

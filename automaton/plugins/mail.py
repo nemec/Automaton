@@ -21,10 +21,11 @@ class Mail(plugin.PluginInterface):
              USAGE: mail
              Checks the gmail account of the user specified in
              the configuration file.
-            """)
+            """,
+      namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("mail")
+    self.registrar.unregister_service("mail", namespace=__name__)
 
   def execute(self, **kwargs):
     # Load command settings from a configuration file

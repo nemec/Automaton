@@ -25,12 +25,15 @@ class Google(plugin.PluginInterface):
     #        """)
     
     registrar.register_service("google", self.execute,
-      grammar={"how": ["how to"]})
+      grammar={"how": ["how to"]},
+      namespace=__name__)
     registrar.register_service("know", self.execute,
-      grammar={"how": ["about"]})
+      grammar={"how": ["about"]},
+      namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("google")
+    self.registrar.unregister_service("google", namespace=__name__)
+    self.registrar.unregister_service("know", namespace=__name__)
 
   def execute(self, **kwargs):
 

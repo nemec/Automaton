@@ -17,13 +17,13 @@ class Wiki(automaton.lib.plugin.PluginInterface):
       usage="""
              USAGE: wiki page
              Grabs the beginning of the specified wikipedia page.
-            """)
+            """,
+      namespace=__name__)
     #registrar.register_service("know", self.execute,
     #  grammar={"page": ["about"]})
 
   def disable(self):
-    self.registrar.unregister_service("wiki")
-    self.registrar.unregister_service("know")
+    self.registrar.unregister_service("wiki", namespace=__name__)
     
   def fallback_interpreter(self, arg=''):
     return self.execute(page=arg)

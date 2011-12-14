@@ -17,10 +17,11 @@ class Exe(automaton.lib.plugin.PluginInterface):
       usage="""
              USAGE: exe command
              Provide a command that will be executed in a spawned shell.
-            """)
+            """,
+      namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("exe")
+    self.registrar.unregister_service("exe", namespace=__name__)
 
   def execute(self, **kwargs):
     if "command" not in kwargs:

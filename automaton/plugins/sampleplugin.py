@@ -28,13 +28,15 @@ class Sample(automaton.lib.plugin.PluginInterface):
             Prints "hello" along with the provided name
            """
     self.registrar.register_service("test", self.execute,
-                              self.grammar, help.format("test"))
+                              self.grammar, help.format("test"),
+                              namespace=__name__)
     self.registrar.register_service("sampleplugin", self.execute,
-                              self.grammar, help.format("sampleplugin"))
+                              self.grammar, help.format("sampleplugin"),
+                              namespace=__name__)
 
   def disable(self):
-    self.registrar.remove_service("test")
-    self.registrar.remove_service("sampleplugin")
+    self.registrar.remove_service("test", namespace=__name__)
+    self.registrar.remove_service("sampleplugin", namespace=__name__)
 
   def fallback_interpreter(self, arg=''):
     """ Fallback Interpreter

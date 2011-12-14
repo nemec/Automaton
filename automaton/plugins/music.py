@@ -13,17 +13,21 @@ class Music(automaton.lib.plugin.PluginInterface):
     self.client.connect("localhost", 6600)
     self.version = map(lambda x: int(x), self.client.mpd_version.split('.'))
     
-    registrar.register_service("play", self.play, {"target": []})
-    registrar.register_service("listen", self.play, {"target": ["listen to"]})
-    registrar.register_service("pause", self.pause, {})
-    registrar.register_service("stop", self.stop, {})
+    registrar.register_service("play", self.play, {"target": []}, namespace=__name__)
+    registrar.register_service("listen", self.play, {"target": ["listen to"]}, namespace=__name__)
+    registrar.register_service("pause", self.pause, {}, namespace=__name__)
+    registrar.register_service("stop", self.stop, {}, namespace=__name__)
     registrar.register_service("song", self.song, {
       "next": ["next"],
       "previous": ["previous"],
-    })
+    }, namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("music")
+    self.registrar.unregister_service("play", namespace=__name__)
+    self.registrar.unregister_service("listen", namespace=__name__)
+    self.registrar.unregister_service("pause", namespace=__name__)
+    self.registrar.unregister_service("stop", namespace=__name__)
+    self.registrar.unregister_service("song", namespace=__name__)
 
   def canFind(self):
     return not ((self.version[0] == 0) and (self.version[1] < 16))

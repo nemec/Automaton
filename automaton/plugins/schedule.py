@@ -29,15 +29,16 @@ class Schedule(plugin.PluginInterface):
     if item[0] < datetime.datetime.now():
       return self.queue.get()
     else:
-      return (item[0], None, None)
+      return (item[0], (None, None, None))
 
   def _executionthread(self):
     while True:
-      t, command, args = self.remove_task_if_past()
+      t, (command, namespace, args) = self.remove_task_if_past()
       if command is not None:
         val = None
         try:
-          val = self.registrar.request_service(command, **args)
+          val = self.registrar.request_service(
+            command, namespace=namespace, **args)
         except Exception as e:
           val = "Exception encountered: {0}".format(e)
         logger.log("Scheduled command {0} has been run, with "
@@ -71,7 +72,6 @@ class Schedule(plugin.PluginInterface):
     thread.start()
 
     self.registrar = registrar
-    self.interpreter = interpreter.Interpreter(self.registrar)
     self.registrar.register_service("schedule", self.execute,
       grammar={
         "at": ["at"],
@@ -80,10 +80,11 @@ class Schedule(plugin.PluginInterface):
       },
       usage=("USAGE: schedule WHAT [at WHEN] | [in WHEN]\n"
             "Schedules a command to be run at a specific time, repeating if\n"
-            "necessary."))
+            "necessary."),
+      namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("schedule")
+    self.registrar.unregister_service("schedule", namespace=__name__)
 
   def execute(self, **kwargs):
     t = 0
@@ -120,11 +121,11 @@ class Schedule(plugin.PluginInterface):
     else:
       raise plugin.UnsuccessfulExecution('Command could not be scheduled. Must specify "in" or "at"')
 
-    cmd, args = self.interpreter.interpret(kwargs["command"])
+    cmd, namespace, args = self.registrar.find_best_service(kwargs["command"])
     if cmd is None:
       raise plugin.UnsuccessfulExecution("Provided text could not be "
         "converted into a command.")
-    self.queue.put((t, cmd, args))
+    self.queue.put((t, (cmd, namespace, args)))
     self.event.set()
     return 'Command scheduled.'
 

@@ -21,10 +21,11 @@ class Say(automaton.lib.plugin.PluginInterface):
     registrar.register_service("say", self.execute,
       grammar={"text": []},
       usage=("USAGE: say text\n"
-             "Speaks the provided text to the speakers."))
+             "Speaks the provided text to the speakers."),
+      namespace=__name__)
 
   def disable(self):
-    self.registrar.unregister_service("say")
+    self.registrar.unregister_service("say", namespace=__name__)
 
   def execute(self, **kwargs):
     if not "text" not in kwargs:
