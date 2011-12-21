@@ -1,38 +1,43 @@
-import time
 import datetime
 import re
 import os.path
 import threading
 
 
-class locked:
+class locked:  # pylint: disable-msg=C0103,R0903
+  """Context manager for synchronizing blocks of code."""
   def __init__(self, lock):
     self.lock = lock
 
   def __enter__(self):
     self.lock.acquire()
 
-  def __exit__(self, type, value, tb):
+  def __exit__(self, typ, value, traceback):
     self.lock.release()
 
-
 def spawn_thread(func, *args):
+  """Utility function for spawning a new thread by running the
+  given function with the specified arguments.
+
+  """
   thread = threading.Thread(target=func, args=args)
   thread.daemon = True
   thread.start()
   return thread
 
-
-# Pulls module name (eg. AIM) out of path (eg. /home/user/AIM.py)
 def get_module_name(fullname):
+  """Pulls module name (eg. AIM) out of path (eg. /home/user/AIM.py)"""
   if fullname.endswith("py"):
     return os.path.splitext(os.path.basename(fullname))[0]
   else:
     return fullname[fullname.rfind('.') + 1:]
 
 
-# Adapted from http://stackoverflow.com/questions/493174/is-there-a-way-to-convert-number-words-to-integers-python
+# Adapted from:
+# http://stackoverflow.com/questions/493174/
+#   is-there-a-way-to-convert-number-words-to-integers-python
 def text_to_int(textnum):
+  """Convert numbers in word form to integers."""
   numwords = {}
   units = [
     "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
@@ -55,16 +60,16 @@ def text_to_int(textnum):
 
   current = result = 0
   for word in textnum.split():
-      if word not in numwords:
-        # We want to ignore modifiers...
-        # Possibly want to ignore all unknowns?
-        if word not in ("a",):
-          raise Exception("Illegal word: " + word)
-        else:
-          continue
+    if word not in numwords:
+      # We want to ignore modifiers...
+      # Possibly want to ignore all unknowns?
+      if word not in ("a",):
+        raise Exception("Illegal word: " + word)
+      else:
+        continue
 
-      increment = numwords[word]
-      current = current + increment
+    increment = numwords[word]
+    current = current + increment
 
   return result + current
 
@@ -75,6 +80,7 @@ def text_to_int(textnum):
 # noon tomorrow @TODO
 # 5pm every Monday ? @TODO
 def text_to_absolute_time(text):
+  """Convert an arbitrary time format into UNIX time."""
   match = re.search(r"""
     (?P<h>\d{1,2})            # Hour (required)
     (:(?P<m>\d{1,2}))?        # Optional Minutes
@@ -82,23 +88,23 @@ def text_to_absolute_time(text):
     (\s*(?P<tod>a|p)\.?m\.?)? # Optional am/p.m.
     """, text, flags=re.I | re.X)
   if match:
-    h = match.group('h')
-    m = match.group('m')
-    s = match.group('s')
+    hour = match.group('h')
+    minute = match.group('m')
+    sec = match.group('s')
     newtime = datetime.datetime.now()
     newtime.replace(microsecond=0)
     if match.group('tod'):
       if match.group('tod').lower() == 'a':
-        newtime.replace(hour=int(h))
+        newtime.replace(hour=int(hour))
       else:
-        newtime.replace(hour=int(h) + 12)
+        newtime.replace(hour=int(hour) + 12)
     # 24 hour or "closest next"?
     else:
-      newtime.replace(hour=int(h))
-    if m:
-      newtime = newtime.replace(minute=int(m))
-    if s:
-      newtime = newtime.replace(second=int(s))
+      newtime.replace(hour=int(hour))
+    if minute:
+      newtime = newtime.replace(minute=int(minute))
+    if sec:
+      newtime = newtime.replace(second=int(sec))
     else:
       newtime = newtime.replace(second=0)
     if newtime < datetime.datetime.now():
@@ -107,5 +113,3 @@ def text_to_absolute_time(text):
 
   else:
     return None
-
-#text_to_absolute_time("5:00:4")

@@ -1,14 +1,20 @@
-import os
 import gtk
 import threading
 
+from automaton.lib import exceptions
+from automaton.lib.utils import locked
 from automaton.lib.plugin import UnsuccessfulExecution
 
 
 class StatusIcon(gtk.StatusIcon):
+  """Icon that displays itself in the status bar and gives access
+  to Automaton.
+
+  """
   def __init__(self, server):
     gtk.StatusIcon.__init__(self)
     self.server = server
+    self.window = None
     menu = '''
             <ui>
               <menubar name="Menubar">
@@ -30,26 +36,27 @@ class StatusIcon(gtk.StatusIcon):
       ('About', gtk.STOCK_ABOUT, '_About...', None, 'About Automaton',
                                                                 self.on_about),
       ('Quit', None, '_Quit', None, None, self.on_quit)]
-    ag = gtk.ActionGroup('Actions')
-    ag.add_actions(actions)
+    agrp = gtk.ActionGroup('Actions')
+    agrp.add_actions(actions)
     self.manager = gtk.UIManager()
-    self.manager.insert_action_group(ag, 0)
+    self.manager.insert_action_group(agrp, 0)
     self.manager.add_ui_from_string(menu)
     self.menu = self.manager.get_widget('/Menubar/Menu/About').props.parent
 
     # Dynamically build the reload menu
     if self.server is not None:
-      rlmenu = gtk.Menu()
-      rl = self.manager.get_widget('/Menubar/Menu/Reload')
-      for x in sorted(self.server.loadedPlugins):
-        item = gtk.MenuItem(x)
+      rldmenu = gtk.Menu()
+      rld = self.manager.get_widget('/Menubar/Menu/Reload')
+      for plugin in sorted(self.server.loaded_plugins):
+        item = gtk.MenuItem(plugin)
         item.show()
         item.connect("activate", self.on_reload)
-        rlmenu.append(item)
-      if len(rlmenu.get_children()) > 0:
-        rl.set_submenu(rlmenu)
+        rldmenu.append(item)
+      if len(rldmenu.get_children()) > 0:
+        rldd.set_submenu(rlmenu)
 
     self.command_log = gtk.TextBuffer()
+    self.command_log_lock = threading.Lock()
 
     self.set_from_stock(gtk.STOCK_FIND)
     self.set_visible(True)
@@ -58,7 +65,12 @@ class StatusIcon(gtk.StatusIcon):
 
     self.build_command_window()
 
+    self.window_active = False
+    self.window_display_position = self.window.get_position()
+    self.window_display_size = self.window.get_size()
+
   def build_command_window(self):
+    """Builds the command window UI."""
     self.window_active = False
     self.window = gtk.Window()
     self.window_display_position = (300, 300)
@@ -76,55 +88,69 @@ class StatusIcon(gtk.StatusIcon):
     scrollview.set_policy(gtk.POLICY_NEVER, gtk.POLICY_ALWAYS)
     scrollview.add(output)
 
-    def clear_log(button):
-      self.command_log.delete(*self.command_log.get_bounds())
+    def clear_log(button):  # pylint: disable-msg=W0613
+      """Clears the command history log display."""
+      with locked(self.command_log_lock):
+        self.command_log.delete(*self.command_log.get_bounds())
     button = gtk.Button("Clear log")
     button.connect('clicked', clear_log)
 
-    f = gtk.Fixed()
-    f.put(button, 0, 0)
+    fix = gtk.Fixed()
+    fix.put(button, 0, 0)
     vbox.pack_start(entry, False, False, 0)
     vbox.pack_start(scrollview, True, True, 0)
-    vbox.pack_end(f, False, False)
+    vbox.pack_end(fix, False, False)
 
     def send_command(widget, textview):
+      """Interprets and executes the text entered into the text box."""
       if widget.get_text_length() > 0:
         text = widget.get_text()
         widget.set_text('')
-        cmd, args = self.server.interpreter.interpret(text)
 
-        def cb_call(cmd, args):
+        def cb_call(text):
+          """
+          Interpret the text, execute the service, and insert the 
+          output into the command window.
+
+          """
           try:
-            if cmd is None:
-              output = "Could not parse input."
-            elif cmd == "help":
-              output = self.server.serviceUsage(args)
+            hlp = text.split()
+            if len(hlp) == 2 and hlp[0] == "help":
+              output = self.server.serviceUsage(hlp[1]) or "No help available"
             else:
-              output = self.server.registrar.request_service(cmd, **args) or "No output."
-          except self.server.exceptions.ServiceNotProvidedError as e:
-            output = str(e)
-          except UnsuccessfulExecution as e:
-            output = "Execution Unsuccessful: " + str(e)
-          except Exception as e:
-            output = "Exception encountered: " + str(e)
+              registrar = self.server.registrar
+              cmd, namespace, args = registrar.find_best_service(text)
+              if cmd is None:
+                output = "Could not parse input."
+              else:
+                output = registrar.request_service(cmd, namespace,
+                   args) or "No output."
+          except exceptions.ServiceNotProvidedError as err:
+            output = str(err)
+          except UnsuccessfulExecution as err:
+            output = "Execution Unsuccessful: " + str(err)
+          except Exception as err:
+            output = "Exception encountered: " + str(err)
           output = output.strip()
           if len(output) > 0:
-            buf = textview.get_buffer()
-            end = buf.get_end_iter()
-            if buf.get_char_count() > 0:
-              buf.insert(end, '\n')
-            buf.insert(end, output)
-            textview.scroll_mark_onscreen(buf.get_insert())
+            with locked(self.command_log_lock):
+              buf = textview.get_buffer()
+              end = buf.get_end_iter()
+              if buf.get_char_count() > 0:
+                buf.insert(end, '\n')
+              buf.insert(end, output)
+              textview.scroll_mark_onscreen(buf.get_insert())
           return False
 
-        threading.Thread(target=cb_call, args=(cmd, args)).start()
+        threading.Thread(target=cb_call, args=(text,)).start()
     entry.connect('activate', send_command, output)
 
     self.window.connect('delete-event', self.hide_command_window)
 
     self.window.add(vbox)
 
-  def on_command_activate(self, icon):
+  def on_command_activate(self, icon):  # pylint: disable-msg=W0613
+    """Show the command window when the icon is clicked."""
     if self.server:
       if not self.window_active:
         self.window_active = True
@@ -135,29 +161,23 @@ class StatusIcon(gtk.StatusIcon):
       else:
         self.hide_command_window()
 
-  def hide_command_window(self, *args):
+  def hide_command_window(self, *args):  # pylint: disable-msg=W0613
+    """Hide the command window."""
     self.window.hide()
     self.window_active = False
     self.window_display_position = self.window.get_position()
     self.window_display_size = self.window.get_size()
     return True
 
-  def show_registrar_data(self, event):
+  def show_registrar_data(self, event):  # pylint: disable-msg=W0613
+    """Display information about what is stored in the registrar."""
     win = gtk.Window()
     win.set_size_request(500, 250)
     win.set_title("Registrar Data")
     vbox = gtk.VBox(False, 3)
 
-    def set_buf(output, text):
-      output.set_editable(False)
-      output.set_cursor_visible(False)
-      buf = output.get_buffer()
-      end = buf.get_end_iter()
-      if buf.get_char_count() > 0:
-        buf.insert(end, '\n')
-      buf.insert(end, text)
-
     def get_service_data():
+      """Retrieves and formats information on the registered services."""
       output = gtk.TreeStore(str)
       svc = self.server.registrar.services
       keys = svc.keys()
@@ -168,6 +188,7 @@ class StatusIcon(gtk.StatusIcon):
       return output
 
     def get_object_data():
+      """Retrieves and formats information on the registered objects."""
       output = gtk.TreeStore(str)
       obj = self.server.registrar.objects
       keys = obj.keys()
@@ -199,16 +220,20 @@ class StatusIcon(gtk.StatusIcon):
     win.present()
 
   def on_reload(self, item):
+    """Reload the specified plugin."""
     self.server.reloadPlugin(item.get_label())
 
   def on_popup_menu(self, widget, button, time):
+    """Display the popup menu."""
     self.menu.popup(None, None, gtk.status_icon_position_menu,
                                                           button, time, widget)
 
-  def on_quit(self, data):
+  def on_quit(self, data):  # pylint: disable-msg=W0613,R0201
+    """Quit the program."""
     gtk.main_quit()
 
-  def on_about(self, data):
+  def on_about(self, data):  # pylint: disable-msg=W0613,R0201
+    """Display the About dialog."""
     dialog = gtk.AboutDialog()
     dialog.set_name('Automaton')
     dialog.set_version('0.9.0')
@@ -216,9 +241,3 @@ class StatusIcon(gtk.StatusIcon):
     dialog.set_website('http://github.com/nemec/Automaton')
     dialog.run()
     dialog.destroy()
-
-
-if __name__ == '__main__':
-  StatusIcon(None)
-  gtk.threads_init()
-  gtk.main()

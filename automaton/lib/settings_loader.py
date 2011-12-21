@@ -1,46 +1,43 @@
 import os
-import re
-import utils
-import logger
-import autoplatform
-
-# settings_loader takes a plugin name, opens the associated settings
-# file, and reads all of the settings into a dictionary. It then
-# returns the dictionary for use in the program that called the
-# function
+from automaton.lib import utils, logger, autoplatform
 
 
-# Function used by plugins to load their settings
-# Before calling __load_settings it removes the "plugins." package
-# indicator and prepends cmd_ in case an app and a plugin have the
-# same name
 def load_plugin_settings(name):
-  # Removes all "upper" module indicators, if present
+  """
+  Load a plugin's settings.
+  Before calling __load_settings it removes the "plugins." package
+  indicator.
+
+  """
   name = utils.get_module_name(name)
   name = os.path.join("plugins", name + ".conf")
   return __load_settings(name)
 
-
-# Function used by apps to load their settings
-# Before calling __load_settings it removes the absolute path provided
-# by sys.argv in the app and removes the .py file extension if it exists.
 def load_app_settings(name):
+  """
+  Load an app's settings.
+  Remove the absolute path provided by sys.argv in the app and
+  remove the .py file extension if it exists.
+
+  """
   name = utils.get_module_name(name)
   name = os.path.join("apps", name + ".conf")
   return __load_settings(name)
 
-
-# Private function that loads settings, since both plugins and apps
-# have the same settings file format
 def __load_settings(name):
-  op = {}
+  """
+  Private function that loads settings, since both plugins and apps
+  have the same settings file format.
+  
+  """
+  opt = {}
   settings = None
   # Try the home directory first, then system, then local settings
-  for path in autoplatform.getDirHierarchy():
+  for path in autoplatform.get_dir_hierarchy():
     filepath = os.path.join(path, name)
     if os.path.isfile(filepath):
-      with open(filepath, "r") as settingsFile:
-        settings = settingsFile.readlines()
+      with open(filepath, "r") as settings_file:
+        settings = settings_file.readlines()
       if settings != None:
         break
   if settings != None:
@@ -50,9 +47,9 @@ def __load_settings(name):
       # Lines beginning with # are comments
       if line[0] == '#':
         continue
-      ix = line.find('=')
-      if ix < 0:
+      idx = line.find('=')
+      if idx < 0:
         logger.log("Cannot read settings line: " + line)
         continue
-      op[line[0:ix].strip().upper()] = line[ix + 1:].strip()
-  return op
+      opt[line[0:idx].strip().upper()] = line[idx + 1:].strip()
+  return opt

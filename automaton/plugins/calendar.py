@@ -1,19 +1,16 @@
-try:
-  from xml.etree import ElementTree
-except ImportError:
-  from elementtree import ElementTree
 import gdata.calendar.data
 import gdata.calendar.client
 
 import automaton.lib.plugin
 import automaton.lib.settings_loader as settings_loader
 
+# pylint: disable-msg=W0101
 raise automaton.lib.plugin.PluginLoadError("Incomplete plugin. "
   "Loading has no effect.")
 
 
 class Calendar(automaton.lib.plugin.PluginInterface):
-
+  """Plugin that allows access to a Google Calendar."""
   def __init__(self, registrar):
     super(Calendar, self).__init__(registrar)
     self.settings = settings_loader.load_plugin_settings(
@@ -27,10 +24,6 @@ class Calendar(automaton.lib.plugin.PluginInterface):
                                 self.settings["PASSWORD"],
                                 self.cal_client.source)
 
-    registrar.register_service("calendar", self.execute, namespace=__name__)
-
   def disable(self):
-    self.registrar.unregister_service("calendar", namespace=__name__)
-
-  def execute(self, arg='', **kwargs):
+    """Disable all of Calendar's services."""
     pass

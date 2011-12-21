@@ -1,21 +1,22 @@
-import subprocess as sp
-import gst
-import threading
 import os
-import gobject
+#import gst
+#import gobject
+#import threading
+#import subprocess as sp
 
 import automaton.lib.plugin
-import automaton.lib.autoplatform as autoplatform
+#import automaton.lib.autoplatform as autoplatform
 
-gobject.threads_init()
+#gobject.threads_init()
 
 
 def platform():
+  """Return the list of platforms the plugin is available for."""
   return ['linux']
 
 
 class Say(automaton.lib.plugin.PluginInterface):
-
+  """Speak the provided text through the computer's speakers."""
   def __init__(self, registrar):
     super(Say, self).__init__(registrar)
     registrar.register_service("say", self.execute,
@@ -25,11 +26,23 @@ class Say(automaton.lib.plugin.PluginInterface):
       namespace=__name__)
 
   def disable(self):
+    """Disable all of Say's services."""
     self.registrar.unregister_service("say", namespace=__name__)
 
   def execute(self, **kwargs):
-    if not "text" not in kwargs:
+    """Speak the provided text through the computer's speakers.
+
+    Keyword arguments:
+    text -- the text to speak
+
+    """
+    if "text" not in kwargs:
       return ''
+
+    os.system('espeak "{0}"'.format(kwargs["text"]))
+    return ""
+
+    #TODO find a better way of implementing TTS
     """tmp = autoplatform.getExistingFile("say.wav")
     tmp2 = autoplatform.getExistingFile("say2.wav")
     ## aplay, mplayer, etc all hang for >5 sec after playing, so gstreamer
@@ -65,5 +78,3 @@ class Say(automaton.lib.plugin.PluginInterface):
       player.set_state(gst.STATE_NULL)
 
     os.remove(tmp2)"""
-    os.system('espeak "{0}"'.format(kwargs["text"]))
-    return ""

@@ -12,7 +12,7 @@ import alsaaudio as alsa
 import pocketsphinx as ps
 
 import automaton.client.pyro as thrift_client
-import automaton.lib.exceptions
+import automaton.lib.exceptions as exceptions
 
 
 filename = 'audio'
@@ -43,10 +43,6 @@ def decode_audio():
   block = d.get_hyp()
   buf.close()
   return block[0]
-
-
-def interpret_command(block):
-  return ''
 
 
 if __name__ == '__main__':
@@ -85,8 +81,12 @@ if __name__ == '__main__':
       ret = "Sorry, I don't know how to interpret what you said."
       try:
         ret = client.interpret(block)
-      except automaton.lib.exceptions.ServiceNotRegisteredError:
+      except exceptions.ServiceNotRegisteredError:
         pass
+      except exceptions.ClientError as err:
+        ret = "Error in client."
+      except exceptions.UnknownIntentError:
+        ret = "Could not understand your query."
       print ret
       client.interpret('say ' + ret)
       print

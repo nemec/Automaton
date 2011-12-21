@@ -1,11 +1,10 @@
-import sys
-import automaton.lib.exceptions as exceptions
+
 
 class ClientInterface:
-
+  """The interface that all clients use to communicate to the server."""
   def __init__(self, server='localhost', port=9090):
     self.client = None
-    self.exceptions = exceptions
+    self.clientid = None
 
   # Opens a connection to the server and registers the client
   def open(self):
@@ -32,9 +31,6 @@ class ClientInterface:
 
   def disallowAllServices(self):
     return self.client.disallowAllServices(self.clientid)
-
-  def execute(self, name, args):
-    return self.client.execute(self.clientid, name, args)
 
   def interpret(self, raw):
     return self.client.interpret(self.clientid, raw)

@@ -12,9 +12,19 @@ class UnsuccessfulExecution(Exception):
 
 
 class PluginLoadError(Exception):
+  """
+  Indicates that the plugin failed to load. If this occurs while
+  importing a plugin, that plugin will be disabled.
+
+  """
   pass
 
 
 class PluginInterface(object):
+  """
+  Marker class to indicate which class in a plugin's file is the
+  actual plugin implementation.
+  
+  """
   def __init__(self, registrar):
     self.registrar = registrar

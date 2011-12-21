@@ -7,9 +7,8 @@ from twisted.words.protocols import oscar
 from twisted.internet import protocol, reactor
 from twisted.internet.error import ConnectionDone
 
-import automaton.lib.logger as logger
 import automaton.client.thrift as thrift_client
-import automaton.lib.settings_loader as settings_loader
+from automaton.lib import exceptions, logger, settings_loader
 
 
 ## unescape
@@ -96,7 +95,15 @@ class B(oscar.BOSConnection):
             self.factory.authenticated_users.remove(username)
             returned = "Logged out."
           else:
-            returned = self.factory.client.interpret(body)
+            try:
+              returned = self.factory.client.interpret(body)
+            except exceptions.ClientError as err:
+              returned = str(err)
+            except exceptions.UnknownIntentError:
+              returned = "Could not understand your intent."
+            except exceptions.ClientNotRegisteredError:
+              returned = ("AIM Client not registered to "
+                          "Automaton, please restart.")
 
           multiparts[0] = (returned,)
         self.lastUser = user.name
@@ -127,7 +134,7 @@ class AIMClientFactory(protocol.ReconnectingClientFactory):
 
   def clientConnectionLost(self, connector, reason):
     logger.log("Lost connection: " + str(reason))
-    if reason.check([thrift_client.ClientException]):
+    if reason.check([exceptions.ClientError]):
       reactor.stop()
 
   def clientConnectionFailed(self, connector, reason):

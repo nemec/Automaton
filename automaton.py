@@ -1,5 +1,6 @@
 import sys
 import automaton.client.thrift as thrift_client
+import automaton.lib.exceptions as exceptions
 
 try:
   client = thrift_client.ClientWrapper("localhost", appname="cmd")
@@ -13,14 +14,16 @@ try:
       print client.getAvailableServices()
     else:
       print client.interpret(cmd)
-  except thrift_client.ClientNotRegisteredError:
+  except exceptions.ClientNotRegisteredError:
     print "Service not registered"
-  except thrift_client.ServiceNotProvidedError as e:
+  except exceptions.ServiceNotProvidedError as e:
     print e
-  except thrift_client.ServiceNotRegisteredError as e:
+  except exceptions.ServiceNotRegisteredError as e:
     print e
+  except exceptions.UnknownIntentError:
+    print "Cannot understand query."
   finally:
     client.close()
 
-except thrift_client.ClientException as tx:
+except exceptions.ClientException as tx:
   print repr(tx.message)

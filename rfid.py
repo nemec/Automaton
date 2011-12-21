@@ -6,8 +6,7 @@ from struct import unpack
 import time
 import pgdb
 
-import automaton.lib.logger as logger
-import automaton.lib.settings_loader as settings_loader
+from automaton.lib import exceptions, logger, settings_loader
 from automaton.lib.client_wrapper_thrift import ClientWrapper
 
 
@@ -75,9 +74,9 @@ client.open()
 
 try:
   client.registerPlugin("say")
-except ClientWrapper.PluginNotLoadedException:
+except exceptions.PluginNotLoadedException:
     print "PluginNotLoaded Exception"
-except ClientWrapper.ServiceNotRegisteredException:
+except exceptions.ServiceNotRegisteredException:
     print "Service not registered"
 
 

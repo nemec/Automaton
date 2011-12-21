@@ -2,19 +2,21 @@ from __future__ import absolute_import
 import sys
 import time
 
+# pylint: disable-msg=E0611
 from thrift import Thrift
 from thrift.transport import TSocket
 from thrift.transport import TTransport
 from thrift.protocol import TBinaryProtocol
+# pylint: enable-msg=E0611
 
 from automaton.lib.thrift.python import AutomatonThrift
 from automaton.lib.thrift.python.ttypes import *
 
 from automaton.client.base import ClientInterface
 import automaton.lib.logger as logger
+import automaton.lib.exceptions
 
-
-ClientException = Thrift.TException
+automaton.lib.exceptions.ClientError = Thrift.TException
 
 
 class ClientWrapper(ClientInterface):

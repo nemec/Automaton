@@ -1,20 +1,23 @@
-import re
 import nltk
-import string
+import string  # pylint: disable-msg=W0402
 
 class Interpreter:
-  #text = nltk.word_tokenize("What is the weather in Katy, TX like today?")
-  #p = nltk.pos_tag(text)
+  """
+  The interpreter takes natural language and extracts semantic meaning from
+  it based on the registered services in the registrar.
 
+  """
   def __init__(self, registrar):
     self.registrar = registrar
-    self.grammarDict = {}
+    self.grammar_dict = {}
 
-  # Tidies up the text for better processing, ignoring
-  # certain "pretty" words that have no effect on the
-  # meaning of the text.
-  def cleanSpeech(self, raw):
-    # Currently does nothing
+  def clean_speech(self, raw):
+    """
+    Tidy up the text for better processing, ignoring
+    certain "pretty" words that have no effect on the
+    meaning of the text.
+  
+    """
     return raw
 
   def best_interpretation(self, raw):
@@ -25,9 +28,12 @@ class Interpreter:
     else:
       return matches[0]
 
-  # Converts the raw text into a (command, namespace, arguments) pair
-  # based on the grammar dictionary that was built on initialization
   def interpret(self, raw):
+    """
+    Convert the raw text into a (command, namespace, arguments) pair
+    based on the grammar dictionary that was built on initialization.
+
+    """
     matches = []
     
     similarity_threshold = 0
@@ -36,12 +42,12 @@ class Interpreter:
     tagged = nltk.pos_tag(tokens)
 
     for svc_name in self.registrar.services:
-      for ns in self.registrar.services[svc_name]:
-        grammar = self.registrar.services[svc_name][ns].grammar
+      for nspc in self.registrar.services[svc_name]:
+        grammar = self.registrar.services[svc_name][nspc].grammar
         similarity = self.get_similarity(tagged, grammar, svc_name)
         if similarity > similarity_threshold:
           command = svc_name
-          namespace = ns
+          namespace = nspc
           args = self.extract_args(tokens, grammar, command)
           matches.append((similarity, (command, namespace, args)))
 
@@ -49,13 +55,16 @@ class Interpreter:
     return [match for score, match in matches]
 
   def get_similarity(self, tagged_text, grammar, svc_name):
+    """Calculate the similarity between the tagged text and the grammar."""
+    # pylint: disable-msg=R0201
     similarity = 0
     
     if type(grammar) is dict:
       for (idx, (word, pos)) in enumerate(tagged_text):
         if word.lower() == svc_name:  # svc name exists in command
           similarity += 10
-          similarity += 15 * ((len(tagged_text) - idx) / float(len(tagged_text)))
+          similarity += (
+            15 * ((len(tagged_text) - idx) / float(len(tagged_text))))
           if pos.startswith("VB"):  # svc name is a verb in command
             similarity += 3
           
@@ -75,6 +84,12 @@ class Interpreter:
     return similarity
 
   def extract_args(self, tokens, grammar, command):
+    """
+    Using the grammar, convert the list of tokens into an argument
+    dictionary.
+
+    """
+    # pylint: disable-msg=R0201
     args = {}
 
     tokens = [x.lower() for x in tokens if x not in string.punctuation]
@@ -92,13 +107,16 @@ class Interpreter:
           option_tokens = option.split()
           op_indices = None
           for op_tok in option_tokens:
-            op_tok_indices = [idx for (idx, op) in enumerate(tokens) if op == op_tok]
+            op_tok_indices = [idx for (idx, op) in 
+                                enumerate(tokens) if op == op_tok]
             if op_indices == None:
               op_indices = op_tok_indices
             else:
-              op_indices = [idx for idx in op_tok_indices if idx - 1 in op_indices]
+              op_indices = [idx for idx in
+                              op_tok_indices if idx - 1 in op_indices]
           if len(op_indices) > 0:
-            indices.append((op_indices[0] - (len(option_tokens) - 1), op_indices[0], arg))
+            indices.append(
+              (op_indices[0] - (len(option_tokens) - 1), op_indices[0], arg))
 
     indices.sort()
     
@@ -109,7 +127,8 @@ class Interpreter:
     
     return args
 
-if __name__ == "__main__":
+#TODO move to unit test
+"""if __name__ == "__main__":
   import registrar
   r = registrar.Registrar()
   
@@ -166,4 +185,4 @@ if __name__ == "__main__":
   print i.interpret("What is the weather forecast in College Station for tomorrow?")
   print i.interpret("I would like to know how the weather will be near Houston for today")
   print i.interpret("What will the weather be like tomorrow at Dallas?")  
-  print i.interpret("What is the weather like in Snook?")
+  print i.interpret("What is the weather like in Snook?")"""

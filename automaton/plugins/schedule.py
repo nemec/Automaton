@@ -1,17 +1,9 @@
-import re
 import os
 import sys
-import time
-import pickle
 import datetime
 import threading
 
-import automaton.lib.utils as utils
-import automaton.lib.plugin as plugin
-import automaton.lib.logger as logger
-import automaton.lib.interpreter as interpreter
-import automaton.lib.autoplatform as autoplatform
-import automaton.lib.settings_loader as settings_loader
+from automaton.lib import utils, plugin, logger, settings_loader, autoplatform
 from automaton.lib.persistent_queue import PersistentPriorityQueue
 
 if sys.version_info < (2, 7):
@@ -19,12 +11,14 @@ if sys.version_info < (2, 7):
 
 
 def platform():
+  """Return the list of platforms the plugin is available for."""
   return ['linux', 'windows', 'mac']
 
 
 class Schedule(plugin.PluginInterface):
-
+  """Plugin for scheduling other tasks to be run later."""
   def remove_task_if_past(self):
+    """Remove the task from the queue if the expiration time is past."""
     item = self.queue.front()
     if item[0] < datetime.datetime.now():
       return self.queue.get()
@@ -32,19 +26,20 @@ class Schedule(plugin.PluginInterface):
       return (item[0], (None, None, None))
 
   def _executionthread(self):
+    """Continually poll the queue for tasks to be run."""
     while True:
-      t, (command, namespace, args) = self.remove_task_if_past()
+      expire, (command, namespace, args) = self.remove_task_if_past()
       if command is not None:
         val = None
         try:
           val = self.registrar.request_service(
-            command, namespace=namespace, **args)
-        except Exception as e:
-          val = "Exception encountered: {0}".format(e)
+            command, namespace=namespace, argdict=args)
+        except Exception as err:
+          val = "Exception encountered: {0}".format(err)
         logger.log("Scheduled command {0} has been run, with "
                    "return value: \"{1}\"".format(command, val))
       else:
-        twait = max((t - datetime.datetime.now()).total_seconds(), 0)
+        twait = max((expire - datetime.datetime.now()).total_seconds(), 0)
         self.event.wait(twait)
         self.event.clear()
 
@@ -54,7 +49,7 @@ class Schedule(plugin.PluginInterface):
     self.ops.update(settings_loader.load_plugin_settings(__name__))
 
     if self.ops["QUEUE_FILE"] is None:
-      self.ops["QUEUE_FILE"] = platformdata.getExistingFile("schedule.queue")
+      self.ops["QUEUE_FILE"] = autoplatform.get_existing_file("schedule.queue")
     else:
       if not os.access(self.ops["QUEUE_FILE"], os.W_OK):
         self.ops["QUEUE_FILE"] = None
@@ -71,7 +66,6 @@ class Schedule(plugin.PluginInterface):
     thread.setDaemon(True)
     thread.start()
 
-    self.registrar = registrar
     self.registrar.register_service("schedule", self.execute,
       grammar={
         "at": ["at"],
@@ -84,53 +78,63 @@ class Schedule(plugin.PluginInterface):
       namespace=__name__)
 
   def disable(self):
+    """Disable all of Schedule's services."""
     self.registrar.unregister_service("schedule", namespace=__name__)
 
   def execute(self, **kwargs):
-    t = 0
+    """Schedule a command to be run at a later time.
+
+    Keyword arguments:
+    command -- the command (in natural language) to be run
+    in -- a relative time offset (hours, minutes, and/or seconds)
+    at -- an absolute time to run the command
+
+    """
+    expire = 0
     if "command" not in kwargs:
       raise plugin.UnsuccessfulExecution("No command provided.")
     
     if "in" in kwargs:
       try:
-        ix = kwargs["in"].rfind(" ")
-        time = kwargs["in"][:ix]
-        scale = kwargs["in"][ix + 1:]
+        idx = kwargs["in"].rfind(" ")
+        wait = kwargs["in"][:idx]
+        scale = kwargs["in"][idx + 1:]
       except ValueError:
         raise plugin.UnsuccessfulExecution("Error parsing time.")
       try:
-        t = int(time)
+        expire = int(wait)
       except ValueError:
         try:
-          t = utils.text_to_int(time)
+          expire = utils.text_to_int(wait)
         except:
           raise plugin.UnsuccessfulExecution("Error parsing time.")
       if scale.startswith("h"):
-        t = datetime.datetime.now() + datetime.timedelta(hours=t)
+        expire = datetime.datetime.now() + datetime.timedelta(hours=expire)
       elif scale.startswith("m"):
-        t = datetime.datetime.now() + datetime.timedelta(minutes=t)
+        expire = datetime.datetime.now() + datetime.timedelta(minutes=expire)
       elif scale.startswith("s"):
-        t = datetime.datetime.now() + datetime.timedelta(seconds=t)
+        expire = datetime.datetime.now() + datetime.timedelta(seconds=expire)
       else:
         raise plugin.UnsuccessfulExecution(
                           "Could not determine time scale (h/m/s).")
     elif "at" in kwargs:
-      t = utils.text_to_absolute_time(match.group('time'))
-      if not t:
+      expire = utils.text_to_absolute_time(wait)
+      if not expire:
         raise plugin.UnsuccessfulExecution("Error parsing time.")        
     else:
-      raise plugin.UnsuccessfulExecution('Command could not be scheduled. Must specify "in" or "at"')
+      raise plugin.UnsuccessfulExecution(
+        'Command could not be scheduled. Must specify "in" or "at"')
 
     cmd, namespace, args = self.registrar.find_best_service(kwargs["command"])
     if cmd is None:
       raise plugin.UnsuccessfulExecution("Provided text could not be "
         "converted into a command.")
-    self.queue.put((t, (cmd, namespace, args)))
+    self.queue.put((expire, (cmd, namespace, args)))
     self.event.set()
     return 'Command scheduled.'
 
-
-if __name__ == "__main__":
+#TODO Move to a unit test
+"""if __name__ == "__main__":
   __name__ = "schedule"
   import automaton.lib.registrar as registrar
   r = registrar.Registrar()
@@ -149,4 +153,4 @@ if __name__ == "__main__":
   #s.execute("echo absolute at 5:00 A.M.")
   #s.execute("echo absolute at 5:00:4 AM")
   #s.execute("echo absolute at 5:55")
-  time.sleep(60)
+  time.sleep(60)"""

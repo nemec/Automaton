@@ -25,8 +25,6 @@ service AutomatonThrift {
 
   void disallowAllServices(1:string clientid) throws (1:ClientNotRegisteredError oops),
 
-  string execute(1:string clientid, 2:string name, 3:string arguments) throws(1:ClientNotRegisteredError oops, 2:ServiceNotRegisteredError ouch),
-
   string interpret(1:string clientid, 2:string raw) throws(1:ClientNotRegisteredError oops, 2:ServiceNotRegisteredError ouch),
 
   bool isService(1:string name),

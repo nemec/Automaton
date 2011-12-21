@@ -2,11 +2,11 @@ import os.path
 from os import mkdir
 from datetime import datetime
 
-import autoplatform
+import automaton.lib.autoplatform as autoplatform
 
-
+#TODO logging
 def log(message, exception=None):
-  """@TODO logging"""
+  """Log a message (with optional exception) to a file."""
   if exception:
     message = message[0:-1] + ': ' + str(exception)
   time = datetime.now()
@@ -15,8 +15,8 @@ def log(message, exception=None):
   if not os.path.exists(logdir):
     mkdir(logdir)
   logfile = os.path.join(logdir, "log.txt")
-  with open(logfile, 'a') as f:
-    f.write("{0}:{1}\n".format(time, message))
+  with open(logfile, 'a') as fil:
+    fil.write("{0}:{1}\n".format(time, message))
 
 # Logging client
 ''' import logging, logging.handlers

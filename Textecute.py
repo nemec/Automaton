@@ -15,6 +15,7 @@ from email import Encoders
 
 import pgdb
 
+import automaton.lib.exceptions as exceptions
 import automaton.lib.settings_loader as settings_loader
 from automaton.lib.logger import log
 
@@ -84,7 +85,7 @@ def handle_message(body, frm):
 
     client.close()
 
-  except thrift.ClientException as tx:
+  except exceptions.ClientError as tx:
     result = str(tx.message)
 
   if len(returned) > 160:
