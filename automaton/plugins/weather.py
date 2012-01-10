@@ -1,9 +1,8 @@
-import time
 import re
+import time
+import json
 import urllib2
-from xml.dom import minidom
 from collections import namedtuple
-
 import automaton.lib.logger as logger
 import automaton.lib.plugin as plugin
 import automaton.lib.settings_loader as settings_loader
@@ -14,6 +13,7 @@ class Weather(plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(Weather, self).__init__(registrar)
+    self.API_KEY = 'c0ef2d09acaf835f'
     self.ttl = 3600  # seconds
     self.last = None  # last weather value recorded, tuple of (location, value)
     cmd = settings_loader.load_plugin_settings(self.__class__.__name__)
@@ -28,7 +28,7 @@ class Weather(plugin.PluginInterface):
       self.locations.pop("FORMAT", None)
 
     self.max_cache_distance = int(self.locations.pop("MAX_CACHE_DISTANCE", 25))
-    self.CacheItem = namedtuple('CacheItem', ['expires', 'val']
+    self.CacheItem = namedtuple('CacheItem', ['expires', 'val'])
 
     # remove spaces after commas - these would screw up lat/long searches
     for loc in self.locations:
@@ -64,77 +64,6 @@ class Weather(plugin.PluginInterface):
       return 0
     else:
       return 100
-
-  def tempmodifier(self, temp):
-    """Return whether the ones digit of the temperature is in the low,
-    mid, or high range.
-
-    """
-    if (temp % 10) < 4:
-      return "low"
-    elif (temp % 10) < 7:
-      return "mid"
-    else:
-      return "high"
-
-  def gettimeofday(self):
-    """Turn a numerical hour into the time of day it corresponds to."""
-    hour = time.localtime().tm_hour
-    if hour < 3:
-      return "tonight"
-    elif hour < 12:
-      return "this morning"
-    elif hour < 7:
-      return "today"
-    elif hour < 11:
-      return "this evening"
-    else:
-      return "tonight"
-
-  def _parse_response(self, resp, forecastday):
-    """Parse the weather response from WUnderground."""
-    ret = ''
-    try:
-      simple = resp.getElementsByTagName("simpleforecast")[0]
-      w_list = simple.getElementsByTagName("forecastday")
-      if forecastday < len(w_list):
-        w_node = w_list[forecastday]
-
-        # Get Weather
-        try:
-          condnode = w_node.getElementsByTagName("conditions")
-          if len(condnode) > 0:
-            if forecastday == 1:
-              when = "tomorrow"
-            else:
-              when = self.gettimeofday()
-            ret = 'The weather {0} is {1}. '.format(when,
-                    condnode[0].firstChild.data)
-        except Exception as err:
-          logger.log("Exception occurred when parsing Weather", err)
-
-        # Get High, Low Temperatures
-        try:
-          temp = 0
-          for rel_temp in ("high", "low"):
-            temp_type = w_node.getElementsByTagName(rel_temp)[0]
-            if self.format == 'F':
-              temp = int(temp_type.getElementsByTagName(
-                                        "fahrenheit")[0].firstChild.data)
-            else:
-              temp = int(temp_type.getElementsByTagName(
-                                        "celsius")[0].firstChild.data)
-              if self.format == 'K':
-                temp = temp + 273
-            ret = ret + '{0}s in the {1} {2}s. '.format(rel_temp.capitalize(),
-                                                      self.tempmodifier(temp),
-                                                      str(temp - (temp % 10)))
-        except Exception as err:
-          logger.log("Exception occurred when parsing Weather temp", err)
-    except Exception as err:
-      logger.log("Error parsing temperature data.", err)
-      raise plugin.UnsuccessfulExecution("Error parsing temperature data.")
-    return ret
 
   def execute(self, **kwargs):
     """Retrieve the latest weather for the provided location for the given time.
@@ -188,15 +117,24 @@ class Weather(plugin.PluginInterface):
         else:
           self.cache.pop(location, None)
 
-    url = ("http://api.wunderground.com/auto/wui/geo/ForecastXML/"
-            "index.xml?query=" + re.sub('\s+', '%20', location))
+    url = ("http://api.wunderground.com/api/{0}/forecast/"
+            "q/{1}.json".format(self.API_KEY, re.sub('\s+', '_', location)))
 
-    resp = minidom.parse(urllib2.urlopen(urllib2.Request(url)))
+    resp = json.load(urllib2.urlopen(urllib2.Request(url)))
     if not resp:
       raise plugin.UnsuccessfulExecution(
                       "Parsing failed for location " + location)
 
-    ret = self._parse_response(resp, forecastday)
+    if 'results' in resp['response']:
+      raise plugin.UnsuccessfulExecution("Ambiguous results for weather.")
+
+    ret = None
+    try:
+      forecast = resp['forecast']['txt_forecast']['forecastday']
+      ret = forecast[forecastday]['fcttext']
+    except KeyError as err:
+      logger.log("Error parsing forecast:", e)
+
     if not ret:
       raise plugin.UnsuccessfulExecution(
                       "There is no weather data for this location")
