@@ -142,3 +142,53 @@ class Weather(plugin.PluginInterface):
     self.last = (location, self.CacheItem(time.time() + self.ttl, ret))
     self.cache[location] = self.last[1]
     return ret
+
+
+import unittest
+class WeatherTest(plugin.RegistrationTestCase):
+  plugin_type = Weather
+
+  def test_grammar(self):
+    self.check_interpreter(
+      ("What is the weather forecast in College Station for tomorrow?",
+        ("weather", __name__,
+          {'where': "college station", 'when': "tomorrow"}))
+    )
+
+    self.check_interpreter(
+      ("I would like to know how the weather will be near Houston for today",
+        ("weather", __name__,
+          {'where': "houston", 'when': "today"}))
+    )
+
+    self.check_interpreter(
+      ("What will the weather be like tomorrow at Dallas?",
+        ("weather", __name__,
+          {'where': "dallas", 'when': "tomorrow"}))
+    )
+
+    self.check_interpreter(
+      ("What is the weather like in Snook?",
+        ("weather", __name__,
+          {'where': "snook"}))
+    )
+
+  @unittest.skip("True distance function is not yet implemented.")
+  def test_distance(self):
+    houston = (29.764377375163125, -95.372314453125)
+    cstat = (30.64736425824319, -96.3336181640625)
+    self.assertAlmostEqual(
+      self.plugin.distance(houston, cstat), 53.23, places=7)
+
+  def test_api(self):
+    out_today = self.plugin.execute(
+      **{'where': "college station texas", 'when': "today"})
+    self.assertTrue("Highs" in out_today or "Lows" in out_today)
+    out_tomorrow = self.plugin.execute(
+      **{'where': "college station texas", 'when': "tomorrow"})
+    self.assertTrue("Highs" in out_tomorrow or "Lows" in out_tomorrow)
+
+    self.assertNotEquals(out_today, out_tomorrow)
+
+    self.assertRaises(plugin.UnsuccessfulExecution, self.plugin.execute,
+      **{'where': "college station", 'when': "tomorrow"})

@@ -159,7 +159,7 @@ class Registrar(object):
         name=svc_name.lower(), svc=svc_func, grammar=grammar,
         usage=usage, namespace=namespace)
 
-  def remove_service(self, svc_name, namespace=None):
+  def unregister_service(self, svc_name, namespace=None):
     """Remove the registered service with the provided name and
     (optional) namespace.
 

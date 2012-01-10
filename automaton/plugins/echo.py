@@ -22,3 +22,15 @@ class Echo(automaton.lib.plugin.PluginInterface):
 
     """
     return kwargs.get("text", "")
+
+class EchoTest(automaton.lib.plugin.RegistrationTestCase):
+  plugin_type = Echo
+
+  def test_grammar(self):
+    self.check_interpreter(
+      ("echo hello world", ("echo", __name__, {"text": "hello world"}))
+    )
+
+  def test_echo(self):
+    message = "Hello world."
+    self.assertEquals(message, self.plugin.execute(text=message))
