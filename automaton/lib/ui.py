@@ -53,7 +53,7 @@ class StatusIcon(gtk.StatusIcon):
         item.connect("activate", self.on_reload)
         rldmenu.append(item)
       if len(rldmenu.get_children()) > 0:
-        rldd.set_submenu(rlmenu)
+        rld.set_submenu(rldmenu)
 
     self.command_log = gtk.TextBuffer()
     self.command_log_lock = threading.Lock()

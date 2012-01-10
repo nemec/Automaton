@@ -5,7 +5,7 @@ except ImportError:
 
 loader = unittest.TestLoader()
 test_suite = loader.discover(
-  "automaton.plugins", pattern="*.py", top_level_dir='..')
+  "automaton.plugins", pattern="weather.py", top_level_dir='..')
 
 if __name__ == "__main__":
   runner = unittest.runner.TextTestRunner()

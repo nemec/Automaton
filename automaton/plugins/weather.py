@@ -8,6 +8,7 @@ import automaton.lib.plugin as plugin
 import automaton.lib.settings_loader as settings_loader
 
 
+# http://www.wunderground.com/weather/api/d/documentation.html
 class Weather(plugin.PluginInterface):
   """Plugin that retrieves weather data for a location."""
 
@@ -78,7 +79,8 @@ class Weather(plugin.PluginInterface):
     if kwargs.get("last", None):
       if self.last:
         if time.time() < self.last[1].ttl:
-          return "Data for {0}: {1}".format(self.last[0], self.last[1].val)
+          yield "Data for {0}: {1}".format(self.last[0], self.last[1].val)
+          return
         else:
           self.last = None
       raise plugin.UnsuccessfulExecution("No recent data stored.")
@@ -113,27 +115,62 @@ class Weather(plugin.PluginInterface):
       closest_hit = min(cache_hit_distances, key=lambda x: x[1])[0]
       if closest_hit < self.max_cache_distance:
         if time.time() < self.cache[location].expires:
-          return self.cache[location].val
+          yield self.cache[location].val
+          return
         else:
           self.cache.pop(location, None)
 
-    url = ("http://api.wunderground.com/api/{0}/forecast/"
-            "q/{1}.json".format(self.API_KEY, re.sub('\s+', '_', location)))
+    url = "http://api.wunderground.com/api/{0}/forecast".format(self.API_KEY)
+    query = "/q/{0}.json".format(re.sub('\s+', '_', location))
 
-    resp = json.load(urllib2.urlopen(urllib2.Request(url)))
+    resp = json.load(urllib2.urlopen(urllib2.Request(url + query)))
     if not resp:
       raise plugin.UnsuccessfulExecution(
                       "Parsing failed for location " + location)
 
-    if 'results' in resp['response']:
-      raise plugin.UnsuccessfulExecution("Ambiguous results for weather.")
-
     ret = None
+    if 'results' in resp['response']:
+      results = resp['response']['results']
+      while len(results) > 1:
+        ret = "Did you mean "
+        states = set()
+        countries = set()
+        for result in results:
+          if result['state'] != '':
+            states.add(result['state'].lower())
+          elif result['country'] != '':
+            countries.add(result['country'].lower())
+        if len(states) > 0:
+          ret += "the state"
+          if len(states) > 1:
+            ret += "s"
+          ret += ' ' + ', '.join(x.upper() for x in states)
+        if len(countries) > 0:
+          if len(states) > 0:
+            ret += " or "
+          ret += "the country"
+          if len(countries) > 1:
+            ret += "s"
+          ret += ' ' + ', '.join(x.upper() for x in countries)
+        ret += "?"
+        # TODO better parsing of conversation arguments
+        cont = (yield ret)['_raw'].split()
+        old_results = results
+        results = [res for res in results if
+                    res['state'].lower() in cont or
+                    res['country'].lower() in cont]
+        if len(results) == 0:  # Invalid input was given, back up
+          results = old_results
+      query = results[0]['l'] + '.json'
+      resp = json.load(urllib2.urlopen(urllib2.Request(url + query)))
+      if not resp:
+        raise plugin.UnsuccessfulExecution(
+                        "Parsing failed for location " + location)
     try:
       forecast = resp['forecast']['txt_forecast']['forecastday']
       ret = forecast[forecastday]['fcttext']
     except KeyError as err:
-      logger.log("Error parsing forecast:", e)
+      logger.log("Error parsing forecast:", err)
 
     if not ret:
       raise plugin.UnsuccessfulExecution(
@@ -141,14 +178,16 @@ class Weather(plugin.PluginInterface):
 
     self.last = (location, self.CacheItem(time.time() + self.ttl, ret))
     self.cache[location] = self.last[1]
-    return ret
+    yield ret
 
 
 import unittest
 class WeatherTest(plugin.RegistrationTestCase):
+  """Test case for the Weather Plugin."""
   plugin_type = Weather
 
   def test_grammar(self):
+    """Check that the interpreter correctly parses sample input."""
     self.check_interpreter(
       ("What is the weather forecast in College Station for tomorrow?",
         ("weather", __name__,
@@ -175,20 +214,26 @@ class WeatherTest(plugin.RegistrationTestCase):
 
   @unittest.skip("True distance function is not yet implemented.")
   def test_distance(self):
+    """Verify that the distance function calculates correctly."""
     houston = (29.764377375163125, -95.372314453125)
     cstat = (30.64736425824319, -96.3336181640625)
     self.assertAlmostEqual(
       self.plugin.distance(houston, cstat), 53.23, places=7)
 
   def test_api(self):
+    """Test the WeatherUnderground API to ensure it works."""
     out_today = self.plugin.execute(
-      **{'where': "college station texas", 'when': "today"})
+      **{'where': "college station texas", 'when': "today"}).next()
     self.assertTrue("Highs" in out_today or "Lows" in out_today)
     out_tomorrow = self.plugin.execute(
-      **{'where': "college station texas", 'when': "tomorrow"})
+      **{'where': "college station texas", 'when': "tomorrow"}).next()
     self.assertTrue("Highs" in out_tomorrow or "Lows" in out_tomorrow)
 
     self.assertNotEquals(out_today, out_tomorrow)
 
-    self.assertRaises(plugin.UnsuccessfulExecution, self.plugin.execute,
+  def test_more_information()
+    out_conv = self.plugin.execute(
       **{'where': "college station", 'when': "tomorrow"})
+    self.assertTrue(out_conv.next().startswith("Did you mean"))
+    final = out_conv.send({'_raw': 'tx'})
+    self.assertTrue("Highs" in final or "Lows" in final)

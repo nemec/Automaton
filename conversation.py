@@ -8,12 +8,13 @@ try:
 
   try:
     client.allowAllServices()
-    
-    cmd = ' '.join(sys.argv[1:])
-    if cmd == "help":
-      print client.getAvailableServices()
-    else:
-      print client.interpret(cmd)
+
+    while True:
+      cmd = raw_input("> ")
+      if cmd == "help":
+        print client.getAvailableServices()
+      else:
+        print client.interpret(cmd)
   except exceptions.ClientNotRegisteredError:
     print "Service not registered"
   except exceptions.ServiceNotProvidedError as e:
@@ -27,3 +28,5 @@ try:
 
 except exceptions.ClientError as tx:
   print repr(tx.message)
+except KeyboardInterrupt:
+  pass

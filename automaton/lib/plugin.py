@@ -72,3 +72,23 @@ class RegistrationTestCase(unittest.TestCase):
         self.assertEquals(namespace, out_namespace)
       if out_args is not None:
         self.assertEquals(args, out_args)
+
+  def check_conversation(self, fnc, arg_sequence, output_sequence):
+    """
+    Convenience function for testing conversations.
+    Ensures the sequence of inputs are provided to the conversation
+    generator in the same way the server will handle them.
+
+    """
+    self.assertGreater(len(arg_sequence), 1,
+      "Must provide at least two responses.")
+    self.assertEquals(len(arg_sequence), len(output_sequence),
+      "Argument and output sequences must be same length.")
+
+    gen = fnc(**arg_sequence[0])
+    conversation_output = gen.next()
+    self.assertEquals(conversation_output, output_sequence[0])
+    arg_sequence = arg_sequence[1:]
+    output_sequence = output_sequence[1:]
+    for kwargs, out in zip(arg_sequence, output_sequence):
+      self.assertEqual(gen.send(kwargs), out)

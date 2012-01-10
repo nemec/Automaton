@@ -2,13 +2,15 @@
 
 import re
 import uuid
+import time
 import inspect
 import threading
+from types import GeneratorType
 from collections import namedtuple
 
 import automaton.plugins
 from automaton.lib import (
-  logger, registrar, exceptions,autoplatform, input_sanitizer)
+  logger, registrar, exceptions,autoplatform, input_sanitizer, utils)
 from automaton.lib.clientmanager import ClientManager
 from automaton.lib.plugin import PluginInterface, UnsuccessfulExecution
 
@@ -22,7 +24,7 @@ class AutomatonServer(object):
     self.sanitizer = input_sanitizer.InputSanitizer(self.registrar)
 
     # A dictionary mapping clientids to registered plugins
-    self.clientmanager = ClientManager()
+    self.client_manager = ClientManager()
 
     # pylint: disable-msg=C0103
     self.LoadedPlugin = namedtuple('LoadedPlugin', ['obj', 'lock'])
@@ -81,6 +83,13 @@ class AutomatonServer(object):
       finally:
         plugin.lock.release()
 
+  def get_client(self, clientid):
+    if clientid not in self.client_manager.registered_clients:
+      raise exceptions.ClientNotRegisteredError()
+    client = self.client_manager.registered_clients[clientid]
+    client.last_contact = time.time()
+    return client
+
   def registerClient(self, appname=None):
     """Register a client service with the server. Calculate a UUID that will
     identify which plugins are loaded for each client service and return it
@@ -88,12 +97,12 @@ class AutomatonServer(object):
 
     """
     ident = str(uuid.uuid1())
-    while ident in self.clientmanager.registeredclients:
+    while ident in self.client_manager.registered_clients:
       ident = str(uuid.uuid1())
     if appname is not None:
       ident = re.sub('[\W_]+', '', appname) + '-' + ident
     logger.log("Registering client {0}".format(ident))
-    self.clientmanager.add_client(ident)
+    self.client_manager.add_client(ident)
     return ident
 
   def unregisterClient(self, clientid):
@@ -107,11 +116,11 @@ class AutomatonServer(object):
     ClientNotRegisteredError
 
     """
-    if clientid not in self.clientmanager.registeredclients:
+    if clientid not in self.client_manager.registered_clients:
       raise exceptions.ClientNotRegisteredError()
 
     logger.log("Unregistering client {0}".format(clientid))
-    del self.clientmanager.registeredclients[clientid]
+    del self.client_manager.registered_clients[clientid]
 
   def allowService(self, clientid, name):
     """Register a service for use by a client.
@@ -126,14 +135,13 @@ class AutomatonServer(object):
 
     """
     name = name.lower()
-    if clientid not in self.clientmanager.registeredclients:
-      raise exceptions.ClientNotRegisteredError()
+    client = self.get_client(clientid)
     if name not in self.registrar.services:
       raise exceptions.ServiceNotProvidedError(name)
 
-    if name not in self.clientmanager.registeredclients[clientid].plugins:
+    if name not in client.plugins:
       logger.log("Adding service {0} for client {1}".format(name, clientid))
-      self.clientmanager.registeredclients[clientid].plugins.add(name)
+      client.plugins.add(name)
 
   def disallowService(self, clientid, name):
     """Unregister a service from being used with a client.
@@ -148,24 +156,23 @@ class AutomatonServer(object):
 
     """
     name = name.lower()
-    if clientid not in self.clientmanager.registeredclients:
-      raise exceptions.ClientNotRegisteredError()
-    if name not in self.clientmanager.registeredclients[clientid].plugins:
+    client = self.get_client(clientid)
+    if name not in client.plugins:
       raise exceptions.ServiceNotRegisteredError(name)
 
     logger.log("Removing service {0} for client {1}".format(name, clientid))
-    self.clientmanager.registeredclients[clientid].plugins.remove(name)
+    client.plugins.remove(name)
 
   def allowAllServices(self, clientid):
     """Allow all services for the given clientid."""
     logger.log("Allowing all services for client {0}".format(clientid))
-    self.clientmanager.registeredclients[clientid].plugins = set(
+    self.get_client(clientid).plugins = set(
                                               self.registrar.services.keys())
 
   def disallowAllServices(self, clientid):
     """Disallow all services for the given client id."""
     logger.log("Removing all services for client {0}".format(clientid))
-    self.clientmanager.registeredclients[clientid].plugins = set()
+    self.get_client(clientid).plugins = set()
 
   def interpret(self, clientid, raw):
     """Use the interpreter to translate the raw (arbitrary) text into
@@ -182,39 +189,51 @@ class AutomatonServer(object):
     UnknownIntentError
 
     """
-    if clientid not in self.clientmanager.registeredclients:
-      raise exceptions.ClientNotRegisteredError()
+    client = self.get_client(clientid)
+    with utils.locked(client.lock):
+      # Continue a previous conversation
+      if client.current_conversation is not None:
+        try:
+          kwargs = {"_raw": raw.lower()}
+          output = client.current_conversation.send(kwargs)
+        except StopIteration:
+          client.current_conversation = None
+      # Start a new conversation
+      if client.current_conversation is None:
+        matches = self.registrar.find_services(raw)
+        
+        # remove all unregistered services
+        matches = [match for match in matches if 
+          match[0] in client.plugins]
 
-    matches = self.registrar.find_services(raw)
-    
-    # remove all unregistered services
-    matches = [match for match in matches if 
-      match[0] in self.clientmanager.registeredclients[clientid].plugins]
+        if len(matches) == 0:
+          raise exceptions.UnknownIntentError(
+            "Execution failed: could not find a registered command.")
 
-    if len(matches) == 0:
-      raise exceptions.UnknownIntentError(
-        "Execution failed: could not find a registered command.")
+        output = None
+        limit = 1  # How many results to try before quitting
+        try:
+          for (ix, (command, namespace, args)) in enumerate(matches):
+            if ix == limit:
+              break
+            #args = self.sanitizer.alias(args)
+            #args = self.sanitizer.sanitize(args)
+            output = self.registrar.request_service(
+              svc_name=command, namespace=namespace, argdict=args)
+            if output:
+              if isinstance(output, GeneratorType):
+                client.current_conversation = output
+                output = output.next()
+              else:
+                client.history.append((command, args))
+              break  # We got some good output, don't continue to the next
+        except UnsuccessfulExecution as e:
+          output = "Execution failed: " + str(e)
 
-    output = None
-    limit = 1  # How many results to try before quitting
-    try:
-      for (ix, (command, namespace, args)) in enumerate(matches):
-        if ix == limit:
-          break
-        #args = self.sanitizer.alias(args)
-        #args = self.sanitizer.sanitize(args)
-        output = self.registrar.request_service(
-          svc_name=command, namespace=namespace, argdict=args)
-        if output:
-          self.clientmanager.registeredclients[clientid].history.append(
-                                                                (command, args))
-          break  # We got some good output, don't continue to the next ranked
-    except UnsuccessfulExecution as e:
-      output = "Execution failed: " + str(e)
-    if output:
-      self.sanitizer.set_prev_alias(output)
-    else:
-      output = "No output."
+      if output:
+        self.sanitizer.set_prev_alias(output)
+      else:
+        output = "No output."
     
     return output
 
