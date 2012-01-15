@@ -1,8 +1,13 @@
-FROM = email@example.com
-IMAP_SERVER = imap.gmail.com
-IMAP_PORT = 993
-IMAP_USER  = username
-IMAP_PASSWORD = password
-SMTP_SERVER = smtp.gmail.com
-SMTP_PORT = 587
-THRIFT_SERVER =
+[Settings]
+thrift_server = localhost
+
+[IMAP]
+server = imap.gmail.com
+port = 993
+username  = username
+password = password
+
+[SMTP]
+server = smtp.gmail.com
+port = 587
+from_address = email@example.com

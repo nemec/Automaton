@@ -1,13 +1,21 @@
 import re
-from automaton.lib import logger, settings_loader
+import ConfigParser
+
+from automaton.lib import logger, utils
 
 
 class InputSanitizer:
   """Class for cleaning and modifying text."""
   def __init__(self, registrar):
     self.registrar = registrar
-    self.aliases = settings_loader.load_app_settings("InputSanitizer_Aliases")
-    self.aliases['PREV'] = ""
+    settings = ConfigParser.SafeConfigParser()
+    settings.read(utils.get_app_settings_paths(__name__))
+    self.aliases = {'PREV': ""}
+    try:
+      self.aliases = dict((key.upper(), tuple(value)) for key, value in
+        settings.items("Aliases"))
+    except ConfigParser.NoSectionError:
+      logger.log("No section 'Aliases' found in input_sanitizer config file.")
 
   def sanitize(self, msg):
     """Clean up the message."""

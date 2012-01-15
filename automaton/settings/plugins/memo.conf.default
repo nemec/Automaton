@@ -1,1 +1,2 @@
-MEMO_FILE = /home/user/memo.txt
+[Settings]
+memo_file = /home/user/memo.txt

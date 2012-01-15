@@ -2,12 +2,11 @@ import re
 import urllib
 import urllib2
 import os.path
+import ConfigParser
 import subprocess as sp
 from BeautifulSoup import BeautifulSoup
 
-import automaton.lib.plugin as plugin
-import automaton.lib.logger as logger
-import automaton.lib.settings_loader as settings_loader
+from automaton.lib import plugin, logger, utils
 
 
 class Torrent(plugin.PluginInterface):
@@ -53,7 +52,7 @@ class Torrent(plugin.PluginInterface):
 
   def begin_torrent(self, movie_name):
     """Attempt to start a torrent program to begin download of the torrent."""
-    filename = os.path.join(self.cmd_op["DOWNLOAD_DIR"],
+    filename = os.path.join(self.settings.get("Downloads", "download_dir"),
                                                   os.path.basename(movie_name))
     try:
       urllib.urlretrieve(movie_name, filename)
@@ -69,7 +68,8 @@ class Torrent(plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(Torrent, self).__init__(registrar)
-    self.cmd_op = settings_loader.load_plugin_settings(__name__)
+    self.settings = ConfigParser.SafeConfigParser()
+    self.settings.read(utils.get_plugin_settings_paths(__name__))
 
     registrar.register_service("torrent", self.execute,
       grammar={"name":[], "file": ["file"]},
@@ -95,7 +95,7 @@ class Torrent(plugin.PluginInterface):
     name -- either an IMDB link to the media or the media name to search for
 
     """
-    if "DOWNLOAD_DIR" not in self.cmd_op:
+    if not self.settings.has_option("Downloads", "download_dir"):
       raise plugin.UnsuccessfulExecution("Could not continue - "
         "no download directory in settings.")
 

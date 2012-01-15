@@ -2,10 +2,9 @@ import re
 import time
 import json
 import urllib2
+import ConfigParser
 from collections import namedtuple
-import automaton.lib.logger as logger
-import automaton.lib.plugin as plugin
-import automaton.lib.settings_loader as settings_loader
+from automaton.lib import logger, plugin, utils
 
 
 # http://www.wunderground.com/weather/api/d/documentation.html
@@ -17,19 +16,30 @@ class Weather(plugin.PluginInterface):
     self.API_KEY = 'c0ef2d09acaf835f'
     self.ttl = 3600  # seconds
     self.last = None  # last weather value recorded, tuple of (location, value)
-    cmd = settings_loader.load_plugin_settings(self.__class__.__name__)
-    self.locations = cmd
+    settings = ConfigParser.SafeConfigParser()
+    settings.read(utils.get_plugin_settings_paths(__name__))
     self.format = 'F'
-    if "FORMAT" in self.locations:
-      if len(self.locations["FORMAT"]) > 0:
-        temp = self.locations["FORMAT"][0].upper()
-        if temp in ('F', 'C', 'K'):
-          self.format = temp
-      # We don't want anyone to be able to search for a temp format...
-      self.locations.pop("FORMAT", None)
+    try:
+      scale = settings.get("Settings", "temp_scale").upper()
+      if scale in ('F', 'C', 'K'):
+          self.format = scale
+    except ConfigParser.Error:
+      pass
 
-    self.max_cache_distance = int(self.locations.pop("MAX_CACHE_DISTANCE", 25))
+    self.max_cache_distance = 25
+    try:
+      self.max_cache_distance = int(settings.get("Settings",
+                                                  "max_cache_distance"))
+    except (ConfigParser.Error, TypeError):
+      pass
     self.CacheItem = namedtuple('CacheItem', ['expires', 'val'])
+
+    self.locations = {}
+    try:
+      self.locations = dict((key, value) for key, value in
+        settings.items("Aliases"))
+    except ConfigParser.NoSectionError:
+      logger.log("No section 'Aliases' found in weather config file.")
 
     # remove spaces after commas - these would screw up lat/long searches
     for loc in self.locations:
@@ -231,7 +241,7 @@ class WeatherTest(plugin.RegistrationTestCase):
 
     self.assertNotEquals(out_today, out_tomorrow)
 
-  def test_more_information()
+  def test_more_information():
     out_conv = self.plugin.execute(
       **{'where': "college station", 'when': "tomorrow"})
     self.assertTrue(out_conv.next().startswith("Did you mean"))

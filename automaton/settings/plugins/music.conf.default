@@ -1,2 +1,3 @@
-mpdserver = localhost
+[MPD]
+hostname = localhost
 port = 6600

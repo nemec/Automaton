@@ -1,1 +1,2 @@
-DOWNLOAD_DIR = /home/user/downloads/
+[Downloads]
+download_dir = /home/user/downloads/

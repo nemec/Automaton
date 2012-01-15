@@ -1,7 +1,9 @@
-import datetime
 import re
 import os.path
+import datetime
 import threading
+
+import autoplatform
 
 
 class locked:  # pylint: disable-msg=C0103,R0903
@@ -32,6 +34,15 @@ def get_module_name(fullname):
   else:
     return fullname[fullname.rfind('.') + 1:]
 
+def get_app_settings_paths(name):
+  name = get_module_name(name)
+  return [os.path.join(base, "apps", name + ".conf") for base in
+    autoplatform.get_dir_hierarchy()]
+
+def get_plugin_settings_paths(name):
+  name = get_module_name(name)
+  return [os.path.join(base, "plugins", name + ".conf") for base in
+    autoplatform.get_dir_hierarchy()]
 
 # Adapted from:
 # http://stackoverflow.com/questions/493174/

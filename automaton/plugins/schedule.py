@@ -2,8 +2,9 @@ import os
 import sys
 import datetime
 import threading
+import ConfigParser
 
-from automaton.lib import utils, plugin, logger, settings_loader, autoplatform
+from automaton.lib import utils, plugin, logger, autoplatform
 from automaton.lib.persistent_queue import PersistentPriorityQueue
 
 if sys.version_info < (2, 7):
@@ -45,18 +46,21 @@ class Schedule(plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(Schedule, self).__init__(registrar)
-    self.ops = {"QUEUE_FILE": None}
-    self.ops.update(settings_loader.load_plugin_settings(__name__))
+    self.settings = ConfigParser.SafeConfigParser()
+    self.settings.read(utils.get_plugin_settings_paths(__name__))
 
-    if self.ops["QUEUE_FILE"] is None:
-      self.ops["QUEUE_FILE"] = autoplatform.get_existing_file("schedule.queue")
+    if not self.settings.has_option("Settings", "queue_file"):
+      self.settings.set("Settings", "queue_file",
+        autoplatform.get_existing_file("schedule.queue"))
     else:
-      if not os.access(self.ops["QUEUE_FILE"], os.W_OK):
-        self.ops["QUEUE_FILE"] = None
+      if not os.access(self.settings.get("Settings", "queue_file"), os.W_OK):
+        self.settings.set("Settings", "queue_file", None)
 
-    self.queue = PersistentPriorityQueue(storagefile=self.ops["QUEUE_FILE"])
+    self.queue = PersistentPriorityQueue(
+      storagefile=self.settings.get("Settings", "queue_file"))
 
-    if self.ops["QUEUE_FILE"] is None:
+    if not self.settings.has_option("Settings", "queue_file") or
+      self.settings.get("Settings", "queue_file") is None:
       logger.log("Scheduler could not find an existing queue file and "
                  "no write access to create a new one. Any scheduled tasks "
                  "will disappear once server is stopped.")

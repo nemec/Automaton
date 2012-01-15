@@ -1,6 +1,5 @@
-import automaton.lib.logger as logger
-import automaton.lib.plugin as plugin
-import automaton.lib.settings_loader as settings_loader
+import ConfigParser
+from automaton.lib import logger, plugin, utils
 
 
 #Inserts your specified text into a "memo" textfile
@@ -11,8 +10,9 @@ class Memo(plugin.PluginInterface):
     super(Memo, self).__init__(registrar)
 
     # Load command settings from a configuration file
-    self.cmd_op = settings_loader.load_plugin_settings(__name__)
-    if "MEMO_FILE" not in self.cmd_op:
+    self.settings = ConfigParser.SafeConfigParser()
+    self.settings.read(utils.get_plugin_settings_paths(__name__))
+    if not self.settings.has_option('Settings', 'memo_file'):
       raise plugin.PluginLoadError(
           "Error: no memo file provided in the config.")
 
@@ -40,7 +40,7 @@ class Memo(plugin.PluginInterface):
     """
     if "memo" in kwargs:
       try:
-        with open(self.cmd_op['MEMO_FILE'], "a") as fil:
+        with open(self.settings.get('Settings', 'memo_file'), "a") as fil:
           fil.write(kwargs["memo"] + "\n")
         return "Inserted into memo file."
       except IOError, err:

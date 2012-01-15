@@ -1,4 +1,8 @@
-USER = bot_username
-PASS = bot_password
-MASTER = controller_username
-PASSPHRASE = puppies
+[Automaton]
+thrift_server = localhost
+
+[Settings]
+username = aim_user
+password = aim_password
+master = master_username
+passphrase = puppies

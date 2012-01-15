@@ -4,7 +4,10 @@
 # Optionally, a format may be provided. Default value is F, legal values are:
 #  F, Farenheit
 #  C, Celseus
-format = F
+[Settings]
+temp_scale = F
+max_cache_distance = 25
 
+[Aliases]
 home = (lat,lng)
 school = (lat,lng)

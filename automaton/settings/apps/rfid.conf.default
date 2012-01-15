@@ -1,2 +1,5 @@
-dbpass = password
-thrift_server = localhosts
+[Automaton]
+thrift_server = localhost
+
+[Database]
+password = pass

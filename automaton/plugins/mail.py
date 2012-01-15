@@ -1,7 +1,7 @@
+import ConfigParser
 import subprocess as sp
 
 import automaton.lib.plugin as plugin
-import automaton.lib.settings_loader as settings_loader
 
 
 def platform():
@@ -30,17 +30,19 @@ class Mail(plugin.PluginInterface):
     """Retrieve mail from a GMail account through curl."""
 
     # Load command settings from a configuration file
-    cmd_op = settings_loader.load_plugin_settings(__name__)
-    if not 'MAIL_USER' in cmd_op or not 'MAIL_PASS' in  cmd_op:
+    settings = ConfigParser.SafeConfigParser()
+    settings.read(utils.get_plugin_settings_paths(__name__))
+    try:
+      username = settings.get("Credentials", "username")
+      password = settings.get("Credentials", "password")
+    except ConfigParser.NoOptionError:
       raise plugin.UnsuccessfulExecution("Error: username/password "
                                           "not provided in settings file.")
-    user = cmd_op["MAIL_USER"]
-    pas = cmd_op["MAIL_PASS"]
     cmd = ("curl -u {0}:{1} --silent \"https://mail.google.com/mail/"
             "feed/atom\" | tr -d '\n' | awk -F '<entry>' '{"
             "for (i=2; i<=NF; i++) {print $i}}' | "
             "sed -n \"s/<title>\\(.*\)<\\/title.*name>\\(.*\\)"
-            "<\\/name>.*/\\2 - \\1/p\"".format(user, pas))
+            "<\\/name>.*/\\2 - \\1/p\"".format(username, password))
     proc = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
     out, err = proc.communicate()
     if out == "":

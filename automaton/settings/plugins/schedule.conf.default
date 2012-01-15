@@ -1,1 +1,2 @@
-QUEUE_FILE = /home/user/.automaton/schedulefile
+[Settings]
+queue_file = /home/user/.automaton/schedulefile

@@ -1,16 +1,37 @@
 # requires mpd.py from
 # http://code.google.com/p/client175/source/browse/trunk/mpd.py
 import mpd
+import ConfigParser
 
 import automaton.lib.plugin
+from automaton.lib import utils, logger
 
 
 class Music(automaton.lib.plugin.PluginInterface):
   """Plugin that interfaces with MPD to play music."""
   def __init__(self, registrar):
     super(Music, self).__init__(registrar)
+    settings = ConfigParser.SafeConfigParser()
+    settings.read(utils.get_plugin_settings_paths(__name__))
+    hostname = "localhost"
+    port = 6600
+    try:
+      hostname = settings.get("MPD", "hostname")
+      port = settings.get("MPD", "port")
+    except ConfigParser.NoSectionError:
+      raise plugin.PluginLoadError("'MPD' section in config does not exist.")
+    except ConfigParser.NoOptionError as e:
+      if e.section == "hostname":
+        logger.log("MPD hostname not in settings. "
+                    "Using default of '{0}'".format(hostname))
+      elif e.section == "port":
+        logger.log("MPD port not in settings. "
+                    "Using default of '{0}'".format(port))
+    except TypeError as e:
+      logger.log("Error loading settings for MPD. Using host and port "
+                  "{0}:{1}.".format(hostname, port))
     self.client = mpd.MPDClient()
-    self.client.connect("localhost", 6600)
+    self.client.connect(hostname, port)
     self.version = tuple(int(i) for i in self.client.mpd_version.split('.'))
     
     registrar.register_service("play", self.play,

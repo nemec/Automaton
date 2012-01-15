@@ -3,10 +3,10 @@ import urllib
 import pickle
 import httplib2
 import simplejson
+import ConfigParser
 
 import automaton.lib.utils as utils
 import automaton.lib.plugin as plugin
-import automaton.lib.settings_loader as settings_loader
 
 try:
   from apiclient.discovery import build
@@ -87,15 +87,19 @@ class Latitude(plugin.PluginInterface):
       into a human-readable location. (default False)
 
     """
-    cmd_op = settings_loader.load_plugin_settings(__name__)
-    if not 'AUTHPATH' in cmd_op:
-      raise plugin.UnsuccessfulExecution("Server not authenticated "
-                                "with Google Latitude.")
+    settings = ConfigParser.SafeConfigParser()
+    settings.read(utils.get_plugin_settings_paths(__name__))
 
     try:
-      auth = open(cmd_op['AUTHPATH'], "r")
+      auth = open(settings.get('Settings', 'AUTHPATH'), "r")
       credentials = pickle.loads(auth.read())
       auth.close()
+    except ConfigParser.NoSectionError:
+      raise plugin.UnsuccessfulExecution("'Settings' section missing from "
+                                          "config file.")
+    except ConfigParser.NoOptionError:
+      raise plugin.UnsuccessfulExecution("Server not authenticated "
+                                "with Google Latitude.")
     except IOError:
       raise plugin.UnsuccessfulExecution("Error opening authentication file.")
 

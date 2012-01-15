@@ -37,7 +37,7 @@ class ClientWrapper(ClientInterface):
         self.transport.open()
         self.clientid = self.client.registerClient(self.appname)
         return
-      except ClientException:
+      except automaton.lib.exceptions.ClientError:
         logger.log("Failed to connect to Thrift server. "
                     "Retrying in {0} seconds.".format(x))
         time.sleep(x)

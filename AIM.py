@@ -2,13 +2,14 @@
 
 import re
 import sys
+import ConfigParser
 import htmlentitydefs
 from twisted.words.protocols import oscar
 from twisted.internet import protocol, reactor
 from twisted.internet.error import ConnectionDone
 
 import automaton.client.thrift as thrift_client
-from automaton.lib import exceptions, logger, settings_loader
+from automaton.lib import exceptions, logger, utils
 
 
 ## unescape
@@ -47,13 +48,21 @@ op = {'HOST': 'login.oscar.aol.com',
       'THRIFT_SERVER': 'tails.local'
      }
 
-op.update(settings_loader.load_app_settings(sys.argv[0]))
+settings = ConfigParser.SafeConfigParser()
+settings.read(utils.get_app_settings_paths("AIM"))
+try:
+  if not settings.has_option("AIM", "oscar_host"):
+    settings.set("AIM", "oscar_host", "login.oscar.aol.com")
+  if not settings.has_option("AIM", "oscar_port"):
+    settings.set("AIM", "oscar_port", "5190")
 
-# Fail if authentication info is not present.
-for operator in ('USER', 'PASS', 'MASTER'):
-  if op[operator] == '':
+  if not (settings.has_option("AIM", "username") and
+          settings.has_option("AIM", "password") and
+          settings.has_option("AIM", "master")):
     logger.log("Missing necessary credentials to log in to AIM.")
     sys.exit()
+except ConfigParser.NoSectionError as err:
+  print "AIM config file has no section '{0}'".format(err.section)
 
 
 class B(oscar.BOSConnection):
@@ -79,10 +88,11 @@ class B(oscar.BOSConnection):
     def receiveMessage(self, user, multiparts, flags):
         username = user.name.upper()
         # Strips HTML tags
-        body = re.sub(r'<.*?>', '', multiparts[0][0].strip())
-        if (username != op['MASTER'].upper() and
+        body = re.sub(r'<.*?>', '', multiparts[0][0]).strip()
+        if (username != settings.get("AIM", "master").upper() and
                        username not in self.factory.authenticated_users):
-          if op.get('PASSPHRASE', None) == body:
+          if (settings.has_option("AIM", "passphrase") and 
+              settings.get("AIM", "passphrase") == body):
             self.factory.authenticated_users.append(username)
             multiparts[0] = ("Passphrase accepted.", )
           else:
@@ -121,14 +131,17 @@ class AIMClientFactory(protocol.ReconnectingClientFactory):
 
   def __init__(self):
     self.authenticated_users = []
-    self.client = thrift_client.ClientWrapper(op['THRIFT_SERVER'],
+    thrift_server = settings.get("Automaton", "thrift_server")
+    self.client = thrift_client.ClientWrapper(thrift_server,
                                               appname='AIM')
     self.client.open()
     self.client.allowAllServices()
 
   def buildProtocol(self, addr):
-    #return protocol.ClientCreator(reactor, OA, op['USER'], op['PASS'])
-    proto = OA(op['USER'], op['PASS'])
+    username = settings.get("AIM", "username")
+    password = settings.get("AIM", "password")
+    #return protocol.ClientCreator(reactor, OA, username, password)
+    proto = OA(username, password)
     proto.factory = self
     return proto
 
@@ -143,5 +156,7 @@ class AIMClientFactory(protocol.ReconnectingClientFactory):
                                                     connector, reason)
 
 
-reactor.connectTCP(op['HOST'], int(op['PORT']), AIMClientFactory())
+reactor.connectTCP(settings.get("AIM", "oscar_host"),
+                  int(settings.get("AIM", "oscar_port")),
+                  AIMClientFactory())
 reactor.run()
