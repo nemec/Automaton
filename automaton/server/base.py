@@ -33,7 +33,7 @@ class AutomatonServer(object):
     for plugin in automaton.plugins.__all__:
       try:
         self.enablePlugin(plugin)
-      except Exception as e:
+      except Exception as e:  # pylint: disable-msg=W0703
         logger.log("Error loading module {0}.".format(plugin), e)
 
   def enablePlugin(self, name):
@@ -84,6 +84,11 @@ class AutomatonServer(object):
         plugin.lock.release()
 
   def get_client(self, clientid):
+    """
+    Retrieves the client for the given clientid
+    and updates its last-accessed time.
+    
+    """
     if clientid not in self.client_manager.registered_clients:
       raise exceptions.ClientNotRegisteredError()
     client = self.client_manager.registered_clients[clientid]
@@ -213,11 +218,7 @@ class AutomatonServer(object):
         output = None
         limit = 1  # How many results to try before quitting
         try:
-          for (ix, (command, namespace, args)) in enumerate(matches):
-            if ix == limit:
-              break
-            #args = self.sanitizer.alias(args)
-            #args = self.sanitizer.sanitize(args)
+          for (ix, (command, namespace, args)) in zip(xrange(limit), matches):
             output = self.registrar.request_service(
               svc_name=command, namespace=namespace, argdict=args)
             if output:
@@ -266,13 +267,10 @@ class AutomatonServer(object):
       raise exceptions.ServiceNotProvidedError()
     return ret
 
-
   def _start(self):
     """Start the server. Should be implemented in a subclass."""
     pass
 
-
-  """ Start server initialization functions """
   def start(self):
     """Start the server.
     Ensures any networking is done in a separate thread from the UI.

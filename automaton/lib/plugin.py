@@ -32,7 +32,7 @@ class RegistrationTestCase(unittest.TestCase):
   be automatically created and destroyed during each test case setup.
 
   """
-  plugin_type = None
+  plugin_class = None
 
   def setUp(self):
     """
@@ -41,10 +41,10 @@ class RegistrationTestCase(unittest.TestCase):
     """
     self.registrar = registrar.Registrar()
 
-    self.assertIsNotNone(self.plugin_type, 
+    self.assertIsNotNone(self.plugin_class, 
       "plugin_type attribute must be defined in subclasses of "
       "RegistrationTestCase.")
-    self.plugin = self.plugin_type(self.registrar)
+    self.plugin = self.plugin_class(self.registrar)
 
   def test_disable(self):
     """Automated test to ensure disabling a plugin cleans up the registrar."""

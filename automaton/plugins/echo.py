@@ -25,7 +25,7 @@ class Echo(automaton.lib.plugin.PluginInterface):
 
 class EchoTest(automaton.lib.plugin.RegistrationTestCase):
   """Test case for the Echo plugin."""
-  plugin_type = Echo
+  plugin_class = Echo
 
   def test_grammar(self):
     """Check that the interpreter correctly parses sample input."""

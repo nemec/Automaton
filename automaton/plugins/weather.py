@@ -184,7 +184,7 @@ class Weather(plugin.PluginInterface):
 import unittest
 class WeatherTest(plugin.RegistrationTestCase):
   """Test case for the Weather Plugin."""
-  plugin_type = Weather
+  plugin_class = Weather
 
   def test_grammar(self):
     """Check that the interpreter correctly parses sample input."""

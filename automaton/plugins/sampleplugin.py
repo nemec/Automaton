@@ -84,7 +84,7 @@ class Sample(automaton.lib.plugin.PluginInterface):
 
 class SampleTest(automaton.lib.plugin.RegistrationTestCase):
   """Test case describing how to test a plugin."""
-  plugin_type = Sample
+  plugin_class = Sample
 
   # the disable() function is tested automatically by the superclass
   # please do not overwrite test_disable
