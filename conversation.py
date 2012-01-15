@@ -28,5 +28,5 @@ try:
 
 except exceptions.ClientError as tx:
   print repr(tx.message)
-except KeyboardInterrupt:
+except (KeyboardInterrupt, EOFError):
   pass

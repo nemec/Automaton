@@ -4,6 +4,7 @@ import json
 import urllib2
 import ConfigParser
 from collections import namedtuple
+from automaton.lib.data import abbreviations as abbrev
 from automaton.lib import logger, plugin, utils
 
 
@@ -51,7 +52,7 @@ class Weather(plugin.PluginInterface):
     
     grammar = {
       "when": ["for", "be like"],
-      "where": ["at","near","in"],
+      "where": ["at","near","in", 'for'],
     }
 
     registrar.register_service("weather", self.execute, grammar=grammar,
@@ -95,7 +96,7 @@ class Weather(plugin.PluginInterface):
           self.last = None
       raise plugin.UnsuccessfulExecution("No recent data stored.")
 
-    if len(kwargs) == 0:
+    if "where" not in kwargs:
       try:
         # Try to call on latitude plugin to get the current location
         kwargs["where"] = re.sub("[() ]", "",
@@ -154,21 +155,30 @@ class Weather(plugin.PluginInterface):
           ret += "the state"
           if len(states) > 1:
             ret += "s"
-          ret += ' ' + ', '.join(x.upper() for x in states)
+          ret += ' ' + utils.humanize_join(
+              abbrev.states.try_long(x).capitalize() for x in states)
         if len(countries) > 0:
           if len(states) > 0:
             ret += " or "
           ret += "the country"
           if len(countries) > 1:
             ret += "s"
-          ret += ' ' + ', '.join(x.upper() for x in countries)
+          ret += ' ' + utils.humanize_join(
+              abbrev.countries.try_long(x).capitalize() for x in countries)
         ret += "?"
         # TODO better parsing of conversation arguments
         cont = (yield ret)['_raw'].split()
         old_results = results
-        results = [res for res in results if
-                    res['state'].lower() in cont or
-                    res['country'].lower() in cont]
+        results = []
+        for word in cont:
+          # Try to convert long name to abbrev
+          state = abbrev.states.try_short(word)
+          country = abbrev.countries.try_short(word)
+          for result in old_results:
+            if result['state'].lower() == state.lower():
+              results.append(result)
+            elif result['country'].lower() == country.lower():
+              results.append(result)
         if len(results) == 0:  # Invalid input was given, back up
           results = old_results
       query = results[0]['l'] + '.json'

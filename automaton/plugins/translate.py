@@ -3,6 +3,7 @@ from urllib import urlencode
 import unicodedata
 
 import automaton.lib.plugin
+from automaton.lib.data.abbreviations import language_codes
 
 # pylint: disable-msg=W0101
 raise automaton.lib.plugin.PluginLoadError(
@@ -17,60 +18,6 @@ def platform():
 
 class Translate(automaton.lib.plugin.PluginInterface):
   """Translate text from one language to another by name or language code."""
-  language_codes = {
-    "afrikaans": "af",
-    "albanian": "sq",
-    "arabic": "ar",
-    "belarusian": "be",
-    "bulgarian": "bg",
-    "catalan": "ca",
-    "chinese simplified": "zh-CN",
-    "chinese traditional": "zh-TW",
-    "croatian": "hr",
-    "czech": "cs",
-    "danish": "da",
-    "dutch": "nl",
-    "english": "en",
-    "estonian": "et",
-    "filipino": "tl",
-    "finnish": "fi",
-    "french": "fr",
-    "galician": "gl",
-    "german": "de",
-    "greek": "el",
-    "hebrew": "iw",
-    "hindi": "hi",
-    "hungarian": "hu",
-    "icelandic": "is",
-    "indonesian": "id",
-    "irish": "ga",
-    "italian": "it",
-    "japanese": "ja",
-    "korean": "ko",
-    "latvian": "lv",
-    "lithuanian": "lt",
-    "macedonian": "mk",
-    "malay": "ms",
-    "maltese": "mt",
-    "norwegian": "no",
-    "persian": "fa",
-    "polish": "pl",
-    "portuguese": "pt",
-    "romanian": "ro",
-    "russian": "ru",
-    "serbian": "sr",
-    "slovak": "sk",
-    "slovenian": "sl",
-    "spanish": "es",
-    "swahili": "sw",
-    "swedish": "sv",
-    "thai": "th",
-    "turkish": "tr",
-    "ukrainian": "uk",
-    "vietnamese": "vi",
-    "welsh": "cy",
-    "yiddish": "yi"
-  }
 
   def __init__(self, registrar):
     super(Translate, self).__init__(registrar)
@@ -103,8 +50,14 @@ class Translate(automaton.lib.plugin.PluginInterface):
     if "from" not in kwargs:
       return "Please provide the language of the message."
 
-    lang1 = self.language_codes.get(kwargs["from"].lower(), kwargs["from"])
-    lang2 = self.language_codes.get(kwargs["from"].lower(), kwargs["from"])
+    if kwargs['from'] in language_codes.long:
+      lang1 = language_codes[kwargs['from']]
+    else:
+      lang1 = kwargs['from']
+    if kwargs['to'] in language_codes.long:
+      lang2 = language_codes[kwargs['to']]
+    else:
+      lang2 = kwargs['to']
     langpair = '{0}|{1}'.format(lang1, lang2)
     text = kwargs["text"]
     

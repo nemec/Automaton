@@ -17,6 +17,7 @@ class locked:  # pylint: disable-msg=C0103,R0903
   def __exit__(self, typ, value, traceback):
     self.lock.release()
 
+
 def spawn_thread(func, *args):
   """Utility function for spawning a new thread by running the
   given function with the specified arguments.
@@ -27,6 +28,7 @@ def spawn_thread(func, *args):
   thread.start()
   return thread
 
+
 def get_module_name(fullname):
   """Pulls module name (eg. AIM) out of path (eg. /home/user/AIM.py)"""
   if fullname.endswith("py"):
@@ -34,15 +36,32 @@ def get_module_name(fullname):
   else:
     return fullname[fullname.rfind('.') + 1:]
 
+
 def get_app_settings_paths(name):
   name = get_module_name(name)
   return [os.path.join(base, "apps", name + ".conf") for base in
     autoplatform.get_dir_hierarchy()]
 
+
 def get_plugin_settings_paths(name):
   name = get_module_name(name)
   return [os.path.join(base, "plugins", name + ".conf") for base in
     autoplatform.get_dir_hierarchy()]
+
+
+def humanize_join(iterable, separator=', ',
+                  conjunction='or', oxford_comma=True):
+  lst = list(iterable)
+  string = separator.join(lst)
+  if len(lst) > 1:
+    last = lst[-1]
+    if not oxford_comma or len(lst) == 2:
+      start = string[:-len(last)-2] + " " # Remove the last comma
+    else:
+      start = string[:-len(last)]
+    return ''.join([start, conjunction, ' ', string[-len(last):]])
+  else:
+    return string
 
 # Adapted from:
 # http://stackoverflow.com/questions/493174/
