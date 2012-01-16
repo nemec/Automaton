@@ -47,7 +47,6 @@ class Sample(automaton.lib.plugin.PluginInterface):
     title -- your name (default 'tim')
 
     """
-    
     def callback(obj):
       """Called whenever "cool stuff" is updated."""
       print obj
@@ -66,8 +65,6 @@ class Sample(automaton.lib.plugin.PluginInterface):
       return "Hello, {0}".format(name)
     except ServiceDoesNotExist:
       return "This it thrown when you request a service that is not registered."
-    return echo
-
 
   def converse(self, **kwargs):
     """Example for using a generator to hold a conversation.

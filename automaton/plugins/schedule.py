@@ -59,8 +59,8 @@ class Schedule(plugin.PluginInterface):
     self.queue = PersistentPriorityQueue(
       storagefile=self.settings.get("Settings", "queue_file"))
 
-    if not self.settings.has_option("Settings", "queue_file") or
-      self.settings.get("Settings", "queue_file") is None:
+    if (not self.settings.has_option("Settings", "queue_file") or
+        self.settings.get("Settings", "queue_file") is None):
       logger.log("Scheduler could not find an existing queue file and "
                  "no write access to create a new one. Any scheduled tasks "
                  "will disappear once server is stopped.")

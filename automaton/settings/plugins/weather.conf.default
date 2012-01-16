@@ -7,6 +7,7 @@
 [Settings]
 temp_scale = F
 max_cache_distance = 25
+wunderground_api_key = skju8ekks
 
 [Aliases]
 home = (lat,lng)

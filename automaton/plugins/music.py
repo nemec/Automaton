@@ -20,14 +20,14 @@ class Music(automaton.lib.plugin.PluginInterface):
       port = settings.get("MPD", "port")
     except ConfigParser.NoSectionError:
       raise plugin.PluginLoadError("'MPD' section in config does not exist.")
-    except ConfigParser.NoOptionError as e:
-      if e.section == "hostname":
+    except ConfigParser.NoOptionError as err:
+      if err.section == "hostname":
         logger.log("MPD hostname not in settings. "
                     "Using default of '{0}'".format(hostname))
-      elif e.section == "port":
+      elif err.section == "port":
         logger.log("MPD port not in settings. "
                     "Using default of '{0}'".format(port))
-    except TypeError as e:
+    except TypeError:
       logger.log("Error loading settings for MPD. Using host and port "
                   "{0}:{1}.".format(hostname, port))
     self.client = mpd.MPDClient()

@@ -1,7 +1,7 @@
 import ConfigParser
 import subprocess as sp
 
-import automaton.lib.plugin as plugin
+from automaton.lib import plugin, utils
 
 
 def platform():

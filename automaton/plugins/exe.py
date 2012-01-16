@@ -8,8 +8,8 @@ class Exe(automaton.lib.plugin.PluginInterface):
   def __init__(self, registrar):
     super(Exe, self).__init__(registrar)
     grammar = {"command": []}
-    usage = "USAGE: %s command\n"
-            "Provide a command that will be executed in a spawned shell."
+    usage = ("USAGE: %s command\n"
+            "Provide a command that will be executed in a spawned shell.")
     registrar.register_service("exe", self.execute, grammar=grammar,
       usage=usage, namespace=__name__)
     registrar.register_service("execute", self.execute, grammar=grammar,

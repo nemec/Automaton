@@ -14,16 +14,20 @@ class Weather(plugin.PluginInterface):
 
   def __init__(self, registrar):
     super(Weather, self).__init__(registrar)
-    self.API_KEY = 'c0ef2d09acaf835f'
     self.ttl = 3600  # seconds
     self.last = None  # last weather value recorded, tuple of (location, value)
     settings = ConfigParser.SafeConfigParser()
     settings.read(utils.get_plugin_settings_paths(__name__))
+    try:
+      self.api_key = settings.get("Settings", "wunderground_api_key")
+    except ConfigParser.Error:
+      raise automaton.lib.plugin.PluginLoadError("Must provide "
+        "wunderground_api_key in Settings.")
     self.format = 'F'
     try:
       scale = settings.get("Settings", "temp_scale").upper()
       if scale in ('F', 'C', 'K'):
-          self.format = scale
+        self.format = scale
     except ConfigParser.Error:
       pass
 
@@ -131,7 +135,7 @@ class Weather(plugin.PluginInterface):
         else:
           self.cache.pop(location, None)
 
-    url = "http://api.wunderground.com/api/{0}/forecast".format(self.API_KEY)
+    url = "http://api.wunderground.com/api/{0}/forecast".format(self.api_key)
     query = "/q/{0}.json".format(re.sub('\s+', '_', location))
 
     resp = json.load(urllib2.urlopen(urllib2.Request(url + query)))
@@ -243,17 +247,17 @@ class WeatherTest(plugin.RegistrationTestCase):
   def test_api(self):
     """Test the WeatherUnderground API to ensure it works."""
     out_today = self.plugin.execute(
-      **{'where': "college station texas", 'when': "today"}).next()
+      where="college station texas", when="today").next()
     self.assertTrue("Highs" in out_today or "Lows" in out_today)
     out_tomorrow = self.plugin.execute(
-      **{'where': "college station texas", 'when': "tomorrow"}).next()
+      where="college station texas", when="tomorrow").next()
     self.assertTrue("Highs" in out_tomorrow or "Lows" in out_tomorrow)
 
     self.assertNotEquals(out_today, out_tomorrow)
 
-  def test_more_information():
-    out_conv = self.plugin.execute(
-      **{'where': "college station", 'when': "tomorrow"})
+  def test_more_information(self):
+    """Test the conversation support when insufficient information provided."""
+    out_conv = self.plugin.execute(where="college station", when="tomorrow")
     self.assertTrue(out_conv.next().startswith("Did you mean"))
     final = out_conv.send({'_raw': 'tx'})
     self.assertTrue("Highs" in final or "Lows" in final)

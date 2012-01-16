@@ -83,16 +83,22 @@ class AutomatonServer(object):
       finally:
         plugin.lock.release()
 
-  def get_client(self, clientid):
+  def get_client(self, clientid, touch_client=True):
     """
     Retrieves the client for the given clientid
     and updates its last-accessed time.
+    
+    Keyword Arguments:
+    clientid -- a unique id assigned to the client when registering
+    touch_client -- Whether or not to update the last_contact time of
+      the client
     
     """
     if clientid not in self.client_manager.registered_clients:
       raise exceptions.ClientNotRegisteredError()
     client = self.client_manager.registered_clients[clientid]
-    client.last_contact = time.time()
+    if touch_client:
+      client.last_contact = time.time()
     return client
 
   def registerClient(self, appname=None):
@@ -194,14 +200,19 @@ class AutomatonServer(object):
     UnknownIntentError
 
     """
-    client = self.get_client(clientid)
+    client = self.get_client(clientid, touch_client=False)
     with utils.locked(client.lock):
+      # TODO put conversation_timeout in settings
+      conversation_timeout = 10  # seconds
+      if client.last_contact + conversation_timeout < time.time():
+        client.current_conversation = None
+      client.last_contact = time.time()
       # Continue a previous conversation
       if client.current_conversation is not None:
         try:
           kwargs = {"_raw": raw.lower()}
           output = client.current_conversation.send(kwargs)
-        except StopIteration:
+        except (StopIteration, AttributeError) as e:
           client.current_conversation = None
       # Start a new conversation
       if client.current_conversation is None:
@@ -216,16 +227,20 @@ class AutomatonServer(object):
             "Execution failed: could not find a registered command.")
 
         output = None
+        # TODO move limit to settings file
         limit = 1  # How many results to try before quitting
         try:
+          # Zip terminates with shortest sequence, so stops after
+          # matches end or `limit` iterations
           for (ix, (command, namespace, args)) in zip(xrange(limit), matches):
-            output = self.registrar.request_service(
+            conversation = self.registrar.request_service(
               svc_name=command, namespace=namespace, argdict=args)
-            if output:
-              if isinstance(output, GeneratorType):
-                client.current_conversation = output
-                output = output.next()
-              else:
+            if conversation:  # Service returns None if it can't handle input
+              try:
+                output = conversation.next()
+                client.current_conversation = conversation
+              except AttributeError as e:  # Not a generator, get string output
+                output = str(conversation)
                 client.history.append((command, args))
               break  # We got some good output, don't continue to the next
         except UnsuccessfulExecution as e:
