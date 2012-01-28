@@ -26,4 +26,4 @@ try:
     client.close()
 
 except exceptions.ClientError as tx:
-  print repr(tx.message)
+  print repr(tx)

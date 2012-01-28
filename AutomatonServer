@@ -7,18 +7,21 @@ if __name__=="__main__":
   servertype = "local"
   server = None
 
-  withgui = True
+  withgui = False
 
   for arg in sys.argv[1:]:
     arg = arg.lower()
-    if arg == '--nogui':
-      withgui = False
+    if arg == '--withgui':
+      withgui = True
     else:
       servertype = arg
       break
 
-  if servertype not in ("cherry", "bottle", "thrift", "pyro", "local"):
-    print "USAGE: AutomatonServer [--nogui] [cherry|bottle|thrift|pyro]"
+#  if servertype not in ("cherry", "bottle", "thrift", "pyro", "local"):
+#    print "USAGE: AutomatonServer [--withgui] [cherry|bottle|thrift|pyro|local]"
+#    sys.exit()
+    if servertype not in ("cherry", "local"):
+      print "USAGE: AutomatonServer [--withgui] [cherry|local]"
     sys.exit()
 
   if servertype == "local" and not withgui:
@@ -29,25 +32,16 @@ if __name__=="__main__":
     from automaton.server.base import AutomatonServer
     server = AutomatonServer(withgui=withgui)
     
-  if servertype == "cherry":
-    #try:
-    from automaton.server.cherry import CherryServer
-    server = CherryServer(withgui=withgui)
-    print "Using CherryPy"
-#    except ImportError as err:
-#      print "CherryPy failed to import - falling back to Thrift:", err
-#      servertype = "thrift"
+  else:
+    try:
+      from automaton.server.cherry import CherryServer
+      server = CherryServer(withgui=withgui)
+      print "Using CherryPy"
+    except ImportError as err:
+      print "CherryPy failed to import - falling back to Thrift:", err
+      servertype = "thrift"
 
-#  if servertype == "bottle":
-#    try:
-#      from automaton.server.bottle import BottleServer
-#      server = BottleServer(withgui=withgui)
-#      print "Using Bottle"
-#    except ImportError as err:
-#      print "Bottle failed to import - falling back to Thrift:", err
-#      servertype = "thrift"
-
-  # Not elseif so that we can fallthrough if bottle fails
+  # Not elseif so that we can fallthrough if CherryPy fails
   if servertype == "thrift":
     try:
       from automaton.server.thrift import ThriftServer

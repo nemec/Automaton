@@ -18,7 +18,7 @@ from automaton.lib.plugin import PluginInterface, UnsuccessfulExecution
 class AutomatonServer(object):
   """Base class for the Automaton Server."""
   def __init__(self, withgui=False):
-    self.needsgui = withgui
+    self.withgui = withgui
 
     self.registrar = registrar.Registrar()
     self.sanitizer = input_sanitizer.InputSanitizer(self.registrar)
@@ -253,6 +253,16 @@ class AutomatonServer(object):
     
     return output
 
+  def findServices(self, query):
+    """Retrieves a list of namespaces and services that match
+    the query.
+    
+    Keyword arguments:
+      query -- the search string
+
+    """
+    return self.registrar.find_services(query)
+
   def isService(self, name):
     """Tests if the specified service is provided or not.
     Querying is possible even when unregistered.
@@ -291,23 +301,18 @@ class AutomatonServer(object):
     Ensures any networking is done in a separate thread from the UI.
 
     """
-    if hasattr(self, "_start"):
-      # Spawn a second thread for the _start method
-      if self.needsgui:
+    if self.withgui:
+      try:
+        import gtk
+        import automaton.lib.ui as ui
+        ui.StatusIcon(self)
         thread = threading.Thread(target=self._start)
         thread.setDaemon(True)
         thread.start()
-        self.load_gui()  # Should block if gui is correctly loaded
-      self._start()
-
-  def load_gui(self):
-    """Load the UI."""
-    try:
-      import gtk
-      import automaton.lib.ui as ui
-      ui.StatusIcon(self)
-      gtk.gdk.threads_init()
-      gtk.main()
-    except ImportError:
-      logger.log("gtk toolkit not present, so no graphical "
-                  "user interface will be available.")
+        gtk.gdk.threads_init()
+        gtk.main()
+        return
+      except ImportError:
+        logger.log("gtk toolkit not present, so no graphical "
+                    "user interface will be available.")
+    self._start()
