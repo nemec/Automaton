@@ -17,8 +17,8 @@ if __name__=="__main__":
       servertype = arg
       break
 
-  if servertype not in ("thrift", "pyro", "local"):
-    print "USAGE: AutomatonServer [--nogui] [thrift|pyro]"
+  if servertype not in ("cherry", "bottle", "thrift", "pyro", "local"):
+    print "USAGE: AutomatonServer [--nogui] [cherry|bottle|thrift|pyro]"
     sys.exit()
 
   if servertype == "local" and not withgui:
@@ -28,15 +28,35 @@ if __name__=="__main__":
   if servertype == "local":
     from automaton.server.base import AutomatonServer
     server = AutomatonServer(withgui=withgui)
-  elif servertype == "thrift":
+    
+  if servertype == "cherry":
+    #try:
+    from automaton.server.cherry import CherryServer
+    server = CherryServer(withgui=withgui)
+    print "Using CherryPy"
+#    except ImportError as err:
+#      print "CherryPy failed to import - falling back to Thrift:", err
+#      servertype = "thrift"
+
+#  if servertype == "bottle":
+#    try:
+#      from automaton.server.bottle import BottleServer
+#      server = BottleServer(withgui=withgui)
+#      print "Using Bottle"
+#    except ImportError as err:
+#      print "Bottle failed to import - falling back to Thrift:", err
+#      servertype = "thrift"
+
+  # Not elseif so that we can fallthrough if bottle fails
+  if servertype == "thrift":
     try:
       from automaton.server.thrift import ThriftServer
       server = ThriftServer(withgui=withgui)
       print "Using thrift"
-    except ImportError:
+    except ImportError as err:
+      print "Thrift failed to import - falling back to pyro:", err
       servertype = "pyro"
 
-  # Not elseif so that we can fallthrough if thrift fails
   if servertype == "pyro":
     try:
       from automaton.server.pyro import PyroServer

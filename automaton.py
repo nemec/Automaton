@@ -1,9 +1,9 @@
 import sys
-import automaton.client.thrift as thrift_client
+import automaton.client.rest as client_lib
 import automaton.lib.exceptions as exceptions
 
 try:
-  client = thrift_client.ClientWrapper("localhost", appname="cmd")
+  client = client_lib.ClientWrapper("localhost", appname="cmd")
   client.open()
 
   try:
