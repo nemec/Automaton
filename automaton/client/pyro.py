@@ -5,7 +5,7 @@ from automaton.client.base import ClientInterface
 
 class ClientWrapper(ClientInterface):
 
-  def __init__(self, server='localhost', port=9090, appname="AutomatonClient"):
+  def __init__(self, server='localhost', port=9090, appname="PyroClient"):
     self.appname = appname
     self.clientid = None
     self.client = Pyro.core.getProxyForURI(

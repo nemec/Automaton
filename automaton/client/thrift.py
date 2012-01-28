@@ -21,7 +21,7 @@ automaton.lib.exceptions.ClientError = Thrift.TException
 
 class ClientWrapper(ClientInterface):
 
-  def __init__(self, server='localhost', port=9090, appname="AutomatonClient"):
+  def __init__(self, server='localhost', port=9090, appname="ThriftClient"):
     ClientInterface.__init__(self, server, port)
     self.appname = appname
     self.transport = TSocket.TSocket(server, port)

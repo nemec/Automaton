@@ -8,7 +8,7 @@ class ClientInterface:
 
   # Opens a connection to the server and registers the client
   def open(self):
-    self.serviceid = None
+    pass
 
   # Unregisters from the server then closes the connection
   def close(self):

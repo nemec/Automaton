@@ -2,7 +2,11 @@
 # from:http://pypi.python.org/pypi/simplejson
 # Example code found at: http://dcortesi.com/
 import urllib
-import simplejson
+try:
+  import simplejson as json
+except ImportError:
+  import json
+  
 import re
 import unicodedata
 
@@ -46,8 +50,8 @@ class Google(plugin.PluginInterface):
     url = ('http://ajax.googleapis.com/ajax/services/'
             'search/web?v=1.0&' + query)
     search_results = urllib.urlopen(url)
-    json = simplejson.loads(search_results.read())
-    results = json['responseData']['results']
+    response = json.loads(search_results.read())
+    results = response['responseData']['results']
     try:
       # Strips HTML formatting
       ret = re.sub(r'<[^>]*?>', '', results[0]['content'])

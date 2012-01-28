@@ -297,18 +297,17 @@ class AutomatonServer(object):
         thread = threading.Thread(target=self._start)
         thread.setDaemon(True)
         thread.start()
-        self.load_gui()
-      else:
-        self._start()
+        self.load_gui()  # Should block if gui is correctly loaded
+      self._start()
 
   def load_gui(self):
     """Load the UI."""
     try:
       import gtk
+      import automaton.lib.ui as ui
+      ui.StatusIcon(self)
+      gtk.gdk.threads_init()
+      gtk.main()
     except ImportError:
       logger.log("gtk toolkit not present, so no graphical "
                   "user interface will be available.")
-    import automaton.lib.ui as ui
-    ui.StatusIcon(self)
-    gtk.gdk.threads_init()
-    gtk.main()
