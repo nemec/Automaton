@@ -51,7 +51,7 @@ def localdir():
   if os.path.islink(root):
     root = os.path.realpath(root)
   directory = os.path.dirname(os.path.abspath(root))
-  return os.path.join(directory, "../settings/")
+  return os.path.normpath(os.path.join(directory, "../settings/"))
 
 def get_existing_file(filename, strict=False):
   """

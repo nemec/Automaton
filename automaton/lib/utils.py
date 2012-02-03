@@ -3,7 +3,7 @@ import os.path
 import datetime
 import threading
 
-import autoplatform
+from automaton.lib import autoplatform
 
 
 class locked:  # pylint: disable-msg=C0103,R0903
@@ -30,36 +30,58 @@ def spawn_thread(func, *args):
 
 
 def get_module_name(fullname):
-  """Pulls module name (eg. AIM) out of path (eg. /home/user/AIM.py)"""
-  if fullname.endswith("py"):
-    return os.path.splitext(os.path.basename(fullname))[0]
+  """Pull module name (eg. AIM) out of path (eg. /home/user/AIM.py)"""
+  basename = os.path.basename(fullname)
+  if basename.endswith("py"):
+    return os.path.splitext(basename)[0]
   else:
-    return fullname[fullname.rfind('.') + 1:]
+    return basename[basename.rfind('.') + 1:]
 
 
 def get_app_settings_paths(name):
+  """Return an ordered list of possible settings filepaths for apps."""
   name = get_module_name(name)
   return [os.path.join(base, "apps", name + ".conf") for base in
     autoplatform.get_dir_hierarchy()]
 
 
 def get_plugin_settings_paths(name):
+  """Return an ordered list of possible settings filepaths for plugins."""
   name = get_module_name(name)
   return [os.path.join(base, "plugins", name + ".conf") for base in
     autoplatform.get_dir_hierarchy()]
 
 
-def humanize_join(iterable, separator=', ',
+def humanize_join(sequence, separator=',', spacing=' ',
                   conjunction='or', oxford_comma=True):
-  lst = list(iterable)
-  string = separator.join(lst)
+  """
+  Join a list together using the English syntax of inserting a
+  conjunction before the last item.
+  
+  Keyword Arguments:
+    sequence -- The sequence to join together. Convert iterables to sequences
+      using list() if necessary.
+    separator -- The string to separate each item with.
+    spacing -- A string appended to the separator to space out sequence
+                members (such as a space in sentences).
+    conjunction -- A string to insert between the last separator and the
+      final item in the sequence.
+    oxford_comma -- Boolean value that indicates whether or not to include
+      the separator before the conjunction inserted before the last item
+      in the sequence. Since there is no consensus on whether or not to use
+      the Oxford comma, it is provided as an option.
+
+  """
+  lst = list(sequence)
+  full_sep = separator + spacing
+  string = full_sep.join(lst)
   if len(lst) > 1:
     last = lst[-1]
     if not oxford_comma or len(lst) == 2:
-      start = string[:-len(last)-2] + " " # Remove the last comma
+      start = string[:-len(last)-len(full_sep)]  # Remove the last comma
     else:
-      start = string[:-len(last)]
-    return ''.join([start, conjunction, ' ', string[-len(last):]])
+      start = string[:-len(last) - len(spacing)]
+    return ''.join([start, spacing, conjunction, spacing, string[-len(last):]])
   else:
     return string
 
@@ -81,6 +103,7 @@ def text_to_int(textnum):
   modifiers = ["", "quarter", "half", "three-quarters"]
 
   numwords["and"] = 0
+  numwords["a"] = 0
   for idx, word in enumerate(units):
     numwords[word] = idx
   for idx, word in enumerate(tens):
@@ -88,20 +111,13 @@ def text_to_int(textnum):
   for idx, word in enumerate(modifiers):
     numwords[word] = idx * .25
 
-  current = result = 0
+  current = 0
   for word in textnum.split():
     if word not in numwords:
-      # We want to ignore modifiers...
-      # Possibly want to ignore all unknowns?
-      if word not in ("a",):
-        raise Exception("Illegal word: " + word)
-      else:
-        continue
+        raise ValueError("Illegal word: " + word)
+    current += numwords[word]
 
-    increment = numwords[word]
-    current = current + increment
-
-  return result + current
+  return current
 
 
 # 5:34 pm
