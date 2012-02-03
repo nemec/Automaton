@@ -7,10 +7,11 @@ except ImportError:
 from automaton.lib import exceptions
 from automaton.client.base import ClientInterface
 
-class ClientWrapper(ClientInterface):
+class ClientWrapper(ClientInterface):  #pylint: disable-msg=C0103
   """The interface that all clients use to communicate to the server."""
   def __init__(self, server='localhost',
       path_prefix='', port=9090, appname="RESTLib"):
+    ClientInterface.__init__(self)
     self.server = server
     self.port = port
     self.appname = appname

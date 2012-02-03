@@ -1,6 +1,6 @@
 
 
-class ClientInterface:
+class ClientInterface:  #pylint: disable-msg=C0103
   """The interface that all clients use to communicate to the server."""
   def __init__(self, server='localhost', port=9090):
     self.client = None
