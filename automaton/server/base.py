@@ -203,7 +203,7 @@ class AutomatonServer(object):
     client = self.get_client(clientid, touch_client=False)
     with utils.locked(client.lock):
       # TODO put conversation_timeout in settings
-      conversation_timeout = 10  # seconds
+      conversation_timeout = 40  # seconds
       if client.last_contact + conversation_timeout < time.time():
         client.current_conversation = None
       client.last_contact = time.time()

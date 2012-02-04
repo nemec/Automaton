@@ -2,7 +2,10 @@ import time
 import urllib
 import pickle
 import httplib2
-import simplejson
+try:
+  import simplejson as json
+except ImportError:
+  import json
 import ConfigParser
 
 import automaton.lib.utils as utils
@@ -73,9 +76,9 @@ class Latitude(plugin.PluginInterface):
     url = ('http://maps.googleapis.com/maps/api/geocode/'
             'json?v=1.0&sensor=true&' + query)
     search_results = urllib.urlopen(url)
-    json = simplejson.loads(search_results.read())
-    if len(json['results']) > 0:
-      return json['results'][0]['formatted_address']
+    json_dict = json.loads(search_results.read())
+    if len(json_dict['results']) > 0:
+      return json_dict['results'][0]['formatted_address']
     else:
       return None
 

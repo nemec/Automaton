@@ -8,11 +8,6 @@ It began as a single python file that would emulate the effects of a smart phone
 through text messages and it grew as I wanted an easy way to add both scripts
 and frontends to interface with those scripts.
 
-It is implemented as a client-server architecture using the Apache Thrift
-http://wiki.apache.org/thrift/ RPC project. This allows the server to be written
-in a single language and allow easy access to the scripts from many other
-languages and remote computers.
-
 Links
 =====
 http://www.youtube.com/user/AutomatonServer
@@ -20,9 +15,9 @@ http://www.youtube.com/user/AutomatonServer
 Requirements
 ============
 
-Apache Thrift: Currently information about installing can be found on Thrift's
-webpage http://incubator.apache.org/thrift. If it moves out of incubator status,
-a quick Google search should find it.
+This application requires CherryPy, nltk, and numpy. These can be installed
+through the pip with the base_requirements.pip file, or they may be installed
+individually through your favorite package manager.
 
 Python: The server is written in Python. Originally compiled with Python 2.6.5,
 but I have since migrated to Python 2.7 and there are some scripts that require
@@ -33,24 +28,15 @@ but I have since migrated to Python 2.7 and there are some scripts that require
 Installation
 ============
 
-Linux/Mac:
-Install Apache Thrift to both the machine the server will be located on and any
-machines that will house clients.
+Install the requirements, then execute `python setup.py install` to install
+the libraries and two scripts: AutomatonServer and automaton.py.
 
-Navigate to the Automaton directory and build the thrift-python bindings with
-thrift --gen py automaton_thrift.thrift
+AutomatonServer is the Python script that starts the server; provide a server
+type (eg. cherry) as an argument to start a specific server.
 
-
-Windows:
-Thrift is difficult to install in Windows. In an effort to provide a working
-implementation on all three major platforms, an alternate server/client
-conection was developed with PYRO, a Python RMI implementation. Unfortunately,
-since PYRO is Python-only, the server loses the ability to connect with
-non-Python applications. Download PYRO from http://www.xs4all.nl/~irmen/pyro3/
-
-If you just want to install the latest "stable" version, unpack one of the
-tarballs in dist/ and execute "python setup.py install" (may need root/admin
-privileges). Otherwise, run the install command (above) in the root directory.
+automaton.py is a command line client for Automaton. Run it while the server
+is running to communicate with the server. The conversation may be ended with
+Control-C.
 
 Running
 =======
@@ -64,10 +50,10 @@ have configuration files (labeled cmd_COMMAND.conf.default in
 Automaton/settings), create copies of them and remove the ".default" extension
 (so it reads cmd_COMMAND.conf) and edit them with the required information.
 
-Run "AutomatonServer" from the terminal/command line. If everything is set up
-correctly, the program should eventually print "Starting the server...". If
-a module fails to load for any reason, it will display a log message with a
-short description of the error.
+Run "AutomatonServer cherry" from the terminal/command line to start the
+CherryPy server. If everything is set up correctly, the program should
+eventually print "Starting the server...". If a module fails to load for any
+reason, it will display a log message with a short description of the error.
 
 Pick a client application from the source directory (such as sampleclient.py
 for testing purposes). Run it with "python sampleclient.py" and it should
@@ -77,19 +63,42 @@ loaded from __init__.py)..
 Creating A New Script
 =====================
 
-A script should implement a class with the following four methods:
-  execute: This is the function that is run when the script is called by the
-    AutomatonServer. Takes one argument - a string that contains any arguments
-    provided by the calling program.
-  grammar (optional): This is a method that returns a string containing a format
-    that the interpreter can use to turn "natural language" into the correct
-    format for the script. Currently it's terribly naive, have a look at some
-    existing scripts for an example of how to write it. This is optional - if
-    missing, the script will not be available to the interpreter.
-  platform: This returns a list of all platforms supported by the script.
-    Currently, the only platforms supported are linux, windows, and mac.
-    If this method does not exist, the script will be active for any platform,
-    even unsupported ones. In this way, a script can be forced to work for any
-    platform by commenting out this method.
-  help: This method should return a string containing usage data for the script.
-    The builtin 'help' command will call this and return the text to the user. 
+Take a look at automaton/plugins/sampleplugin.py for an example of a simple
+plugin. To be accessible from the rest of Automaton, a plugin should do a few
+things:
+
+* Create a function for each service you want to expose. It can take any
+  keyword arguments that you wish, they will be mapped with the grammar.
+  It is recommended to use the **kwargs construct just in case the user does
+  not include every necessary keyword argument (options for handling that
+  situation are described below).
+* Register all services using `self.registrar.register_service`.
+  * svc_name is the name others will use to indicate your service (eg. 'play'
+    for services that play music or movies)
+  * svc_func is the method to call to execute the service.
+  * grammar defines how the input string is mapped to the necessary arguments.
+
+    The keys to the grammar dict (or other mapping) should be keyword argument
+    names and the values are lists of strings containing words in the input
+    string to search for. One key is allowed to have an empty list; it will be
+    filled with the content between the service's name and the next argument.
+    For example, using the grammar `{"what": [], "location": ["near", "at"]}`
+    for the service `"find"` will map the input query `find something near here`
+    to the keyword arguments `{'what': 'something', 'location': 'here'}`
+  * usage is a string containing help text for the service.
+  * namespace is a string that, when combined with the service name, uniquely
+    identifies your service. That way, multiple plugins can register for the
+    service "play" and the correct service will be chosen by comparing the
+    query string to values in the grammar.
+* If you want to support the option to take _partial_ queries, "conversation"
+  support is also an option. If your service function returns a generator
+  instead of normal string output, Automaton will cache the generator and
+  rather than parsing the next query, it will pass it directly as a value
+  in a dictionary to the next "yield" statement in your generator. When the
+  generator exits, queries will once again be passed to the interpreter. For
+  example, if your service provides directions and the client only provides
+  a destination in the query, your service can prompt the user for a starting
+  location and fill in that data at a later time.
+* Some datasets are provided in automaton.lib.data, such as language code,
+  U.S. state, and country abbreviations. They may be useful while implementing
+  certain services.

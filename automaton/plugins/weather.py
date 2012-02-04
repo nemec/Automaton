@@ -21,7 +21,7 @@ class Weather(plugin.PluginInterface):
     try:
       self.api_key = settings.get("Settings", "wunderground_api_key")
     except ConfigParser.Error:
-      raise automaton.lib.plugin.PluginLoadError("Must provide "
+      raise plugin.PluginLoadError("Must provide "
         "wunderground_api_key in Settings.")
     self.format = 'F'
     try:

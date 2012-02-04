@@ -9,21 +9,32 @@ try:
   try:
     client.allowAllServices()
     
-    cmd = ' '.join(sys.argv[1:])
-    if cmd == "help":
-      print client.getAvailableServices()
-    else:
-      print client.interpret(cmd)
+    cmd = ''
+    if len(sys.argv) > 1:
+      cmd = ' '.join(sys.argv[1:])
+
+    while True:
+      if cmd == "help":
+        print client.getAvailableServices()
+      elif cmd != '':
+        try:
+          print client.interpret(cmd)
+        except exceptions.ServiceNotProvidedError as err:
+          print err
+        except exceptions.ServiceNotRegisteredError as err:
+          print err
+        except exceptions.UnknownIntentError:
+          print "Cannot understand query."
+      cmd = raw_input("> ")
   except exceptions.ClientNotRegisteredError:
     print "Service not registered"
-  except exceptions.ServiceNotProvidedError as e:
-    print e
-  except exceptions.ServiceNotRegisteredError as e:
-    print e
-  except exceptions.UnknownIntentError:
-    print "Cannot understand query."
   finally:
-    client.close()
+    try:
+      client.close()
+    except exceptions.ClientNotRegisteredError:
+      pass
 
-except exceptions.ClientError as tx:
-  print repr(tx)
+except exceptions.ClientError as err:
+  print repr(err)
+except (KeyboardInterrupt, EOFError):
+  pass
