@@ -52,11 +52,12 @@ class Map(plugin.PluginInterface):
     from -- the source address (default: current location, if available)
 
     """
-    if "to" not in kwargs:
-      return "Please provide a destination."
+    if "to" in kwargs:
+      destination = kwargs["to"]
+    else:
+      destination = (yield "Please provide a destination.")["_raw"]
       
-    origin = kwargs.get("from", '')
-    destination = kwargs["to"]
+    origin = kwargs.get("from", '')    
     
     if origin == '':
       try:
@@ -64,7 +65,9 @@ class Map(plugin.PluginInterface):
           *self.registrar.find_best_service('location'))
       except Exception as error:
         logger.log("Could not determine location", error)
-        raise plugin.UnsuccessfulExecution("Could not determine location.")
+        # raise plugin.UnsuccessfulExecution("Could not determine location.")
+        origin = (yield "Could not automatically determine your location. "
+                    "Where are you starting from?")["_raw"]
 
     params = {
       'q': 'from:{0} to:{1}'.format(origin, destination),
@@ -80,8 +83,9 @@ class Map(plugin.PluginInterface):
 
     status_code = response['Status']['code']
     if status_code == 200:
-      return self.format_directions_for_human(
+      yield self.format_directions_for_human(
         response['Directions']['Routes'][0]['Steps'])
+      return
     elif status_code == 602:
       raise plugin.UnsuccessfulExecution('malformed query')
     raise plugin.UnsuccessfulExecution("Unknown status code: " + status_code)
