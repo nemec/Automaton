@@ -1,4 +1,11 @@
-import nltk
+import logger
+try:
+  import nltk
+except ImportError:
+  nltk = None
+  logger.log("NLTK is not installed, part of speech tagging will not "
+    "be included in parsing.")
+
 import string  # pylint: disable-msg=W0402
 
 class Interpreter:
@@ -38,8 +45,13 @@ class Interpreter:
     
     similarity_threshold = 0
 
-    tokens = nltk.word_tokenize(raw)
-    tagged = nltk.pos_tag(tokens)
+    if nltk:
+      tokens = nltk.word_tokenize(raw)
+      tagged = nltk.pos_tag(tokens)
+    else:
+      import re
+      tokens = [token for token in re.split("\s|(\W)", raw) if token]
+      tagged = [(token, 'NNP') for token in tokens]
 
     for svc_name in self.registrar.services:
       for nspc in self.registrar.services[svc_name]:
