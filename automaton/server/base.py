@@ -10,8 +10,8 @@ from collections import namedtuple
 
 import automaton.plugins
 from automaton.lib import (
-  logger, registrar, exceptions,autoplatform, input_sanitizer, utils)
-from automaton.lib.clientmanager import ClientManager
+  logger, registrar, exceptions, autoplatform, input_sanitizer, utils,
+  clientmanager)
 from automaton.lib.plugin import PluginInterface, UnsuccessfulExecution
 
 # pylint: disable-msg=C0103
@@ -24,7 +24,7 @@ class AutomatonServer(object):
     self.sanitizer = input_sanitizer.InputSanitizer(self.registrar)
 
     # A dictionary mapping clientids to registered plugins
-    self.client_manager = ClientManager()
+    self.client_manager = clientmanager.ClientManager()
 
     # pylint: disable-msg=C0103
     self.LoadedPlugin = namedtuple('LoadedPlugin', ['obj', 'lock'])
@@ -241,7 +241,10 @@ class AutomatonServer(object):
                 client.current_conversation = conversation
               except AttributeError as e:  # Not a generator, get string output
                 output = str(conversation)
-                client.history.append((command, args))
+                client.history.append(
+                  clientmanager.QueryHistory(raw, command, namespace, args))
+                client.history.append(
+                  clientmanager.ResponseHistory(output))
               break  # We got some good output, don't continue to the next
         except UnsuccessfulExecution as e:
           output = "Execution failed: " + str(e)

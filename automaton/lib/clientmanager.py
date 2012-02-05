@@ -2,6 +2,25 @@ import time
 from threading import Lock
 from collections import deque
 
+
+class ResponseHistory(object):
+  def __init__(self, response):
+    self.response = response
+
+  def __str__(self):
+    return response
+
+class QueryHistory(object):
+  def __init__(self, raw, service, namespace, args):
+    self.raw = raw
+    self.service = service
+    self.namespace = namespace
+    self.args = args
+
+  def __str__(self):
+    return self.raw
+
+
 class Client(object):  # pylint: disable-msg=R0903
   """Represents a connected client."""
   def __init__(self, max_history, name, uid, availability):
@@ -18,7 +37,6 @@ class Client(object):  # pylint: disable-msg=R0903
     return "<Client {0}, {1}, last contacted: {2}".format(
       self.name, self.availability,
       time.strftime("%d/%m/%Y %I:%M:%S%p"))
-
 
 class ClientManager(object):  # pylint: disable-msg=R0903
   """Class to manage multiple connected clients."""

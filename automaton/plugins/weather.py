@@ -106,7 +106,9 @@ class Weather(plugin.PluginInterface):
         kwargs["where"] = re.sub("[() ]", "",
                 self.registrar.request_service('location', 'noreverse'))
       except:
-        raise plugin.UnsuccessfulExecution("No current location is available.")
+        #raise plugin.UnsuccessfulExecution("No current location is available.")
+        kwargs["where"] = (yield "I could not find your current location, "
+          "where do you want weather for?")["_raw"]
 
     forecastday = 0
     if "when" in kwargs:

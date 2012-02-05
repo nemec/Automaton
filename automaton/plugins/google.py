@@ -62,5 +62,4 @@ class Google(plugin.PluginInterface):
     # Strips HTML special characters (ie. &quot; )
     ret = re.sub(r'&[^ ]*?;', '', ret)
 
-    return unicodedata.normalize('NFKD',
-                    unicode(ret, "utf-8")).encode('ascii', 'ignore')
+    return unicodedata.normalize('NFKD', ret).encode('ascii', 'ignore')
