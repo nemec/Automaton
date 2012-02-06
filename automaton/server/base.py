@@ -10,7 +10,7 @@ from collections import namedtuple
 
 import automaton.plugins
 from automaton.lib import (
-  logger, registrar, exceptions, autoplatform, input_sanitizer, utils,
+  logger, registrar, exceptions, autoplatform, utils,
   clientmanager)
 from automaton.lib.plugin import PluginInterface, UnsuccessfulExecution
 
@@ -21,7 +21,6 @@ class AutomatonServer(object):
     self.withgui = withgui
 
     self.registrar = registrar.Registrar()
-    self.sanitizer = input_sanitizer.InputSanitizer(self.registrar)
 
     # A dictionary mapping clientids to registered plugins
     self.client_manager = clientmanager.ClientManager()
@@ -85,8 +84,8 @@ class AutomatonServer(object):
 
   def get_client(self, clientid, touch_client=True):
     """
-    Retrieves the client for the given clientid
-    and updates its last-accessed time.
+    Retrieve the client for the given clientid
+    and update its last-accessed time.
     
     Keyword Arguments:
     clientid -- a unique id assigned to the client when registering
@@ -101,8 +100,9 @@ class AutomatonServer(object):
       client.last_contact = time.time()
     return client
 
-  def registerClient(self, appname=None):
-    """Register a client service with the server. Calculate a UUID that will
+  def registerClient(self, appname=None, publish_url=None):
+    """
+    Register a client service with the server. Calculate a UUID that will
     identify which plugins are loaded for each client service and return it
     to the caller.
 
@@ -113,7 +113,7 @@ class AutomatonServer(object):
     if appname is not None:
       ident = re.sub('[\W_]+', '', appname) + '-' + ident
     logger.log("Registering client {0}".format(ident))
-    self.client_manager.add_client(ident)
+    self.client_manager.add_client(ident, publish_url=publish_url)
     return ident
 
   def unregisterClient(self, clientid):
@@ -249,9 +249,7 @@ class AutomatonServer(object):
         except UnsuccessfulExecution as e:
           output = "Execution failed: " + str(e)
 
-      if output:
-        self.sanitizer.set_prev_alias(output)
-      else:
+      if not output:
         output = "No output."
     
     return output

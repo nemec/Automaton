@@ -104,7 +104,7 @@ class Weather(plugin.PluginInterface):
       try:
         # Try to call on latitude plugin to get the current location
         kwargs["where"] = re.sub("[() ]", "",
-                self.registrar.request_service('location', 'noreverse'))
+                self.registrar.request_service('location', noreverse=True))
       except:
         #raise plugin.UnsuccessfulExecution("No current location is available.")
         kwargs["where"] = (yield "I could not find your current location, "

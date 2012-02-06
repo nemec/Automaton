@@ -16,7 +16,6 @@ class Interpreter:
   """
   def __init__(self, registrar):
     self.registrar = registrar
-    self.grammar_dict = {}
 
   def clean_speech(self, raw):
     """

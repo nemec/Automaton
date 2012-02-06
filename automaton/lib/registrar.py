@@ -77,6 +77,23 @@ class Event:
   __len__ = lambda self: len(self.handlers)
 
 
+class ServiceCollection(object):
+  def __init__(self):
+    self.services = defaultdict(dict)
+
+  def add(self, svc_name, namespace, svc):
+    self.services[svc_name][namespace] = svc
+
+  def remove(self, svc_name, namespace):
+    if len(self.services[svc_name]) == 1:
+      del self.services[svc_name]  # last service by this name
+    else:  # remove the service namespace
+      del self.services[svc_name][namespace]
+  
+  def get(self, svc_name, namespace=None):
+    return self.services.get(svc_name, {}).get(namespace, None)
+
+
 class Registrar(object):
   """
     The Registrar defines a collection where services and objects can
@@ -117,7 +134,7 @@ class Registrar(object):
 
   def __init__(self):
     self.objects = {}
-    self.services = defaultdict(dict)
+    self.services = ServiceCollection()
     self.__obj_lock = Lock()
     self.interpreter = Interpreter(self)
 
@@ -155,9 +172,10 @@ class Registrar(object):
 
     """
     usage = usage.replace('%s', svc_name)
-    self.services[svc_name.lower()][namespace] = self._RepoSvc(
-        name=svc_name.lower(), svc=svc_func, grammar=grammar,
-        usage=usage, namespace=namespace)
+    name = svc_name.lower()
+    self.services.add(name, namespace, self._RepoSvc(
+        name=name, svc=svc_func, grammar=grammar,
+        usage=usage, namespace=namespace))
 
   def unregister_service(self, svc_name, namespace=None):
     """Remove the registered service with the provided name and
@@ -165,13 +183,10 @@ class Registrar(object):
 
     """
     svc_name = svc_name.lower()
-    if (svc_name in self.services and
-        namespace in self.services[svc_name]):
-      with locked(self.services[svc_name][namespace].lock):
-        if len(self.services[svc_name]) == 1:
-          del self.services[svc_name]  # last service by this name
-        else:  # remove the service namespace
-          del self.services[svc_name][namespace]
+    svc = self.services.get(svc_name, namespace)
+    if svc:
+      with locked(svc.lock):
+        self.services.remove(svc_name, namespace)
 
   def request_service(self, svc_name, namespace=None, argdict=None, **kwargs):
     """Call the service registered to svc_name with the specified (optional)
@@ -179,16 +194,16 @@ class Registrar(object):
 
     """
     svc_name = svc_name.lower()
-    if (svc_name not in self.services or
-        namespace not in self.services[svc_name]):
+    if not self.services.get(svc_name, namespace):
       raise ServiceDoesNotExist("Service does not exist.")
-    with locked(self.services[svc_name][namespace].lock):
+    service = self.services.get(svc_name, namespace)
+    with locked(service.lock):
       if argdict:
         try:
           kwargs.update(argdict)
         except AttributeError:
           pass
-      return self.services[svc_name][namespace].svc(**kwargs)
+      return service.svc(**kwargs)
 
   def register_object(self, obj_name, obj):
     """Create a shallow copy of the provided object and register it.
@@ -246,6 +261,54 @@ class Registrar(object):
       raise ObjectDoesNotExist(obj_name)
     return _copy(self.objects[obj_name].obj)
 
+  
+class RegistrarCollection(object):
+  """A collection of local and remote registrars. 
+    Handle adding and removing registrars on remote machines in
+    addition to allowing transparent access to all registrars from
+    the same interface as a normal one.
+    Adding and removing services/objects are only performed on the
+    local registrar.
+
+  """
+  def __init__(self):
+    self.local_registrar = Registrar()
+    self.remote_registrars = defaultdict(dict)
+    self.interpreter = Interpreter(self)
+    
+    
+  @property
+  def services(self):
+    return self.local_registrar
+  
+  def find_best_service(self, query):
+    """Use the interpreter to find the single best
+    (service, namespace, arguments) triplet for the given query.
+
+    """
+    pass
+  
+  def register_service(self, ):
+    self.local_registrar.register_service(**kwargs)
+  
+  def unregister_service(self, **kwargs):
+    self.local_registrar.unregister_service(**kwargs)
+  
+  def register_object(self, obj_name, obj):
+    self.local_registrar.register_object(**kwargs)
+  
+  def remove_object(self, obj_name):
+    self.local_registrar.unregister_object(**kwargs)
+  
+  def register_object_listener(self, obj_name, callback):
+    pass
+  
+  def remove_object_listener(self, obj_name, callback):
+    pass
+  
+  def get_object(self, obj_name):
+    pass
+
 #TODO turn into unit test
 """if __name__ == "__main__":
   class D(object):
@@ -283,4 +346,5 @@ class Registrar(object):
     print "Hello, {0}.".format(kwargs["name"])
 
   r.register_service("name", service)
-  r.request_service("name", name="tim")"""
+  r.request_service("name", name="tim")
+"""
