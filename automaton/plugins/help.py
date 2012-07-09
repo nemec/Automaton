@@ -15,7 +15,7 @@ class Help(automaton.lib.plugin.PluginInterface):
            """
     self.registrar.register_service("help", self.execute,
       grammar={
-        "indirect_action": []
+        "indirect_action": [],
         "action": ["me", "us"],
       }, usage=usage, namespace=__name__)
     # Can you help me...

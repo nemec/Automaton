@@ -139,48 +139,61 @@ class Interpreter:
     return args
 
 #TODO move to unit test
-"""if __name__ == "__main__":
+if __name__ == "__main__":
   import registrar
   r = registrar.Registrar()
+  i = Interpreter(r)
   
   def directions(**kwargs):
     if not all(map(lambda x: x in kwargs, ("from", "to"))):
       return "Missing arguments."
     print "Getting directions from {0} to {1}".format(kwargs["from"], kwargs["to"])
   directions_grammar = {"to":["ending at", "to"], "from":[ "starting at", "from"]}
+  r.register_service("directions", directions, directions_grammar, "Gets directions", "ns")
+
 
   def play(**kwargs):
     if "target" not in kwargs:
       print "Missing Arguments"
     print "Playing {0}".format(kwargs["target"])
   play_grammar = {"target":[]}
+  r.register_service("play", play, play_grammar, "Plays something mon", "ns")
   
   def play2(**kwargs):
     if "station" not in kwargs:
       print "No station listed."
     print "Loaded station {0}".format(kwargs["station"])
   play2_grammar = {"station": ["station"]}
+  r.register_service("play", play2, play2_grammar, "A second 'play' service.", "ns2")
+
 
   def time(**kwargs):
     print "Getting time"
+  r.register_service("time", time, {}, "gets the time mon", "ns")
+
 
   def stop(**kwargs):
     print "stopping music"
+  r.register_service("stop", stop, {}, "stops playing music", "ns")
+
 
   def weather(**kwargs):
     if not all(map(lambda x: x in kwargs, ("time", "location"))):
       print "Missing arguments"
     print "Getting weather at {0} for {1}".format(kwargs["location"], kwargs["time"])
   weather_grammar = {"location":["at","near","in"], "time": ["for", "be like"]}
-    
-  r.register_service("directions", directions, directions_grammar, "Gets directions", "ns")
-  r.register_service("play", play, play_grammar, "Plays something mon", "ns")
-  r.register_service("play", play2, play2_grammar, "A second 'play' service.", "ns2")
-  r.register_service("time", time, {}, "gets the time mon", "ns")
-  r.register_service("stop", stop, {}, "stops playing music", "ns")
   r.register_service("weather", weather, weather_grammar, "gets the weather mon", "ns")
   
-  i = Interpreter(r)
+  
+  def flags(**kwargs):
+    if "add" in kwargs:
+      print "Adding the flag " + str(kwargs.get("flag", "Unknown"))
+    if "remove" in kwargs:
+      print "Removing the flag " + str(kwargs.get("flag", "Unknown"))
+  flags_grammar = {"add": ["add"], "remove": ["remove"], "flag": [] } 
+  r.register_service("flag", flags, flags_grammar, "Tests setting flags as arguments", "ns")
+
+
   print i.interpret("I need directions from College Station, TX to Houston, TX")
   print i.interpret("directions from college station, tx to houston, tx")
   print i.interpret("Directions starting at College Station ending at Houston")
@@ -196,4 +209,6 @@ class Interpreter:
   print i.interpret("What is the weather forecast in College Station for tomorrow?")
   print i.interpret("I would like to know how the weather will be near Houston for today")
   print i.interpret("What will the weather be like tomorrow at Dallas?")  
-  print i.interpret("What is the weather like in Snook?")"""
+  print i.interpret("What is the weather like in Snook?")
+  print i.interpret("add the flag welcome")
+  print i.interpret("remove the flag welcome")

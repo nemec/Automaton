@@ -2,8 +2,16 @@ import sys
 import automaton.client.rest as client_lib
 import automaton.lib.exceptions as exceptions
 
+import socket
+host = "localhost"
+args = sys.argv[1:]
+
+if sys.argv[1] == "-h":  # Allow host to be specified  
+  host = sys.argv[2]
+  args = sys.argv[3:]
+
 try:
-  client = client_lib.ClientWrapper("localhost", appname="cmd")
+  client = client_lib.ClientWrapper(host, appname="cmd")
   client.open()
 
   try:
@@ -11,7 +19,7 @@ try:
     
     cmd = ''
     if len(sys.argv) > 1:
-      cmd = ' '.join(sys.argv[1:])
+      cmd = ' '.join(args)
 
     while True:
       if cmd == "help":
