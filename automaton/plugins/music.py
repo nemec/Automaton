@@ -3,11 +3,10 @@
 import mpd
 import ConfigParser
 
-import automaton.lib.plugin
-from automaton.lib import utils, logger
+from automaton.lib import utils, logger, plugin
 
 
-class Music(automaton.lib.plugin.PluginInterface):
+class Music(plugin.PluginInterface):
   """Plugin that interfaces with MPD to play music."""
   def __init__(self, registrar):
     super(Music, self).__init__(registrar)

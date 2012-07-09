@@ -8,8 +8,7 @@ except ImportError:
   import json
 import ConfigParser
 
-import automaton.lib.utils as utils
-import automaton.lib.plugin as plugin
+from automaton.lib import utils, plugin
 
 try:
   from apiclient.discovery import build
@@ -66,9 +65,9 @@ class Latitude(plugin.PluginInterface):
       try:
         location = self.execute(noreverse=True)
         self.registrar.register_object("location", location)
-        time.sleep(pause_seconds)
-      except plugin.UnsuccessfulExecution:
-        pass
+      except plugin.UnsuccessfulExecution as err:
+        print err
+      time.sleep(pause_seconds)
 
   def lookup(self, lat='', lng=''):
     """Use Google's Map APIs to turn a lat/lon pair into a city."""

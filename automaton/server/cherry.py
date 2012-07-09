@@ -146,7 +146,7 @@ class CherryServer(AutomatonServer):
     root.services = Services(self)
     
     cherrypy.config.update({
-      'server.socket_host': '127.0.0.1',
+      'server.socket_host': '0.0.0.0', #'127.0.0.1',
       'server.socket_port': self.port,
       'request.error_response': self.handle_error,
       'error_page.404': self.make_error_dict

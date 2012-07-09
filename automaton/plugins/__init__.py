@@ -1,3 +1,4 @@
-__all__ = ["echo", "help", "google", "memo", "translate",
-          "wiki", "mail", "say", "map", "latitude", "music",
-          "weather", "gettime", "torrent"]
+
+__all__ = ["echo", "help", "google", "memo",
+          "wiki", "mail", "say", "map", "music",]
+#          "weather", "gettime", "torrent"]
