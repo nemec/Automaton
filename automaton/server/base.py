@@ -177,8 +177,7 @@ class AutomatonServer(object):
   def allowAllServices(self, clientid):
     """Allow all services for the given clientid."""
     logger.log("Allowing all services for client {0}".format(clientid))
-    self.get_client(clientid).plugins = set(
-                                              self.registrar.services.keys())
+    self.get_client(clientid).plugins = set(self.registrar.services.keys())
 
   def disallowAllServices(self, clientid):
     """Disallow all services for the given client id."""

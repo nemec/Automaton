@@ -51,7 +51,7 @@ class ClientManager(object):  # pylint: disable-msg=R0903
     self.registered_publishers = {}
     self.registered_clients = {}
 
-  def add_client(self, ident, name=None):
+  def add_client(self, ident, name=None, publish_url=None):
     """Add a client to the list of registered clients."""
     self.registered_clients[ident] = Client(max_history=self.max_history,
     name=(name or ident), uid=ident)

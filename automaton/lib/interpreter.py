@@ -53,8 +53,8 @@ class Interpreter:
       tagged = [(token, 'NNP') for token in tokens]
 
     for svc_name in self.registrar.services:
-      for nspc in self.registrar.services[svc_name]:
-        grammar = self.registrar.services[svc_name][nspc].grammar
+      for nspc in self.registrar.services.get(svc_name):
+        grammar = self.registrar.services.get(svc_name)[nspc].grammar
         similarity = self.get_similarity(tagged, grammar, svc_name)
         if similarity > similarity_threshold:
           command = svc_name

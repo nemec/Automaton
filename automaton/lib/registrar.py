@@ -91,7 +91,16 @@ class ServiceCollection(object):
       del self.services[svc_name][namespace]
   
   def get(self, svc_name, namespace=None):
-    return self.services.get(svc_name, {}).get(namespace, None)
+    matches = self.services.get(svc_name, {})
+    if namespace is None:
+      return matches
+    return matches.get(namespace, None)
+
+  def keys(self):
+    return self.services.keys()
+
+  def __iter__(self):
+    return iter(self.services)
 
 
 class Registrar(object):
